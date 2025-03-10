@@ -1,5 +1,5 @@
 import React from 'react';
-import Footer from '@/components/footer'; // Predpostavljamo, da imate komponento Footer v mapo components
+import Image from 'next/image';
 
 export default function ProductsPage() {
   // Primer izdelkov (zamenjajte z dejanskimi podatki iz vaše API ali baze podatkov)
@@ -7,7 +7,7 @@ export default function ProductsPage() {
     {
       id: 1,
       name: "Šparglji",
-      imageUrl: "../sparglji.jpg",
+      imageUrl: "/sparglji.jpg",
       description: "Sveži šparglji, gojeni na lokalnih kmetijah. Popolni za pripravo okusnih solat ali kot priloga k mesnim jedem.",
       pricing: [
         { weight: "250g", price: "€3.50" },
@@ -18,7 +18,7 @@ export default function ProductsPage() {
     {
       id: 2,
       name: "Jagode",
-      imageUrl: "../jagode.png",
+      imageUrl: "/jagode.png",
       description: "Sočne in sladke jagode, pobrane v sezoni. Idealne za sladice, smoothije ali kar za neposredno uživanje.",
       pricing: [
         { weight: "250g", price: "€2.00" },
@@ -29,7 +29,7 @@ export default function ProductsPage() {
     {
       id: 3,
       name: "Svež česen",
-      imageUrl: "../cesen.jpg",
+      imageUrl: "/cesen.jpg",
       description: "Organski svež česen z bogatim okusom, idealen za vse vrste kuhanja. Dodajte ga za izjemen okus v jedeh.",
       pricing: [
         { weight: "250g", price: "€10.00" },
@@ -40,7 +40,7 @@ export default function ProductsPage() {
     {
       id: 4,
       name: "Domač krompir",
-      imageUrl: "../krompir.jpg",
+      imageUrl: "/krompir.jpg",
       description: "Krompir, pridelan na naših kmetijah, idealen za pečenje, pire ali kuhanje. Okusno in zdravo.",
       pricing: [
         { weight: "1kg", price: "€4.00" },
@@ -62,10 +62,12 @@ export default function ProductsPage() {
               className={`flex items-center ${index % 2 === 0 ? "flex-row-reverse" : "flex-row"}`}
             >
               <div className="bg-white shadow-lg rounded-lg overflow-hidden w-full md:w-2/3 lg:w-1/2">
-                <img
-                  className="w-full h-64 object-scale-down bg-white"
-                  src={product.imageUrl}
-                  alt={product.name}
+              <Image
+                    className="w-full h-64 object-cover"
+                    src={product.imageUrl}
+                    alt={product.name}
+                    width={500}  // Set the width and height based on your design
+                    height={400} // Set the height based on your design
                 />
               </div>
               <div className="w-full md:w-1/3 lg:w-1/4 p-6">

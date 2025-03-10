@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
             
             <section className="space-y-6 text-lg text-gray-700">
               <p>
-                Ta pravilnik o zasebnosti opisuje, kako Kmetija Tešlan (v nadaljevanju: "mi") zbira, uporablja in varuje vaše osebne podatke, 
+                Ta pravilnik o zasebnosti opisuje, kako Kmetija Tešlan (v nadaljevanju: &quot;mi&quot;) zbira, uporablja in varuje vaše osebne podatke, 
                 ko uporabljate našo spletno stran in stopite v stik z nami prek kontaktnega obrazca.
               </p>
     
