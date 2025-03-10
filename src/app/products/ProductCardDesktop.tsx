@@ -1,7 +1,7 @@
 'use client'
 import React from 'react';
 import Image from 'next/image';
-import { Product } from './types';  // Importing the Product type
+import { Product, PricingOption } from './types';  // Importing the Product type
 
 interface ProductCardDesktopProps {
     product: Product;
@@ -28,7 +28,7 @@ interface ProductCardDesktopProps {
         <div className="bg-gray-100 p-4 rounded-lg shadow-md">
           <h3 className="text-lg font-medium text-gray-900">Cenik:</h3>
           <ul className="mt-2 space-y-1 text-sm text-gray-700">
-            {product.pricing.map((option: any, index: number) => (
+            {product.pricing.map((option: PricingOption, index: number) => (
               <li key={index} className="flex justify-between">
                 <span>{option.weight}</span>
                 <span>{option.price}</span>
