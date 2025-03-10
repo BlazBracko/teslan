@@ -1,5 +1,9 @@
-import React from 'react';
+'use client'
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+
+import ProductCardMobile from './ProductCardMobile';
+import ProductCardDesktop from './ProductCardDesktop';
 
 export default function ProductsPage() {
   // Primer izdelkov (zamenjajte z dejanskimi podatki iz vaše API ali baze podatkov)
@@ -50,44 +54,36 @@ export default function ProductsPage() {
     },
   ];
 
+  // State za spremljanje širine zaslona
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Funkcija za preverjanje širine zaslona
+  const checkIfMobile = () => {
+    setIsMobile(window.innerWidth <= 768); // 768px je običajno meja za mobilne naprave
+  };
+
+  // Uporaba useEffect za spremljanje sprememb velikosti okna
+  useEffect(() => {
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
   return (
     <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Naši Izdelki</h1>
-
+      <h1 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-8 text-center">
+          Naši Izdelki
+        </h1>
         <div className="space-y-6 mb-16">
           {products.map((product, index) => (
-            <div
-              key={product.id}
-              className={`flex items-center ${index % 2 === 0 ? "flex-row-reverse" : "flex-row"}`}
-            >
-              <div className="bg-white shadow-lg rounded-lg overflow-hidden w-full md:w-2/3 lg:w-1/2">
-              <Image
-                    className="w-full h-64 object-cover"
-                    src={product.imageUrl}
-                    alt={product.name}
-                    width={500}  // Set the width and height based on your design
-                    height={400} // Set the height based on your design
-                />
-              </div>
-              <div className="w-full md:w-1/3 lg:w-1/4 p-6">
-                <div className="bg-gray-100 p-4 rounded-lg shadow-md">
-                  <h3 className="text-lg font-medium text-gray-900">Cenik:</h3>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-700">
-                    {product.pricing.map((option, index) => (
-                      <li key={index} className="flex justify-between">
-                        <span>{option.weight}</span>
-                        <span>{option.price}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <div className="p-6 w-full">
-                <h2 className="text-xl font-semibold text-gray-900">{product.name}</h2>
-                <p className="text-gray-600 mt-2">{product.description}</p>
-              </div>
-            </div>
+            isMobile ? (
+              <ProductCardMobile key={product.id} product={product} />
+            ) : (
+                <ProductCardDesktop key={product.id} product={product} index={index} />
+                )
           ))}
         </div>
       </main>
