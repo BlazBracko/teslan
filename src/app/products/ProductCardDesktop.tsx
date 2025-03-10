@@ -1,9 +1,15 @@
 'use client'
 import React from 'react';
 import Image from 'next/image';
+import { Product } from './types';  // Importing the Product type
 
-export default function ProductCardDesktop({ product, index }: { product: any, index: number }) {
-  return (
+interface ProductCardDesktopProps {
+    product: Product;
+    index: number;
+  }
+
+  export default function ProductCardDesktop({ product, index }: ProductCardDesktopProps) {
+    return (
     <div className={`flex items-center space-x-6 rounded-lg p-6 ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
       {/* Slika */}
       <div className=" shadow-lg rounded-lg overflow-hidden w-full md:w-2/4 lg:w-1/3">

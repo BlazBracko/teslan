@@ -1,6 +1,5 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 import ProductCardMobile from './ProductCardMobile';
 import ProductCardDesktop from './ProductCardDesktop';

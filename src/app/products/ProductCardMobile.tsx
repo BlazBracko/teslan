@@ -1,8 +1,13 @@
 'use client'
 import React from 'react';
 import Image from 'next/image';
+import { Product } from './types';  // Importing the Product type
 
-export default function ProductCardMobile({ product }: { product: any }) {
+interface ProductCardMobileProps {
+    product: Product;
+  }
+
+export default function ProductCardMobile({ product }: ProductCardMobileProps) {
   return (
     <div className="flex flex-col items-center rounded-lg p-6">
       {/* Naslov */}
