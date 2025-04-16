@@ -13,9 +13,9 @@ const manrope = Manrope({ subsets: ['latin'] });
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`bg-white dark:bg-gray-950 text-black dark:text-white ${manrope.className}`}>
-      <body className="min-h-[100dvh] bg-gray-50">
+      <body className="min-h-[100dvh] flex flex-col bg-gray-50">
         <Header />
-        <main>{children}</main>
+        <main className="flex-grow">{children}</main>
         <Footer />
       </body>
     </html>
