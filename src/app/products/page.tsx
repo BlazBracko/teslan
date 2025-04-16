@@ -11,13 +11,12 @@ export default function ProductsPage() {
       id: 1,
       name: "Šparglji",
       imageUrl: "/sparglji.jpg",
-      description: "Sveži šparglji, gojeni na lokalnih kmetijah. Popolni za pripravo okusnih solat ali kot priloga k mesnim jedem.",
+      description: "Sveži šparglji. Popolni za pripravo okusnih solat ali kot priloga k mesnim jedem.",
       pricing: [
-        { weight: "250g", price: "€3.50" },
-        { weight: "500g", price: "€6.50" },
-        { weight: "1kg", price: "€12.00" },
+        { weight: "0.5 kg", price: "5 €" },
+        { weight: "1 kg", price: "10 €" },
       ],
-    },
+    }/*,
     {
       id: 2,
       name: "Jagode",
@@ -50,7 +49,7 @@ export default function ProductsPage() {
         { weight: "2kg", price: "€7.50" },
         { weight: "5kg", price: "€15.00" },
       ],
-    },
+    },*/
   ];
 
   // State za spremljanje širine zaslona

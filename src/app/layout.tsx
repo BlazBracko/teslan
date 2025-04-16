@@ -4,7 +4,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 
 export const metadata = {
-  title: 'Kmetija Tešlan',
+  title: 'Domačija Tešlan',
   description: 'Skrbno pridelana hrana, neposredno iz naše kmetije na vaše mize.',
 };
 

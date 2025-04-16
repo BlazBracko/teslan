@@ -10,7 +10,7 @@ export default function Footer() {
                 target="_blank"
                 className="text-gray-900 hover:text-gray-700"
               >
-                Podgora 15, 8000 Novo mesto, Dolenjska
+                Podgora 15, 8351 Straža pri Novem mestu
               </a>
             </div>
             <div>
@@ -26,14 +26,14 @@ export default function Footer() {
                   href="tel:+19172678533"
                   className="text-gray-900 hover:text-gray-700"
                 >
-                  +1 917 267 8533
+                  +386 40 578 512
                 </a>
               </p>
             </div>
           </div>
         </div>
         <div className="border-t border-gray-300 mt-8 pt-2 text-xs sm:text-xs text-gray-600 flex flex-col sm:flex-row justify-center items-center space-y-1 sm:space-y-0 sm:space-x-2"> {/* Zmanjšan prostor in besedilo */}
-          <span>© 2025 Kmetija Tešlan. Vse pravice pridržane.</span>
+          <span>© 2025 Domačija Tešlan. Vse pravice pridržane.</span>
           <a href="/privacyPolicy" className="hover:text-gray-500">
             Privacy Policy
           </a>
