@@ -1,6 +1,4 @@
-import { ContactForm } from '../components/contant_form';
 import { FaMapPin } from 'react-icons/fa';
-import GallerySlider from '../components/gallery_slider';
 
 export default function HomePage() {
   return (
