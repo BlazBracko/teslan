@@ -13,43 +13,40 @@ export default function ProductsPage() {
       imageUrl: "/sparglji.jpg",
       description: "Sveži šparglji. Popolni za pripravo okusnih solat ali kot priloga k mesnim jedem.",
       pricing: [
-        { weight: "0.5 kg", price: "5 €" },
-        { weight: "1 kg", price: "10 €" },
+        { weight: "šopek (0.5 kg)", price: "5 €" },
       ],
-    }/*,
+    },
     {
       id: 2,
       name: "Jagode",
       imageUrl: "/jagode.png",
       description: "Sočne in sladke jagode, pobrane v sezoni. Idealne za sladice, smoothije ali kar za neposredno uživanje.",
       pricing: [
-        { weight: "250g", price: "€2.00" },
-        { weight: "500g", price: "€3.50" },
-        { weight: "1kg", price: "€6.50" },
+        { weight: "košarica (0.5 kg)", price: "5 €" },
       ],
     },
-    {
-      id: 3,
-      name: "Svež česen",
-      imageUrl: "/cesen.jpg",
-      description: "Organski svež česen z bogatim okusom, idealen za vse vrste kuhanja. Dodajte ga za izjemen okus v jedeh.",
-      pricing: [
-        { weight: "250g", price: "€10.00" },
-        { weight: "500g", price: "€18.00" },
-        { weight: "1kg", price: "€35.00" },
-      ],
-    },
-    {
-      id: 4,
-      name: "Domač krompir",
-      imageUrl: "/krompir.jpg",
-      description: "Krompir, pridelan na naših kmetijah, idealen za pečenje, pire ali kuhanje. Okusno in zdravo.",
-      pricing: [
-        { weight: "1kg", price: "€4.00" },
-        { weight: "2kg", price: "€7.50" },
-        { weight: "5kg", price: "€15.00" },
-      ],
-    },*/
+    // {
+    //   id: 3,
+    //   name: "Svež česen",
+    //   imageUrl: "/cesen.jpg",
+    //   description: "Organski svež česen z bogatim okusom, idealen za vse vrste kuhanja. Dodajte ga za izjemen okus v jedeh.",
+    //   pricing: [
+    //     { weight: "250g", price: "€10.00" },
+    //     { weight: "500g", price: "€18.00" },
+    //     { weight: "1kg", price: "€35.00" },
+    //   ],
+    // },
+    // {
+    //   id: 4,
+    //   name: "Domač krompir",
+    //   imageUrl: "/krompir.jpg",
+    //   description: "Krompir, pridelan na naših kmetijah, idealen za pečenje, pire ali kuhanje. Okusno in zdravo.",
+    //   pricing: [
+    //     { weight: "1kg", price: "€4.00" },
+    //     { weight: "2kg", price: "€7.50" },
+    //     { weight: "5kg", price: "€15.00" },
+    //   ],
+    // },
   ];
 
   // State za spremljanje širine zaslona
