@@ -19,9 +19,12 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
     font-family: 'Manrope', Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+    overscroll-behavior: none;
   }
 }
