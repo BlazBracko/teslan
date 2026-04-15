@@ -1,45 +1,114 @@
+'use client';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { contact } from '@/data/contact';
+
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 text-gray-900 py-2 w-full text-[11px] sm:text-xs">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start gap-4 sm:gap-12">
-          {/* Naslov */}
-          <div className="flex-1 text-center sm:text-left">
-            <h4 className="text-[11px] font-semibold mb-1">Naslov</h4>
-            <a
-              href="https://www.google.com/maps"
-              target="_blank"
-              className="text-gray-900 hover:text-gray-700"
-            >
-              Podgora 15, 8351 Straža pri Novem mestu
-            </a>
+    <footer className="bg-[#1a3a2a] text-[#f5f0e8]">
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-12 py-9">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          {/* Column 1 - Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Tešlan logo"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
+              <span className="text-xl font-bold">Tešlan</span>
+            </div>
+            <p className="text-sm text-[#e5dcc8]">
+              Domačija Tešlan — Podgora, Dolenjska
+            </p>
           </div>
 
-          {/* Kontakt */}
-          <div className="flex-1 text-center sm:text-left">
-            <h4 className="text-[11px] font-semibold mb-1">Kontakt</h4>
-            <a
-              href="mailto:sandi.dercar@gmail.com"
-              className="block text-gray-900 hover:text-gray-700"
-            >
-              sandi.dercar@gmail.com
-            </a>
-            <a
-              href="tel:+38640578512"
-              className="block text-gray-900 hover:text-gray-700"
-            >
-              +386 40 578 512
-            </a>
+          {/* Column 2 - Pages */}
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Strani</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/"
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  Domov
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/products"
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  Izdelki
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  O nas
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacyPolicy"
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  Zasebnost
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3 - Contact */}
+          <div>
+            <h4 className="font-semibold text-lg mb-4">Kontakt</h4>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  {contact.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`tel:${contact.phone.replace(/\s/g, '')}`}
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  {contact.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={contact.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
+                >
+                  Navodila za pot →
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Bottom line */}
-      <div className="border-t border-gray-300 mt-3 pt-2 text-[10px] text-gray-600 flex flex-col sm:flex-row justify-center items-center space-y-1 sm:space-y-0 sm:space-x-3">
-        <span>© 2025 Domačija Tešlan. Vse pravice pridržane.</span>
-        <a href="/privacyPolicy" className="hover:text-gray-500">
-          Privacy Policy
-        </a>
+      {/* Bottom Row */}
+      <div className="border-t border-[#2d5a3f]">
+        <div className="max-w-7xl mx-auto px-12 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#e5dcc8]">
+            <p>© 2025 Domačija Tešlan. Vse pravice pridržane.</p>
+            <p className="italic">Izdelano z ljubeznijo na Dolenjskem.</p>
+          </div>
+        </div>
       </div>
     </footer>
   );
