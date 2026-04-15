@@ -43,31 +43,31 @@ function AnimatedSpear({
   config: SpearConfig;
   scrollYProgress: MotionValue<number>;
 }) {
-  // Explosion starts AFTER fade-in completes (at 0.2)
+  // Explosion starts AFTER fade-in completes
   const spearX = useTransform(
     scrollYProgress,
-    [0.2, 0.55],
+    [0.1, 0.65],
     [config.baseX, config.baseX + config.explodeX]
   );
   const spearY = useTransform(
     scrollYProgress,
-    [0.2, 0.55],
+    [0.1, 0.65],
     [config.baseY, config.baseY + config.explodeY]
   );
   const spearRotate = useTransform(
     scrollYProgress,
-    [0.2, 0.55],
+    [0.1, 0.65],
     [config.initialRotate, config.initialRotate + config.explodeRotate]
   );
   const spearScale = useTransform(
     scrollYProgress,
-    [0.2, 0.55],
+    [0.1, 0.65],
     [config.scale, config.scale * 0.5]
   );
   // Hidden at start, fade in, stay visible, then fade out
   const spearOpacity = useTransform(
     scrollYProgress,
-    [0, 0.08, 0.18, 0.5, 0.6],
+    [0, 0.05, 0.12, 0.6, 0.75],
     [0, 0, 1, 1, 0]
   );
 
@@ -105,7 +105,7 @@ function AnimatedSpear({
 
 // Separate component for scroll indicator
 function ScrollIndicator({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
-  const opacity = useTransform(scrollYProgress, [0.05, 0.2], [1, 0]);
+  const opacity = useTransform(scrollYProgress, [0.03, 0.12], [1, 0]);
 
   return (
     <motion.div
@@ -149,11 +149,11 @@ export default function HeroAsparagus() {
   });
 
   // Hero text fade out
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -60]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
 
   return (
-    <div ref={containerRef} className="relative h-[200vh]">
+    <div ref={containerRef} className="relative h-[300vh]">
       {/* Sticky container that holds the animation */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#1a3a2a]">
         {/* Background dot pattern */}
