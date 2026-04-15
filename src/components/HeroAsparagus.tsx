@@ -153,9 +153,9 @@ export default function HeroAsparagus() {
   const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
 
   return (
-    <div ref={containerRef} className="relative h-[300vh] touch-pan-y">
+    <div ref={containerRef} className="relative h-[300vh]">
       {/* Sticky container that holds the animation */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#1a3a2a] overscroll-none">
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#1a3a2a]">
         {/* Background dot pattern */}
         <div
           className="absolute inset-0 opacity-[0.07]"
