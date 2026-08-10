@@ -17,20 +17,15 @@ import { crossFade, project, springSheet, springSnap, springUI } from '@/lib/mot
 import Pressable, { usePress } from '@/components/ui/Pressable';
 import { cn } from '@/lib/utils';
 
-const DRAWER_WIDTH = 288;
-
 const navLinks = [
   { href: '/', label: 'Domov' },
   { href: '/products', label: 'Izdelki' },
   { href: '/about', label: 'O nas' },
 ];
 
-/**
- * Navigacijska povezava z odzivom na pritisk in oznako aktivne strani.
- *
- * Wayfinding (§16): vsak zaslon mora odgovoriti na "kje sem". Prej
- * navigacija ni nikjer kazala trenutne strani.
- */
+/** Pot navzgor, po kateri otok zloži nazaj v pilulo. */
+const COLLAPSE_THRESHOLD = 56;
+
 function NavLink({
   href,
   label,
@@ -61,17 +56,15 @@ function NavLink({
         className={cn(
           'touch-manipulation transition-colors duration-200',
           large ? 'text-lg font-semibold' : 'type-nav',
-          active ? 'text-green-light' : 'text-green-deep hover:text-green-light',
+          active ? 'text-green-bright' : 'text-cream/80 hover:text-cream',
         )}
       >
         {label}
       </Link>
-      {/* Podčrtaj aktivne strani deli isti layoutId, zato med stranmi
-          zdrsne namesto da bi utripnil na novem mestu (§7). */}
       {active && (
         <motion.span
           layoutId={large ? 'nav-active-mobile' : 'nav-active-desktop'}
-          className="absolute -bottom-1.5 left-0 right-0 h-0.5 rounded-full bg-green-light"
+          className="absolute -bottom-1.5 left-0 right-0 h-0.5 rounded-full bg-green-bright"
           transition={reduceMotion ? crossFade : springUI}
         />
       )}
@@ -79,51 +72,54 @@ function NavLink({
   );
 }
 
-/**
- * Mobilni predal z vlečenjem za zapiranje.
- *
- * Trije principi skilla, ki jih prejšnja izvedba ni imela:
- *  - §3 prekinljivost — predal se da zagrabiti med letom in obrniti;
- *    Framerjev drag animira iz trenutne (prikazane) vrednosti, ne iz
- *    ciljne, zato ob prekinitvi ni preskoka.
- *  - §6 projekcija momenta — ob spustu ne gledamo, kje je prst, ampak
- *    kam gre; flick torej res vrže predal ven.
- *  - §9 rubber-banding — `dragElastic` proti zaprti smeri daje
- *    postopen upor namesto trdega ustavka.
- */
-function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function Header() {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
-  const panelRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [condensed, setCondensed] = useState(false);
+  const { scrollY } = useScroll();
+
+  const islandRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleDragEnd = useCallback(
-    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      // Ciljno točko izbere projekcija, ne točka spusta (§6).
-      const projected = info.offset.x + project(info.velocity.x);
-      if (projected > DRAWER_WIDTH / 2) onClose();
-    },
-    [onClose],
-  );
+  useMotionValueEvent(scrollY, 'change', (y) => {
+    setCondensed(y > 24);
+  });
 
-  // Escape zapre predal — brez tega uporabnika ujamemo (§16 wayfinding).
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
   useEffect(() => {
-    if (!open) return;
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Če se okno razširi čez `md`, se otok vrne v namizno obliko — odprt
+  // mobilni panel bi tam ostal viseti in držal scroll zaklenjen.
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 768px)');
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setMenuOpen(false);
+    };
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') setMenuOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+  }, [menuOpen]);
 
-  // Fokus zadržimo v predalu, dokler je odprt.
+  // Fokus ostane v razširjenem otoku, dokler je odprt.
   useEffect(() => {
-    if (!open) return;
+    if (!menuOpen) return;
     closeButtonRef.current?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+      if (e.key !== 'Tab' || !islandRef.current) return;
+      const focusable = islandRef.current.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled])',
       );
       if (focusable.length === 0) return;
@@ -141,11 +137,10 @@ function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+  }, [menuOpen]);
 
-  // Zaklep scrolla brez skoka postavitve: nadomestimo širino scrollbara.
   useEffect(() => {
-    if (!open) return;
+    if (!menuOpen) return;
     const { body } = document;
     const previousOverflow = body.style.overflow;
     const previousPadding = body.style.paddingRight;
@@ -158,153 +153,87 @@ function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
       body.style.overflow = previousOverflow;
       body.style.paddingRight = previousPadding;
     };
-  }, [open]);
+  }, [menuOpen]);
+
+  /**
+   * Otok se je razširil navzdol, zato se zloži navzgor — vstop in izstop
+   * po isti poti (§7). Cilj izbere projekcija hitrosti, ne točka spusta
+   * (§6): flick navzgor ga zloži tudi sredi poti.
+   */
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const projected = info.offset.y + project(info.velocity.y);
+    if (projected < -COLLAPSE_THRESHOLD) setMenuOpen(false);
+  }, []);
+
+  const panelItem = {
+    hidden: reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 },
+    visible: { opacity: 1, y: 0, transition: springUI },
+  };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Modalno opravilo: zatemnitev za fokus (§12 "dim to focus"). */}
+    <>
+      {/* Modalno opravilo na mobilnem: zatemnitev za fokus (§12). */}
+      <AnimatePresence>
+        {menuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={crossFade}
-            onClick={onClose}
+            onClick={closeMenu}
             className="fixed inset-0 z-40 bg-green-deep/50 md:hidden"
           />
+        )}
+      </AnimatePresence>
 
-          <motion.div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigacija"
-            /* Vstop in izstop po isti poti — noter z desne, ven na desno (§7). */
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={reduceMotion ? crossFade : springSheet}
-            drag={reduceMotion ? false : 'x'}
-            dragDirectionLock
-            dragConstraints={{ left: 0, right: 0 }}
-            /* Elastika samo v smeri zapiranja: proti levi je meja trda,
-               proti desni predal sledi z upadajočim uporom. */
-            dragElastic={{ left: 0, right: 0.9 }}
-            dragMomentum={false}
-            onDragEnd={handleDragEnd}
-            style={{
-              width: DRAWER_WIDTH,
-              backgroundColor: 'var(--material-sheet)',
-              backdropFilter: 'blur(var(--material-sheet-blur))',
-              WebkitBackdropFilter: 'blur(var(--material-sheet-blur))',
-            }}
-            className="fixed top-0 right-0 bottom-0 z-50 shadow-2xl md:hidden"
-          >
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between px-5 py-4">
-                {/* Oprijemalo namigne, da se predal da povleči (§8). */}
-                <div
-                  aria-hidden
-                  className="h-1 w-9 rounded-full bg-green-deep/25"
-                  style={{ cursor: 'grab' }}
-                />
-                <button
-                  ref={closeButtonRef}
-                  onClick={onClose}
-                  className="touch-manipulation p-2 text-green-deep transition-colors duration-200 hover:text-green-light"
-                  aria-label="Zapri meni"
-                >
-                  <HiX className="h-6 w-6" />
-                </button>
-              </div>
-
-              <nav className="flex flex-col gap-7 px-6 py-4">
-                {navLinks.map((link) => (
-                  <NavLink
-                    key={link.href}
-                    href={link.href}
-                    label={link.label}
-                    large
-                    active={pathname === link.href}
-                    onNavigate={onClose}
-                  />
-                ))}
-
-                <Pressable
-                  href="/#visit"
-                  variant="secondary"
-                  onClick={onClose}
-                  className="mt-2 w-full py-3"
-                >
-                  Obiščite nas
-                </Pressable>
-              </nav>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-export default function Header() {
-  const pathname = usePathname();
-  const reduceMotion = useReducedMotion();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [overlapping, setOverlapping] = useState(false);
-  const { scrollY } = useScroll();
-
-  // Material se odebeli šele takrat, ko vsebina res pride pod chrome
-  // (§12) — ne kot dekoracija ob poljubnem pragu.
-  useMotionValueEvent(scrollY, 'change', (y) => {
-    setOverlapping(y > 24);
-  });
-
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
-
-  // Predal zapremo ob navigaciji, tudi če jo sproži gib nazaj.
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  /**
-   * Če se okno med odprtim predalom razširi čez `md`, predal izgine
-   * (`md:hidden`), `menuOpen` pa ostane `true` — scroll bi ostal zaklenjen
-   * in uporabnik ujet brez vidnega izhoda (§16: nikoli ne ujmi uporabnika).
-   * Ob prehodu na namizno širino ga zato zapremo.
-   */
-  useEffect(() => {
-    const query = window.matchMedia('(min-width: 768px)');
-    const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches) setMenuOpen(false);
-    };
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
-  }, []);
-
-  return (
-    <>
-      <motion.header
-        initial={reduceMotion ? { opacity: 0 } : { y: -64, opacity: 0 }}
-        animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
-        transition={reduceMotion ? crossFade : springUI}
-        style={{
-          backgroundColor: 'var(--material-chrome)',
-          backdropFilter: `blur(var(--material-chrome-blur)) saturate(180%)`,
-          WebkitBackdropFilter: `blur(var(--material-chrome-blur)) saturate(180%)`,
-        }}
-        className="fixed top-0 right-0 left-0 z-50"
-      >
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <div className="flex items-center justify-between py-2">
-            <Link href="/" aria-label="Domačija Tešlan — domov" className="group inline-flex">
+      {/* Ovoj ne prestreza klikov, da ostane stran okoli otoka klikljiva. */}
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 md:px-6 md:pt-4">
+        <motion.div
+          ref={islandRef}
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -24 }}
+          animate={
+            reduceMotion
+              ? { opacity: 1 }
+              : {
+                  opacity: 1,
+                  y: 0,
+                  // Otok se ob scrollu skrči. Enakomeren `scale` je
+                  // compositor-friendly in ne popači besedila, drugače kot
+                  // animiranje širine ali korekcija merila pri `layout` (§11).
+                  scale: condensed && !menuOpen ? 0.965 : 1,
+                }
+          }
+          transition={reduceMotion ? crossFade : springUI}
+          drag={reduceMotion || !menuOpen ? false : 'y'}
+          dragDirectionLock
+          dragConstraints={{ top: 0, bottom: 0 }}
+          /* Elastika samo navzgor: proti spodaj je meja trda, navzgor
+             otok sledi z upadajočim uporom (§9 rubber-banding). */
+          dragElastic={{ top: 0.9, bottom: 0 }}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          style={{
+            transformOrigin: 'top center',
+            borderRadius: 'var(--island-radius)',
+            backgroundColor: 'var(--material-island)',
+            backdropFilter: 'blur(var(--material-island-blur)) saturate(180%)',
+            WebkitBackdropFilter: 'blur(var(--material-island-blur)) saturate(180%)',
+            border: '1px solid var(--material-island-edge)',
+            boxShadow: 'var(--material-island-shadow)',
+            willChange: 'transform',
+          }}
+          className="pointer-events-auto w-full max-w-6xl overflow-hidden"
+        >
+          {/* Vrstica, ki je vidna vedno. */}
+          <div className="flex items-center justify-between gap-4 px-4 py-2.5 md:px-6">
+            <Link href="/" aria-label="Domačija Tešlan — domov" className="inline-flex shrink-0">
               <Image
                 src="/logo.png"
                 alt=""
-                width={48}
-                height={48}
+                width={44}
+                height={44}
                 priority
-                className="h-12 w-12 object-contain"
+                className="h-11 w-11 object-contain"
               />
             </Link>
 
@@ -317,35 +246,85 @@ export default function Header() {
                   active={pathname === link.href}
                 />
               ))}
-              {/* Prej je bilo `#visit`, kar na /about in /products ni
-                  vodilo nikamor, ker sekcija obstaja le na domači strani. */}
-              <Pressable href="/#visit" variant="secondary" className="px-5 py-1.5">
+              <Pressable href="/#visit" variant="primary" className="px-5 py-1.5">
                 Obiščite nas
               </Pressable>
             </nav>
 
             <button
+              ref={menuOpen ? closeButtonRef : undefined}
               onClick={() => setMenuOpen((v) => !v)}
-              className="touch-manipulation p-2 text-green-deep transition-colors duration-200 hover:text-green-light md:hidden"
+              className="touch-manipulation p-2 text-cream transition-colors duration-200 hover:text-green-bright md:hidden"
               aria-label={menuOpen ? 'Zapri meni' : 'Odpri meni'}
               aria-expanded={menuOpen}
             >
               {menuOpen ? <HiX className="h-6 w-6" /> : <HiMenu className="h-6 w-6" />}
             </button>
           </div>
-        </div>
 
-        {/* Scroll edge effect namesto trde 1px črte (§12): rob se pojavi
-            samo takrat, ko vsebina res teče pod plavajočim chromom. */}
-        <motion.div
-          aria-hidden
-          animate={{ opacity: overlapping ? 1 : 0 }}
-          transition={crossFade}
-          className="pointer-events-none absolute top-full right-0 left-0 h-4 bg-gradient-to-b from-green-deep/10 to-transparent"
-        />
-      </motion.header>
+          {/**
+           * Razširitev otoka.
+           *
+           * Višino animira panel sam (`height: 0 -> auto`), otok pa mu z
+           * `overflow-hidden` sledi. Namenoma ne uporabljam `layout`:
+           * ta bi višino animiral s korekcijo merila, kar med prehodom
+           * popači besedilo v vrstici nad panelom.
+           */}
+          <AnimatePresence initial={false}>
+            {menuOpen && (
+              <motion.div
+                key="panel"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={reduceMotion ? crossFade : springSheet}
+                className="md:hidden"
+              >
+                <motion.nav
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.05, delayChildren: 0.06 } },
+                  }}
+                  className="flex flex-col gap-6 px-6 pt-2 pb-6"
+                  aria-label="Navigacija"
+                >
+                  {navLinks.map((link) => (
+                    <motion.div key={link.href} variants={panelItem}>
+                      <NavLink
+                        href={link.href}
+                        label={link.label}
+                        large
+                        active={pathname === link.href}
+                        onNavigate={closeMenu}
+                      />
+                    </motion.div>
+                  ))}
 
-      <Drawer open={menuOpen} onClose={closeMenu} />
+                  <motion.div variants={panelItem}>
+                    <Pressable
+                      href="/#visit"
+                      variant="primary"
+                      onClick={closeMenu}
+                      className="w-full py-3"
+                    >
+                      Obiščite nas
+                    </Pressable>
+                  </motion.div>
+
+                  {/* Oprijemalo namigne, da se otok da zložiti navzgor (§8). */}
+                  {!reduceMotion && (
+                    <motion.div variants={panelItem} className="flex justify-center pt-1">
+                      <div aria-hidden className="h-1 w-9 rounded-full bg-cream/25" />
+                    </motion.div>
+                  )}
+                </motion.nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
     </>
   );
 }

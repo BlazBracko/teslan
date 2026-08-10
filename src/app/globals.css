@@ -28,13 +28,20 @@
    naredijo motne, ko uporabnik prosi za manj prosojnosti.
    ───────────────────────────────────────────────────────────── */
 :root {
-  /* Nad temnim herojem se krema pod ~0,8 bere kot umazano siva —
-     material mora ostati krema, ne postati siv film. */
-  --material-chrome: rgba(245, 240, 232, 0.86);
-  --material-chrome-blur: 20px;
-  --material-sheet: rgba(245, 240, 232, 0.88);
-  --material-sheet-blur: 24px;
-  --material-edge: rgba(255, 255, 255, 0.5);
+  /* Plavajoči otok (navigacija).
+     Temna prosojna plast deluje nad temnim herojem in nad kremnimi
+     sekcijami; svetel 1px rob je svetloba, ki se ujame na materialu (§12).
+     Radij ≈ 30 % višine vrstice — razmerje Dynamic Islanda. */
+  /* Polnilo je namerno svetlejše od `green-deep`. Pri barvi green-deep
+     je bil otok nad temnim blokom podstrani neviden — definiral ga je
+     samo 1px rob. Nad kremo se videz skoraj ne spremeni. */
+  --material-island: rgba(38, 74, 52, 0.78);
+  --material-island-blur: 24px;
+  --material-island-edge: rgba(245, 240, 232, 0.16);
+  /* Večja površina naj se bere kot debelejša: globlja senca jo dvigne
+     nad katero koli podlago (§12). */
+  --material-island-shadow: 0 8px 32px rgba(26, 58, 42, 0.2);
+  --island-radius: 22px;
 
   /* Trajanja springov — Applova "response" (§4) */
   --response-snap: 0.25s;
@@ -202,21 +209,16 @@
 
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --material-chrome: #f5f0e8;
-    --material-chrome-blur: 0px;
-    --material-sheet: #f5f0e8;
-    --material-sheet-blur: 0px;
-    --material-edge: var(--color-cream-dark);
+    --material-island: #1a3a2a;
+    --material-island-blur: 0px;
   }
 }
 
 @media (prefers-contrast: more) {
   :root {
-    --material-chrome: #f5f0e8;
-    --material-chrome-blur: 0px;
-    --material-sheet: #f5f0e8;
-    --material-sheet-blur: 0px;
-    --material-edge: var(--color-green-deep);
+    --material-island: #1a3a2a;
+    --material-island-blur: 0px;
+    --material-island-edge: var(--color-cream);
   }
 
   body {
