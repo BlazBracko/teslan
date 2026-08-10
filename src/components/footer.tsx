@@ -1,99 +1,59 @@
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { contact } from '@/data/contact';
 
+const pages = [
+  { href: '/', label: 'Domov' },
+  { href: '/products', label: 'Izdelki' },
+  { href: '/about', label: 'O nas' },
+  { href: '/privacyPolicy', label: 'Zasebnost' },
+];
+
+const linkClass =
+  'type-small touch-manipulation text-cream/75 transition-colors duration-200 hover:text-green-bright';
+
 export default function Footer() {
   return (
-    <footer className="bg-[#1a3a2a] text-[#f5f0e8]">
-      {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-12 py-9">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {/* Column 1 - Brand */}
-          <div className="space-y-4">
+    <footer className="bg-green-deep text-cream">
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-12">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="Tešlan logo"
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
-              <span className="text-xl font-bold">Tešlan</span>
+              <Image src="/logo.png" alt="" width={48} height={48} className="rounded-full" />
+              <span className="type-h3 text-cream">Tešlan</span>
             </div>
-            <p className="text-sm text-[#e5dcc8]">
-              Domačija Tešlan — Podgora, Dolenjska
-            </p>
+            <p className="type-small text-cream/75">Domačija Tešlan — Podgora, Dolenjska</p>
           </div>
 
-          {/* Column 2 - Pages */}
-          <div>
-            <h4 className="font-semibold text-lg mb-4">Strani</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/"
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
-                  Domov
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/products"
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
-                  Izdelki
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
-                  O nas
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacyPolicy"
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
-                  Zasebnost
-                </Link>
-              </li>
+          <nav aria-label="Strani">
+            <h2 className="type-label mb-4 text-green-bright">Strani</h2>
+            <ul className="flex flex-col gap-2">
+              {pages.map((page) => (
+                <li key={page.href}>
+                  <Link href={page.href} className={linkClass}>
+                    {page.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
 
-          {/* Column 3 - Contact */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Kontakt</h4>
-            <ul className="space-y-2">
+            <h2 className="type-label mb-4 text-green-bright">Kontakt</h2>
+            <ul className="flex flex-col gap-2">
               <li>
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
+                <a href={`mailto:${contact.email}`} className={linkClass}>
                   {contact.email}
                 </a>
               </li>
               <li>
-                <a
-                  href={`tel:${contact.phone.replace(/\s/g, '')}`}
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
+                <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className={linkClass}>
                   {contact.phone}
                 </a>
               </li>
               <li>
-                <a
-                  href={contact.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#e5dcc8] hover:text-[#6b8e23] transition-colors"
-                >
-                  Navodila za pot →
+                <a href={contact.mapsUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                  Navodila za pot <span aria-hidden>→</span>
                 </a>
               </li>
             </ul>
@@ -101,11 +61,11 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="border-t border-[#2d5a3f]">
-        <div className="max-w-7xl mx-auto px-12 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#e5dcc8]">
-            <p>© 2025 Domačija Tešlan. Vse pravice pridržane.</p>
+      <div className="border-t border-cream/15">
+        <div className="mx-auto max-w-7xl px-6 py-6 md:px-12">
+          <div className="type-small flex flex-col items-center justify-between gap-4 text-cream/70 md:flex-row">
+            {/* Leto je bilo trdo zapisano na 2025 in je zastarelo. */}
+            <p>© {new Date().getFullYear()} Domačija Tešlan. Vse pravice pridržane.</p>
             <p className="italic">Izdelano z ljubeznijo na Dolenjskem.</p>
           </div>
         </div>

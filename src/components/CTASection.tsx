@@ -1,57 +1,35 @@
-'use client';
-
-import { motion } from 'framer-motion';
+import Reveal from '@/components/ui/Reveal';
+import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
 
 export default function CTASection() {
   return (
-    <section className="bg-[#2d5a3f] py-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="space-y-6"
-        >
-          {/* Title */}
-          <h2
-            className="text-3xl sm:text-4xl font-bold text-[#f5f0e8]"
-            style={{ fontFamily: 'DM Serif Display, serif' }}
-          >
-            Sveže iz kmetije, danes na vaši mizi
-          </h2>
+    <section className="bg-green-mid py-20">
+      <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+        <Reveal className="flex flex-col items-center gap-6">
+          <h2 className="type-h2 text-cream">Sveže iz kmetije, danes na vaši mizi</h2>
 
-          {/* Subtitle */}
-          <p className="text-[#f5f0e8] text-lg max-w-2xl mx-auto">
+          <p className="type-body-lg on-material max-w-2xl text-cream/90">
             Pokličite nas ali pa kar pridite. Vedno smo veseli novih obrazov na naši kmetiji.
           </p>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            {/* Primary CTA - Phone */}
-            <motion.a
+          <div className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:justify-center">
+            {/* Klic je primarna akcija — ne skrivamo je pod enak videz
+                kot navodila za pot (§16 hierarhija). */}
+            <Pressable
               href={`tel:${contact.phone.replace(/\s/g, '')}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-[#f5f0e8] text-[#1a3a2a] font-semibold rounded-full hover:bg-[#e5dcc8] transition-all shadow-lg"
+              external={false}
+              variant="primary"
+              ariaLabel={`Pokličite ${contact.phoneDisplay}`}
             >
               {contact.phoneDisplay}
-            </motion.a>
+            </Pressable>
 
-            {/* Secondary CTA - Directions */}
-            <motion.a
-              href={contact.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 border-2 border-[#f5f0e8] text-[#f5f0e8] font-semibold rounded-full hover:bg-[#f5f0e8] hover:text-[#2d5a3f] transition-all"
-            >
-              Navodila za pot →
-            </motion.a>
+            <Pressable href={contact.mapsUrl} external variant="onDark">
+              Navodila za pot <span aria-hidden>→</span>
+            </Pressable>
           </div>
-        </motion.div>
+        </Reveal>
       </div>
     </section>
   );

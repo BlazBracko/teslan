@@ -1,8 +1,11 @@
 @import 'tailwindcss';
-@import 'slick-carousel/slick/slick.css';
-@import 'slick-carousel/slick/slick-theme.css';
 
-@theme inline {
+/* ─────────────────────────────────────────────────────────────
+   Design tokens
+   Paleta je predpisana v navodila.md — vsaka vrednost tu je
+   namerna izbira, ne priložnostni hex v komponenti.
+   ───────────────────────────────────────────────────────────── */
+@theme {
   --color-green-deep: #1a3a2a;
   --color-green-mid: #2d5a3f;
   --color-green-light: #4a8c5e;
@@ -11,19 +14,212 @@
   --color-cream-dark: #e8e0d0;
   --color-brown: #8b6914;
   --color-brown-light: #c49a2a;
-  --color-text-dark: #1a1a18;
-  --color-text-mid: #4a4a42;
-  --color-text-light: #7a7a70;
+  --color-ink: #1a1a18;
+  --color-ink-mid: #4a4a42;
+  --color-ink-light: #7a7a70;
+
+  --font-display: var(--font-dm-serif-display), Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Materiali (§12)
+   Prosojne plasti so definirane enkrat; media queries spodaj jih
+   naredijo motne, ko uporabnik prosi za manj prosojnosti.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Nad temnim herojem se krema pod ~0,8 bere kot umazano siva —
+     material mora ostati krema, ne postati siv film. */
+  --material-chrome: rgba(245, 240, 232, 0.86);
+  --material-chrome-blur: 20px;
+  --material-sheet: rgba(245, 240, 232, 0.88);
+  --material-sheet-blur: 24px;
+  --material-edge: rgba(255, 255, 255, 0.5);
+
+  /* Trajanja springov — Applova "response" (§4) */
+  --response-snap: 0.25s;
+  --response-ui: 0.4s;
 }
 
 @layer base {
   html {
+    /* Tipografija se skalira z uporabnikovo nastavitvijo (§15) */
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    overflow-x: clip;
+    /* Privzeti scroll container za useScroll je document.scrollingElement,
+       torej <html>. Kot `static` ne more zanesljivo izmeriti relativnih
+       položajev — od tod opozorilo framer-motion v konzoli. */
+    position: relative;
   }
 
   body {
-    font-family: 'Manrope', Arial, Helvetica, sans-serif;
-    overflow-x: hidden;
+    background-color: var(--color-cream);
+    color: var(--color-ink-mid);
+    line-height: 1.7;
+    overflow-x: clip;
+  }
+
+  /* Tracking je odvisen od velikosti — ena vrednost za vse je
+     vedno kje napačna (§15). Velik display tekst gre v minus,
+     body ostane pri 0, majhne oznake v plus. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--color-green-deep);
+    text-wrap: balance;
+  }
+
+  /* Vidna tipkovnična navigacija — prej je ni bilo nikjer. */
+  :focus-visible {
+    outline: 2px solid var(--color-green-light);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Sistem sam skrbi za obroč; ne podvajamo ga ob kliku z miško. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Animiramo samo compositor-friendly lastnosti (§11). */
+  ::selection {
+    background-color: var(--color-green-bright);
+    color: var(--color-green-deep);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Tipska lestvica (§15)
+   Velikost + težo + leading + tracking obravnavamo kot en set,
+   ne gradimo hierarhije samo z velikostjo.
+   ───────────────────────────────────────────────────────────── */
+@utility type-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.5rem + 3.4vw, 3.5rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+}
+
+@utility type-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility type-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+@utility type-h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 1.2rem + 0.6vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+@utility type-body {
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+
+@utility type-body-lg {
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+}
+
+@utility type-small {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
+}
+
+/* Majhno besedilo v verzalkah rabi izrazit plus tracking. */
+@utility type-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility type-nav {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+}
+
+/* Statistike so display font v veliki velikosti — tesen tracking. */
+@utility type-stat {
+  font-family: var(--font-display);
+  font-size: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Vibrancy (§12)
+   Nad prosojno plastjo ploska siva izgubi berljivost — malo več
+   teže in tracking namesto nižjega kontrasta.
+   ───────────────────────────────────────────────────────────── */
+@utility on-material {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Dostopnost (§14) — tri neodvisne preference
+   Reduced motion ne pomeni brez odziva, ampak nežnejši odziv.
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+    /* Prehodi ostanejo za opacity/color (pomagajo razumevanju),
+       transformi ne — te izklopijo komponente same prek
+       useReducedMotion, ker morajo obdržati postavitev. */
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material-chrome: #f5f0e8;
+    --material-chrome-blur: 0px;
+    --material-sheet: #f5f0e8;
+    --material-sheet-blur: 0px;
+    --material-edge: var(--color-cream-dark);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --material-chrome: #f5f0e8;
+    --material-chrome-blur: 0px;
+    --material-sheet: #f5f0e8;
+    --material-sheet-blur: 0px;
+    --material-edge: var(--color-green-deep);
+  }
+
+  body {
+    color: var(--color-ink);
   }
 }

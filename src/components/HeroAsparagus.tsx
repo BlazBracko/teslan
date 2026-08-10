@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import Image from 'next/image';
+import Pressable from '@/components/ui/Pressable';
+import { springUI } from '@/lib/motion';
 
-// Spear configuration for animation
 interface SpearConfig {
   id: string;
   baseX: number;
@@ -17,107 +18,105 @@ interface SpearConfig {
   zIndex: number;
 }
 
-// Desktop values
 const spearsDesktop: SpearConfig[] = [
-  { id: 'spear-1', baseX: -90,  baseY: 50,  explodeX: -400, explodeY: -150, explodeRotate: -40, scale: 0.6,  initialRotate: -25, zIndex: 1 },
-  { id: 'spear-2', baseX: -40,  baseY: 5,   explodeX: -200, explodeY: -200, explodeRotate: -20, scale: 0.8,  initialRotate: -12, zIndex: 2 },
-  { id: 'spear-3', baseX: 8,    baseY: -25, explodeX: 20,   explodeY: -250, explodeRotate: 5,   scale: 1.0,  initialRotate: 3,   zIndex: 3 },
-  { id: 'spear-4', baseX: 50,   baseY: 10,  explodeX: 220,  explodeY: -180, explodeRotate: 25,  scale: 0.75, initialRotate: 15,  zIndex: 2 },
-  { id: 'spear-5', baseX: 85,   baseY: 55,  explodeX: 420,  explodeY: -120, explodeRotate: 45,  scale: 0.55, initialRotate: 28,  zIndex: 1 },
+  { id: 'spear-1', baseX: -90, baseY: 50,  explodeX: -400, explodeY: -150, explodeRotate: -40, scale: 0.6,  initialRotate: -25, zIndex: 1 },
+  { id: 'spear-2', baseX: -40, baseY: 5,   explodeX: -200, explodeY: -200, explodeRotate: -20, scale: 0.8,  initialRotate: -12, zIndex: 2 },
+  { id: 'spear-3', baseX: 8,   baseY: -25, explodeX: 20,   explodeY: -250, explodeRotate: 5,   scale: 1.0,  initialRotate: 3,   zIndex: 3 },
+  { id: 'spear-4', baseX: 50,  baseY: 10,  explodeX: 220,  explodeY: -180, explodeRotate: 25,  scale: 0.75, initialRotate: 15,  zIndex: 2 },
+  { id: 'spear-5', baseX: 85,  baseY: 55,  explodeX: 420,  explodeY: -120, explodeRotate: 45,  scale: 0.55, initialRotate: 28,  zIndex: 1 },
 ];
 
-// Mobile values - smaller explosion, smaller scale
 const spearsMobile: SpearConfig[] = [
-  { id: 'spear-1', baseX: -50,  baseY: 30,  explodeX: -120, explodeY: -80,  explodeRotate: -30, scale: 0.45, initialRotate: -20, zIndex: 1 },
-  { id: 'spear-2', baseX: -25,  baseY: 5,   explodeX: -60,  explodeY: -100, explodeRotate: -15, scale: 0.55, initialRotate: -10, zIndex: 2 },
-  { id: 'spear-3', baseX: 5,    baseY: -15, explodeX: 10,   explodeY: -120, explodeRotate: 5,   scale: 0.65, initialRotate: 3,   zIndex: 3 },
-  { id: 'spear-4', baseX: 35,   baseY: 5,   explodeX: 70,   explodeY: -90,  explodeRotate: 18,  scale: 0.5,  initialRotate: 12,  zIndex: 2 },
-  { id: 'spear-5', baseX: 55,   baseY: 35,  explodeX: 130,  explodeY: -60,  explodeRotate: 35,  scale: 0.4,  initialRotate: 22,  zIndex: 1 },
+  { id: 'spear-1', baseX: -50, baseY: 30,  explodeX: -120, explodeY: -80,  explodeRotate: -30, scale: 0.45, initialRotate: -20, zIndex: 1 },
+  { id: 'spear-2', baseX: -25, baseY: 5,   explodeX: -60,  explodeY: -100, explodeRotate: -15, scale: 0.55, initialRotate: -10, zIndex: 2 },
+  { id: 'spear-3', baseX: 5,   baseY: -15, explodeX: 10,   explodeY: -120, explodeRotate: 5,   scale: 0.65, initialRotate: 3,   zIndex: 3 },
+  { id: 'spear-4', baseX: 35,  baseY: 5,   explodeX: 70,   explodeY: -90,  explodeRotate: 18,  scale: 0.5,  initialRotate: 12,  zIndex: 2 },
+  { id: 'spear-5', baseX: 55,  baseY: 35,  explodeX: 130,  explodeY: -60,  explodeRotate: 35,  scale: 0.4,  initialRotate: 22,  zIndex: 1 },
 ];
 
-// Separate component for animated spear to properly use hooks
+const SPEAR_WIDTH = 160;
+const SPEAR_HEIGHT = 360;
+
+/**
+ * Slika špargljev.
+ *
+ * Tailwind preflight postavi `img { height: auto }`, kar ob eksplicitnem
+ * `width` atributu sproži opozorilo Next.js o pokvarjenem razmerju.
+ * Obe dimenziji zato pripnemo — velikost tako ali tako vodimo prek
+ * `transform: scale`, ki je compositor-friendly (§11).
+ */
+function SpearImage() {
+  return (
+    <Image
+      src="/spargelj22.png"
+      alt=""
+      width={SPEAR_WIDTH}
+      height={SPEAR_HEIGHT}
+      priority
+      className="pointer-events-none select-none"
+      style={{
+        width: `${SPEAR_WIDTH}px`,
+        height: `${SPEAR_HEIGHT}px`,
+        filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.35))',
+      }}
+    />
+  );
+}
+
+/** Scroll-vezan špargelj: 1:1 sledenje scrollu, brez springa (§2). */
 function AnimatedSpear({
   config,
-  scrollYProgress
+  scrollYProgress,
 }: {
   config: SpearConfig;
   scrollYProgress: MotionValue<number>;
 }) {
-  // Explosion starts AFTER fade-in completes
-  const spearX = useTransform(
-    scrollYProgress,
-    [0.1, 0.65],
-    [config.baseX, config.baseX + config.explodeX]
-  );
-  const spearY = useTransform(
-    scrollYProgress,
-    [0.1, 0.65],
-    [config.baseY, config.baseY + config.explodeY]
-  );
-  const spearRotate = useTransform(
-    scrollYProgress,
-    [0.1, 0.65],
-    [config.initialRotate, config.initialRotate + config.explodeRotate]
-  );
-  const spearScale = useTransform(
-    scrollYProgress,
-    [0.1, 0.65],
-    [config.scale, config.scale * 0.5]
-  );
-  // Hidden at start, fade in, stay visible, then fade out
-  const spearOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.05, 0.12, 0.6, 0.75],
-    [0, 0, 1, 1, 0]
-  );
+  const range: [number, number] = [0.1, 0.65];
 
-  // Calculate image dimensions based on config scale
-  const baseWidth = 160;
-  const baseHeight = 360;
+  const x = useTransform(scrollYProgress, range, [config.baseX, config.baseX + config.explodeX]);
+  const y = useTransform(scrollYProgress, range, [config.baseY, config.baseY + config.explodeY]);
+  const rotate = useTransform(scrollYProgress, range, [
+    config.initialRotate,
+    config.initialRotate + config.explodeRotate,
+  ]);
+  const scale = useTransform(scrollYProgress, range, [config.scale, config.scale * 0.5]);
+  // Velik premikajoč objekt naj med potovanjem postane prosojen (§14).
+  const opacity = useTransform(scrollYProgress, [0, 0.05, 0.12, 0.6, 0.75], [0, 0, 1, 1, 0]);
 
   return (
     <motion.div
-      style={{
-        x: spearX,
-        y: spearY,
-        rotate: spearRotate,
-        scale: spearScale,
-        opacity: spearOpacity,
-        zIndex: config.zIndex,
-        willChange: 'transform, opacity',
-      }}
+      style={{ x, y, rotate, scale, opacity, zIndex: config.zIndex, willChange: 'transform, opacity' }}
       className="absolute"
     >
-      <Image
-        src="/spargelj22.png"
-        alt="Špargel"
-        width={baseWidth}
-        height={baseHeight}
-        className="pointer-events-none select-none"
-        style={{
-          filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.35))',
-        }}
-        priority
-      />
+      <SpearImage />
     </motion.div>
   );
 }
 
-// Separate component for scroll indicator
+/** Mirujoč špargelj za reduced motion — kompozicija ostane, gibanja ni. */
+function StaticSpear({ config }: { config: SpearConfig }) {
+  return (
+    <div
+      style={{
+        transform: `translate(${config.baseX}px, ${config.baseY}px) rotate(${config.initialRotate}deg) scale(${config.scale})`,
+        zIndex: config.zIndex,
+      }}
+      className="absolute"
+    >
+      <SpearImage />
+    </div>
+  );
+}
+
 function ScrollIndicator({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const opacity = useTransform(scrollYProgress, [0.03, 0.12], [1, 0]);
 
   return (
-    <motion.div
-      style={{ opacity }}
-      className="text-[#f5f1e8]/60 text-sm flex flex-col items-center gap-2"
-    >
-      <span>Pomikaj navzdol</span>
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <motion.div style={{ opacity }} className="flex flex-col items-center gap-2 text-cream/60">
+      <span className="type-small">Pomikaj navzdol</span>
+      {/* 1,5 s cikel ≈ 0,67 Hz — nad mejo, pred katero skill svari (§14). */}
+      <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M12 5v14M5 12l7 7 7-7" />
         </svg>
       </motion.div>
@@ -125,144 +124,141 @@ function ScrollIndicator({ scrollYProgress }: { scrollYProgress: MotionValue<num
   );
 }
 
+const stats = [
+  { value: '15+', label: 'let izkušenj' },
+  { value: '100%', label: 'ekološko' },
+  { value: '4km', label: 'od NM' },
+];
+
+function HeroContent({ reduceMotion }: { reduceMotion: boolean }) {
+  // Vstopna koreografija: kratek stagger, spring brez prekoračitve.
+  const item = {
+    hidden: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: springUI },
+  };
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}
+      className="relative z-10 flex h-screen flex-col items-center justify-center px-4 text-center"
+    >
+      <motion.div variants={item} className="mb-6 md:mb-8">
+        <span className="type-label inline-block rounded-full border border-cream/40 px-5 py-2.5 text-cream">
+          Domačija Tešlan — Dolenjska
+        </span>
+      </motion.div>
+
+      <motion.h1 variants={item} className="type-display mb-4 max-w-4xl text-cream md:mb-6">
+        Iz naše zemlje,
+        <br />
+        na vašo <span className="text-green-bright italic">mizo</span>
+      </motion.h1>
+
+      <motion.p variants={item} className="type-body-lg mb-10 max-w-xl text-cream/80 md:mb-14">
+        Ekološko pridelana zelenjava in sadje, neposredno z njive na vašo mizo.
+      </motion.p>
+
+      <motion.div variants={item} className="mb-20 flex flex-col gap-4 sm:flex-row md:mb-24">
+        <Pressable href="/#visit" variant="primary">
+          Pridite k nam
+          <span aria-hidden>→</span>
+        </Pressable>
+        <Pressable href="/products" variant="onDark">
+          Naši izdelki
+        </Pressable>
+      </motion.div>
+
+      <motion.div variants={item} className="grid max-w-2xl grid-cols-3 gap-8 md:gap-16">
+        {stats.map((stat) => (
+          <div key={stat.label} className="text-center">
+            <div className="type-stat mb-1 text-green-bright">{stat.value}</div>
+            <div className="type-label text-cream/70">{stat.label}</div>
+          </div>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function DotPattern() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0 opacity-[0.07]"
+      style={{
+        backgroundImage: 'radial-gradient(circle, var(--color-cream) 1.5px, transparent 1.5px)',
+        backgroundSize: '32px 32px',
+      }}
+    />
+  );
+}
+
 export default function HeroAsparagus() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile screen
+  // matchMedia namesto poslušanja vsakega piksla resize — enak rezultat,
+  // brez dogodka na vsak premik roba okna.
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const query = window.matchMedia('(max-width: 767px)');
+    setIsMobile(query.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
   }, []);
 
-  // Use appropriate spear config based on screen size
   const spears = isMobile ? spearsMobile : spearsDesktop;
 
-  // Set up scroll-linked animation
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end start'],
   });
 
-  // Hero text fade out
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.15], [0, -60]);
 
+  /**
+   * Reduced motion (§14): 300vh scroll-vezana eksplozija je ravno tisto
+   * gibanje čez cel viewport, pred katerim skill svari. Zložimo jo v en
+   * mirujoč zaslon — kompozicija in sporočilo ostaneta enaka.
+   */
+  if (reduceMotion) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-green-deep">
+        <DotPattern />
+        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="relative flex items-center justify-center" style={{ width: 300, height: 400 }}>
+            {spears.map((spear) => (
+              <StaticSpear key={spear.id} config={spear} />
+            ))}
+          </div>
+        </div>
+        <HeroContent reduceMotion />
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="relative h-[300vh]">
-      {/* Sticky container that holds the animation */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#1a3a2a]">
-        {/* Background dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage: `radial-gradient(circle, #f5f1e8 1.5px, transparent 1.5px)`,
-            backgroundSize: '32px 32px',
-          }}
-        />
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-green-deep">
+        <DotPattern />
 
-        {/* Asparagus Spears - Behind text on mobile, around text on desktop */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative flex items-center justify-center" style={{ width: '300px', height: '400px' }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="relative flex items-center justify-center" style={{ width: 300, height: 400 }}>
             {spears.map((spear) => (
-              <AnimatedSpear
-                key={spear.id}
-                config={spear}
-                scrollYProgress={scrollYProgress}
-              />
+              <AnimatedSpear key={spear.id} config={spear} scrollYProgress={scrollYProgress} />
             ))}
           </div>
         </div>
 
-        {/* Hero Content */}
-        <motion.div
-          style={{ opacity: heroOpacity, y: heroY }}
-          className="relative z-10 flex flex-col items-center justify-center h-screen px-4 text-center"
-        >
-          {/* Tag Pill */}
-          <motion.div
-            className="mb-6 md:mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <span className="inline-block px-5 py-2.5 border border-[#f5f1e8]/40 text-[#f5f1e8] text-xs md:text-sm font-medium tracking-widest uppercase rounded-full backdrop-blur-sm">
-              Domačija Tešlan — Dolenjska
-            </span>
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            className="mb-4 md:mb-6 text-4xl md:text-5xl lg:text-7xl text-[#f5f1e8] leading-[1.1] max-w-4xl"
-            style={{ fontFamily: 'var(--font-display), serif' }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-          >
-            Iz naše zemlje,<br />
-            na vašo <span className="italic text-[#7bc47f]">mizo</span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            className="mb-10 md:mb-14 text-base md:text-lg lg:text-xl text-[#f5f1e8]/80 max-w-xl leading-relaxed"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-          >
-            Ekološko pridelana zelenjava in sadje, neposredno z njive na vašo mizo.
-          </motion.p>
-
-          {/* Buttons */}
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4 mb-20 md:mb-24"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.8 }}
-          >
-            <a
-              href="#visit"
-              className="group px-8 py-4 bg-[#7bc47f] text-[#1a3a2a] font-semibold rounded-full hover:bg-[#8fd493] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
-            >
-              Pridite k nam
-              <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
-            </a>
-            <a
-              href="/products"
-              className="px-8 py-4 border-2 border-[#f5f1e8]/50 text-[#f5f1e8] font-semibold rounded-full hover:bg-[#f5f1e8]/10 hover:border-[#f5f1e8] transition-all duration-300"
-            >
-              Naši izdelki
-            </a>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            className="grid grid-cols-3 gap-8 md:gap-16 max-w-2xl"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.0 }}
-          >
-            <div className="text-center">
-              <div className="text-3xl md:text-5xl font-bold text-[#7bc47f] mb-1" style={{ fontFamily: 'var(--font-display), serif' }}>15+</div>
-              <div className="text-xs md:text-sm text-[#f5f1e8]/70 uppercase tracking-wider">let izkušenj</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-5xl font-bold text-[#7bc47f] mb-1" style={{ fontFamily: 'var(--font-display), serif' }}>100%</div>
-              <div className="text-xs md:text-sm text-[#f5f1e8]/70 uppercase tracking-wider">ekološko</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-5xl font-bold text-[#7bc47f] mb-1" style={{ fontFamily: 'var(--font-display), serif' }}>4km</div>
-              <div className="text-xs md:text-sm text-[#f5f1e8]/70 uppercase tracking-wider">od NM</div>
-            </div>
-          </motion.div>
+        <motion.div style={{ opacity: heroOpacity, y: heroY }}>
+          <HeroContent reduceMotion={false} />
         </motion.div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-0 right-0 text-center z-20">
+        <div className="absolute bottom-8 right-0 left-0 z-20 text-center">
           <ScrollIndicator scrollYProgress={scrollYProgress} />
         </div>
       </div>

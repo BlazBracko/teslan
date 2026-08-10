@@ -1,99 +1,67 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { Product } from '@/data/products';
+import { springUI } from '@/lib/motion';
+import { usePress } from '@/components/ui/Pressable';
+import { cn } from '@/lib/utils';
 
-interface ProductCardProps {
-  product: Product;
-}
-
-const statusConfig = {
-  available: {
-    label: 'Na voljo',
-    color: '#6fb583'
-  },
-  soon: {
-    label: 'Kmalu',
-    color: '#a67c52'
-  },
-  autumn: {
-    label: 'Jesen',
-    color: 'rgba(245, 240, 232, 0.7)'
-  }
+/**
+ * Barve značk pridejo iz palete, ne iz priložnostnih hexov.
+ * Prej so bile tu tri barve (#6fb583, #a67c52), ki v paleti ne obstajajo.
+ */
+const statusStyle: Record<Product['status'], string> = {
+  available: 'bg-green-bright text-green-deep',
+  soon: 'bg-brown-light text-green-deep',
+  autumn: 'bg-brown text-cream',
 };
 
-export default function ProductCard({ product }: ProductCardProps) {
-  const status = statusConfig[product.status];
+export default function ProductCard({ product }: { product: Product }) {
+  const reduceMotion = useReducedMotion();
+  const { pressed, handlers } = usePress();
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.3 }}
-      className="rounded-2xl overflow-hidden border"
-      style={{
-        backgroundColor: 'rgba(245, 240, 232, 0.06)',
-        borderColor: 'rgba(245, 240, 232, 0.08)',
-        borderWidth: '1px'
-      }}
+    <motion.article
+      {...handlers}
+      animate={
+        reduceMotion
+          ? { opacity: pressed ? 0.85 : 1 }
+          : { scale: pressed ? 0.985 : 1 }
+      }
+      whileHover={reduceMotion ? undefined : { y: -4 }}
+      transition={springUI}
+      className="touch-manipulation overflow-hidden rounded-2xl border border-cream/10 bg-cream/[0.06]"
     >
-      <motion.div
-        className="relative overflow-hidden"
-        style={{ height: '180px' }}
-        whileHover={{ scale: 1.05 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10" />
+      <div className="relative h-45 overflow-hidden">
+        {/* Sence je nad zaposleno vsebino treba več kot nad ravno podlago (§12). */}
+        <div aria-hidden className="absolute inset-0 z-10 bg-gradient-to-t from-green-deep/60 to-transparent" />
         {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-          />
+          <Image src={product.image} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-green-900 to-green-700" />
+          <div className="h-full w-full bg-gradient-to-br from-green-deep to-green-mid" />
         )}
-        <div
-          className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium z-20"
-          style={{
-            backgroundColor: status.color,
-            color: product.status === 'autumn' ? '#1a3a2a' : '#ffffff'
-          }}
+        <span
+          className={cn('type-label absolute top-3 left-3 z-20 rounded-full px-3 py-1', statusStyle[product.status])}
         >
           {product.statusLabel}
-        </div>
-      </motion.div>
+        </span>
+      </div>
 
       <div className="p-6">
-        <h3
-          className="text-2xl mb-2"
-          style={{
-            fontFamily: 'DM Serif Display, serif',
-            color: '#f5f0e8'
-          }}
-        >
-          {product.name}
-        </h3>
-        <p className="text-xs mb-4" style={{ color: 'rgba(245, 240, 232, 0.5)' }}>
-          {product.description}
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: 'rgba(245, 240, 232, 0.6)' }}>
-            {product.season}
-          </span>
-          <a
+        <h3 className="type-h3 mb-2 text-cream">{product.name}</h3>
+        <p className="type-small mb-4 text-cream/65">{product.description}</p>
+        <div className="flex items-center justify-between gap-4">
+          <span className="type-small on-material text-cream/70">{product.season}</span>
+          <Link
             href="/products"
-            className="text-xs px-4 py-1.5 rounded-full border transition-colors hover:bg-white/5"
-            style={{
-              color: '#f5f0e8',
-              borderColor: 'rgba(245, 240, 232, 0.2)'
-            }}
+            className="type-nav touch-manipulation rounded-full border border-cream/25 px-4 py-1.5 text-cream transition-colors duration-200 hover:bg-cream/10"
           >
-            Več →
-          </a>
+            Več <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
