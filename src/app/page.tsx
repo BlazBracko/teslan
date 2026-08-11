@@ -1,4 +1,4 @@
-import HeroAsparagus from '@/components/HeroAsparagus';
+import Hero from '@/components/Hero';
 import ValuesSection from '@/components/ValuesSection';
 import ProductsSection from '@/components/ProductsSection';
 import VisitSection from '@/components/VisitSection';
@@ -7,7 +7,7 @@ import CTASection from '@/components/CTASection';
 export default function HomePage() {
   return (
     <>
-      <HeroAsparagus />
+      <Hero />
       <ValuesSection />
       <ProductsSection />
       <VisitSection />
