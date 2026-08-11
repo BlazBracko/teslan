@@ -1,30 +1,40 @@
 import Hero from '@/components/Hero';
 import ValuesSection from '@/components/ValuesSection';
 import PhotoFeature from '@/components/PhotoFeature';
-import ProductsSection from '@/components/ProductsSection';
+import OfferingSection from '@/components/OfferingSection';
 import VisitSection from '@/components/VisitSection';
 import CTASection from '@/components/CTASection';
 import SectionBridge, { surface } from '@/components/ui/SectionBridge';
+import { getProduct } from '@/data/products';
 
 /**
  * Menjava svetle in temne podlage je namerna, vsaka meja pa dobi mehak
  * prehod. Prej so bile te meje trde in prav to je bila pritožba.
  *
  *   Hero          temno      cel zaslon, centrirano
+ *     ↓ mehak prehod
  *   Vrednote      svetlo     nesimetrična mreža, naslov levo
  *   Šparglji      svetlo     razpolovljeno, fotografija LEVO
  *   Jagode        svetlo     razpolovljeno, fotografija DESNO (zrcalno)
- *   Izdelki       temno      centriran naslov nad mrežo
+ *     ↓ TRD rob (namerno)
+ *   Ponudba       temno      kategorije, velikost sledi številu
+ *     ↓ TRD rob (namerno)
  *   Obiščite nas  svetlo     razpolovljeno, zemljevid desno
+ *     ↓ mehak prehod
  *   CTA           srednje    centrirano
  *
- * Štiri zaporedne sekcije so svetle, zato med njimi prehodov ni — tvorijo
- * en svetel blok in ne štiri ločene menjave.
+ * Tri zaporedne svetle sekcije prehodov med sabo ne rabijo — tvorijo en
+ * svetel blok, ne tri ločene menjave.
  *
  * Prehod od CTA do footerja je tu, ker footer živi v `layout.tsx` in ga
  * stran ne more oviti.
  */
 export default function HomePage() {
+  // Besedila in sezone so iz `data/products.ts` — en vir resnice, da se
+  // opis pridelka ne razhaja med to sekcijo in ostalo stranjo.
+  const sparglji = getProduct('sparglji');
+  const jagode = getProduct('jagode');
+
   return (
     <>
       <Hero />
@@ -32,12 +42,11 @@ export default function HomePage() {
 
       <ValuesSection />
 
-      {/* Besedili in sezoni sta iz `data/products.ts`. */}
       <PhotoFeature
         side="left"
         label="Sezona špargljev"
-        title="April — Junij"
-        description="Sveži zeleni šparglji, ročno pobrani vsako jutro. Nežen okus, popolni za na žar ali v solato."
+        title={sparglji.season}
+        description={sparglji.description}
         src="/slika1.jpeg"
         alt="Šparglji z Domačije Tešlan na žaru, v ozadju vas Podgora"
         cta={{ href: '/products', label: 'Poglej cenik' }}
@@ -46,8 +55,8 @@ export default function HomePage() {
       <PhotoFeature
         side="right"
         label="Sezona jagod"
-        title="Maj — Julij"
-        description="Sladke, sočne jagode pridelane brez pesticidov. Popolne za sveže uživanje ali predelavo."
+        title={jagode.season}
+        description={jagode.description}
         src="/jagodeFB.jpg"
         alt="Jagode na rastlini na njivi Domačije Tešlan"
         /* Zrele rdeče jagode so v spodnji tretjini kadra, ne na sredini. */
@@ -55,10 +64,10 @@ export default function HomePage() {
         cta={{ href: '/products', label: 'Poglej cenik' }}
       />
 
-      <SectionBridge from={surface.light} to={surface.dark} />
-
-      <ProductsSection />
-      <SectionBridge from={surface.dark} to={surface.light} />
+      {/* Ponudba je namerno brez prehoda na obeh straneh: trd rob jo
+          odreže od svetlega bloka nad in pod njo, zato sekcija izstopi
+          kot samostojen blok. Vsi ostali prehodi ostajajo mehki. */}
+      <OfferingSection />
 
       <VisitSection />
       <SectionBridge from={surface.light} to={surface.mid} />

@@ -42,3 +42,13 @@ export const products: Product[] = [
     statusLabel: 'Jesen',
   },
 ];
+
+/**
+ * Iskanje po id. Vrže ob neznanem id — to je server komponenta, zato se
+ * napaka pokaže med buildom in ne tiho na strani.
+ */
+export function getProduct(id: string): Product {
+  const found = products.find((product) => product.id === id);
+  if (!found) throw new Error(`Neznan pridelek: ${id}`);
+  return found;
+}
