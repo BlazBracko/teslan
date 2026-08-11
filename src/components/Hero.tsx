@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import Pressable from '@/components/ui/Pressable';
 import { crossFade, springUI } from '@/lib/motion';
+import { heroScrim } from '@/components/ui/PageBackdrop';
 
 const stats = [
   { value: '15+', label: 'let izkušenj' },
@@ -33,7 +34,9 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-green-deep">
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Ozadje je fiksna plast v layoutu; tu le zaslon za kontrast. */}
+      <div aria-hidden className={heroScrim} />
       <DotPattern />
 
       <motion.div
@@ -52,7 +55,7 @@ export default function Hero() {
         </motion.div>
 
         <motion.h1 variants={item} className="type-display mb-4 max-w-4xl text-cream md:mb-6">
-          Iz naše zemlje,
+          Iz naše zemlje
           <br />
           na vašo <span className="text-green-bright italic">mizo</span>
         </motion.h1>

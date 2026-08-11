@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import PageBackdrop from '@/components/ui/PageBackdrop';
 import { FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
 import PageHeader from '@/components/ui/PageHeader';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
@@ -73,6 +74,7 @@ const contactRows = [
 export default function AboutPage() {
   return (
     <>
+      <PageBackdrop src="/strawberryFields.jpg" />
       <PageHeader
         label="Naša zgodba"
         title="O nas"

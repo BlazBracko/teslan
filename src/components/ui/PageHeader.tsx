@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { crossFade, springUI } from '@/lib/motion';
+import { heroScrim } from '@/components/ui/PageBackdrop';
 
 interface PageHeaderProps {
   label: string;
@@ -28,12 +29,15 @@ export default function PageHeader({ label, title, description }: PageHeaderProp
   };
 
   return (
-    <header className="bg-green-deep pt-28 pb-16 md:pt-36 md:pb-24">
+    <header className="relative pt-28 pb-16 md:pt-36 md:pb-24">
+      {/* Enako kot hero: ozadje pride iz fiksne plasti v layoutu,
+          tu je samo zaslon za kontrast kremnega besedila. */}
+      <div aria-hidden className={heroScrim} />
       <motion.div
         initial="hidden"
         animate="visible"
         variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.07 } } }}
-        className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 text-center"
+        className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 text-center"
       >
         <motion.span variants={item} className="type-label text-green-bright">
           {label}

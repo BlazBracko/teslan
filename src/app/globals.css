@@ -80,6 +80,18 @@
     color: var(--color-ink-mid);
     line-height: 1.7;
     overflow-x: clip;
+    /**
+     * Nujno za fiksno ozadje strani (`PageBackdrop`, z-index -10).
+     *
+     * Brez tega `body` ni stacking context, zato element z negativnim
+     * z-indexom pripada kontekstu `html` in se po vrstnem redu risanja
+     * nariše PRED ozadjem `body`-ja — `background-color` zgoraj ga je nato
+     * v celoti prekril in slike ni bilo videti nikjer.
+     *
+     * `isolation: isolate` naredi `body` stacking context: najprej se
+     * nariše njegovo ozadje, nato negativna plast, nato vsebina.
+     */
+    isolation: isolate;
   }
 
   /* Tracking je odvisen od velikosti — ena vrednost za vse je

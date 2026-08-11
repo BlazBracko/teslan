@@ -9,7 +9,7 @@ export const metadata = {
   keywords: 'kmetija, ekološko, šparglji, Dolenjska, Novo mesto, lokalna hrana',
   openGraph: {
     title: 'Domačija Tešlan',
-    description: 'Iz naše zemlje, na vašo mizo.',
+    description: 'Iz naše zemlje na vašo mizo.',
     locale: 'sl_SI',
   },
 };

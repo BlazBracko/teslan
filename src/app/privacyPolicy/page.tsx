@@ -1,4 +1,5 @@
 import PageHeader from '@/components/ui/PageHeader';
+import PageBackdrop from '@/components/ui/PageBackdrop';
 import Reveal from '@/components/ui/Reveal';
 import { contact } from '@/data/contact';
 import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
@@ -23,6 +24,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PrivacyPolicyPage() {
   return (
     <>
+      <PageBackdrop src="/asparagusField.jpeg" />
       <PageHeader
         label="Pravni dokumenti"
         title="Politika zasebnosti"

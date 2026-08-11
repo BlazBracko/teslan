@@ -1,4 +1,5 @@
 import PageHeader from '@/components/ui/PageHeader';
+import PageBackdrop from '@/components/ui/PageBackdrop';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
@@ -16,6 +17,7 @@ const formatPrice = (price: number) => `${price.toFixed(2).replace('.', ',')} �
 export default function ProductsPage() {
   return (
     <>
+      <PageBackdrop src="/asparagusField.jpeg" />
       <PageHeader
         label="Domačija Tešlan"
         title="Naši izdelki"

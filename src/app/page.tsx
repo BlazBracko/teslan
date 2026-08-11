@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import PageBackdrop from '@/components/ui/PageBackdrop';
 import ValuesSection from '@/components/ValuesSection';
 import PhotoFeature from '@/components/PhotoFeature';
 import OfferingSection from '@/components/OfferingSection';
@@ -37,6 +38,7 @@ export default function HomePage() {
 
   return (
     <>
+      <PageBackdrop src="/strawberryFields.jpg" />
       <Hero />
 
       <div className={sectionStack}>
