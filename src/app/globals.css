@@ -32,12 +32,13 @@
      Temna prosojna plast deluje nad temnim herojem in nad kremnimi
      sekcijami; svetel 1px rob je svetloba, ki se ujame na materialu (§12).
      Radij ≈ 30 % višine vrstice — razmerje Dynamic Islanda. */
-  /* Polnilo je namerno svetlejše od `green-deep`. Pri barvi green-deep
-     je bil otok nad temnim blokom podstrani neviden — definiral ga je
-     samo 1px rob. Nad kremo se videz skoraj ne spremeni. */
-  --material-island: rgba(38, 74, 52, 0.78);
+  /* Polnilo je namerno svetlejše od `green-deep`, sicer se otok nad
+     temno podlago zlije z njo. Izmerjeno po alfa mešanju: pri tej
+     vrednosti je razlika nad `green-deep` ~36 na kanal (prej 10, kar je
+     bilo premalo), nad kremo pa otok ostane temen. */
+  --material-island: rgba(66, 107, 81, 0.85);
   --material-island-blur: 24px;
-  --material-island-edge: rgba(245, 240, 232, 0.16);
+  --material-island-edge: rgba(245, 240, 232, 0.22);
   /* Večja površina naj se bere kot debelejša: globlja senca jo dvigne
      nad katero koli podlago (§12). */
   --material-island-shadow: 0 8px 32px rgba(26, 58, 42, 0.2);
@@ -56,10 +57,14 @@
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     overflow-x: clip;
-    /* Privzeti scroll container za useScroll je document.scrollingElement,
-       torej <html>. Kot `static` ne more zanesljivo izmeriti relativnih
-       položajev — od tod opozorilo framer-motion v konzoli. */
-    position: relative;
+    /* Ozadje korenskega elementa se prenese na platno strani — to je
+       tisto, kar razkrije rubber-band, ko potegneš čez zgornji ali
+       spodnji rob. Vsaka stran se na vrhu začne s temno zelenim blokom
+       in konča s temno zelenim footerjem, zato mora biti platno temno
+       zeleno; kremno je dajalo svetel pas ob skrajnem scrollu.
+       Odboja ne odstranjujem — je fizikalno pravilen (§9), le barva je
+       bila napačna. */
+    background-color: var(--color-green-deep);
   }
 
   body {

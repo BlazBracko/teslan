@@ -15,7 +15,10 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#f5f0e8',
+  // Barva sistemske vrstice na mobilnem. Vsaka stran se na vrhu začne s
+  // temno zelenim blokom, zato mora biti ta; kremna je dajala svetel pas
+  // tam, kjer telefon kaže uro.
+  themeColor: '#1a3a2a',
 };
 
 // Oba fonta se izpostavita kot CSS spremenljivki. Literalno ime
