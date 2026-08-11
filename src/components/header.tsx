@@ -42,6 +42,55 @@ function NavLink({
   const reduceMotion = useReducedMotion();
   const { pressed, handlers } = usePress();
 
+  const barva = active ? 'text-green-bright' : 'text-cream/85 hover:text-cream';
+
+  /* Podčrtaj mora objemati besedilo, ne vrstice — zato je v notranjem
+     `relative` ovoju in ne v tistem, ki se razteza čez širino. */
+  const podcrtaj = active && (
+    <motion.span
+      layoutId={large ? 'nav-active-mobile' : 'nav-active-desktop'}
+      className="absolute -bottom-1.5 right-0 left-0 h-0.5 rounded-full bg-green-bright"
+      transition={reduceMotion ? crossFade : springUI}
+    />
+  );
+
+  /**
+   * V razširjenem otoku je tarča cela vrstica, ne le besedilo.
+   *
+   * Prej je bil ovoj `inline-flex` in `<Link>` je objemal samo besedilo, zato
+   * je bilo treba zadeti natanko črke. Zdaj povezava zapolni vrstico in ima
+   * navpični rob, kar da tarčo nad Applovim minimumom 44px (§10).
+   *
+   * Odziv na pritisk je podlaga cele vrstice, ne skaliranje besedila —
+   * podlaga pove, da je tarča vrstica.
+   */
+  if (large) {
+    return (
+      <motion.div
+        animate={{ backgroundColor: pressed ? 'rgba(245,240,232,0.08)' : 'rgba(245,240,232,0)' }}
+        transition={springSnap}
+        className="-mx-3 rounded-2xl"
+      >
+        <Link
+          href={href}
+          onClick={onNavigate}
+          aria-current={active ? 'page' : undefined}
+          className={cn(
+            'flex min-h-11 touch-manipulation items-center px-3 py-2.5',
+            'text-lg font-semibold transition-colors duration-200',
+            barva,
+          )}
+          {...handlers}
+        >
+          <span className="relative inline-flex">
+            {label}
+            {podcrtaj}
+          </span>
+        </Link>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.span
       className="relative inline-flex"
@@ -53,21 +102,11 @@ function NavLink({
         href={href}
         onClick={onNavigate}
         aria-current={active ? 'page' : undefined}
-        className={cn(
-          'touch-manipulation transition-colors duration-200',
-          large ? 'text-lg font-semibold' : 'type-nav',
-          active ? 'text-green-bright' : 'text-cream/80 hover:text-cream',
-        )}
+        className={cn('type-nav touch-manipulation transition-colors duration-200', barva)}
       >
         {label}
       </Link>
-      {active && (
-        <motion.span
-          layoutId={large ? 'nav-active-mobile' : 'nav-active-desktop'}
-          className="absolute -bottom-1.5 left-0 right-0 h-0.5 rounded-full bg-green-bright"
-          transition={reduceMotion ? crossFade : springUI}
-        />
-      )}
+      {podcrtaj}
     </motion.span>
   );
 }
@@ -287,7 +326,9 @@ export default function Header() {
                     hidden: {},
                     visible: { transition: { staggerChildren: 0.05, delayChildren: 0.06 } },
                   }}
-                  className="flex flex-col gap-6 px-6 pt-2 pb-6"
+                  /* Reža je manjša kot prej: navpični rob vrstic zdaj sam
+                     ustvari ločnico, ob gap-6 pa bi bile vrstice predaleč. */
+                  className="flex flex-col gap-1 px-6 pt-2 pb-6"
                   aria-label="Navigacija"
                 >
                   {navLinks.map((link) => (
