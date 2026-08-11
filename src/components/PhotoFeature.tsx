@@ -45,13 +45,16 @@ export default function PhotoFeature({
   cta,
 }: PhotoFeatureProps) {
   return (
-    <section className={`${sectionShell} bg-cream py-16 md:py-20`}>
+    <section className={`${sectionShell} bg-cream py-12 md:py-14`}>
       <div className="mx-auto max-w-7xl px-6 md:px-10">
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
+        {/* 5/12 za fotografijo, 7/12 za besedilo: pri polovici je bila
+            fotografija na namizju prevelika, besedilne vrstice pa predolge. */}
+        <div className="grid items-center gap-8 md:grid-cols-12 md:gap-12">
           <Reveal
             direction={side === 'left' ? 'left' : 'right'}
             className={cn(
               'overflow-hidden rounded-3xl border border-cream-dark bg-white p-1.5 shadow-lg',
+              'md:col-span-5',
               side === 'right' && 'md:order-2',
             )}
           >
@@ -69,7 +72,10 @@ export default function PhotoFeature({
 
           <Reveal
             direction={side === 'left' ? 'right' : 'left'}
-            className={cn('flex flex-col items-start gap-5', side === 'right' && 'md:order-1')}
+            className={cn(
+              'flex flex-col items-start gap-4 md:col-span-7',
+              side === 'right' && 'md:order-1',
+            )}
           >
             <span className="type-label text-green-light">{label}</span>
             <h2 className="type-h2">{title}</h2>

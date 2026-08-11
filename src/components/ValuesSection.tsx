@@ -65,7 +65,7 @@ export default function ValuesSection() {
   const [first, second, third] = values;
 
   return (
-    <section className={`${sectionShell} bg-cream px-6 py-20 md:px-10 md:py-24`}>
+    <section className={`${sectionShell} bg-cream px-6 py-14 md:px-10 md:py-16`}>
       <div className="mx-auto max-w-7xl">
         <Reveal className="mb-10">
           {/* Sekcija prej ni imela naslova in se je začela kar s karticami.
