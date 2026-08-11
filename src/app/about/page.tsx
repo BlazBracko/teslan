@@ -4,6 +4,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
+import SectionBridge, { surface } from '@/components/ui/SectionBridge';
 
 export const metadata = {
   title: 'O nas — Domačija Tešlan',
@@ -77,6 +78,7 @@ export default function AboutPage() {
         title="O nas"
         description="Spoznajte Domačijo Tešlan in našo strast do ekološkega kmetovanja"
       />
+      <SectionBridge from={surface.dark} to={surface.light} />
 
       <div className="mx-auto max-w-5xl px-4 py-12 md:py-20">
         <section className="mb-16 md:mb-24">
@@ -168,6 +170,8 @@ export default function AboutPage() {
         </section>
       </div>
 
+      <SectionBridge from={surface.light} to={surface.mid} />
+
       <section className="bg-green-mid py-12 md:py-16">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <Reveal className="flex flex-col items-center gap-4">
@@ -182,6 +186,8 @@ export default function AboutPage() {
           </Reveal>
         </div>
       </section>
+
+      <SectionBridge from={surface.mid} to={surface.dark} />
     </div>
   );
 }

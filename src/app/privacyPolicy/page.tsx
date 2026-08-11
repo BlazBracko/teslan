@@ -1,6 +1,7 @@
 import PageHeader from '@/components/ui/PageHeader';
 import Reveal from '@/components/ui/Reveal';
 import { contact } from '@/data/contact';
+import SectionBridge, { surface } from '@/components/ui/SectionBridge';
 
 export const metadata = {
   title: 'Politika zasebnosti — Domačija Tešlan',
@@ -27,6 +28,7 @@ export default function PrivacyPolicyPage() {
         title="Politika zasebnosti"
         description="Kako zbiramo, uporabljamo in varujemo vaše osebne podatke"
       />
+      <SectionBridge from={surface.dark} to={surface.light} />
 
       <div className="mx-auto max-w-4xl px-4 py-12 md:py-16">
         <Reveal className="rounded-2xl border border-cream-dark bg-white p-8 md:p-12">
@@ -108,6 +110,8 @@ export default function PrivacyPolicyPage() {
           </Section>
         </Reveal>
       </div>
+
+      <SectionBridge from={surface.light} to={surface.dark} />
     </div>
   );
 }

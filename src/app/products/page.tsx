@@ -3,6 +3,7 @@ import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
 import { priceList, priceListCategories } from '@/data/priceList';
+import SectionBridge, { surface } from '@/components/ui/SectionBridge';
 
 export const metadata = {
   title: 'Naši izdelki — Domačija Tešlan',
@@ -20,6 +21,7 @@ export default function ProductsPage() {
         title="Naši izdelki"
         description="Lokalno pridelani izdelki z naše kmetije v Podgori"
       />
+      <SectionBridge from={surface.dark} to={surface.light} />
 
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         {priceListCategories.map((category) => (
@@ -52,6 +54,8 @@ export default function ProductsPage() {
         ))}
       </div>
 
+      <SectionBridge from={surface.light} to={surface.mid} />
+
       <section className="bg-green-mid py-12 md:py-16">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <Reveal className="flex flex-col items-center gap-4">
@@ -78,6 +82,8 @@ export default function ProductsPage() {
           </Reveal>
         </div>
       </section>
+
+      <SectionBridge from={surface.mid} to={surface.dark} />
     </div>
   );
 }
