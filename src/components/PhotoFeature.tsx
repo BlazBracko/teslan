@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Reveal from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { cn } from '@/lib/utils';
+import { sectionShell } from '@/components/ui/sectionShell';
 
 interface PhotoFeatureProps {
   label: string;
@@ -44,7 +45,7 @@ export default function PhotoFeature({
   cta,
 }: PhotoFeatureProps) {
   return (
-    <section className="bg-cream py-16 md:py-20">
+    <section className={`${sectionShell} bg-cream py-16 md:py-20`}>
       <div className="mx-auto max-w-7xl px-6 md:px-10">
         <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
           <Reveal

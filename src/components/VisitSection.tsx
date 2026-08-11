@@ -2,6 +2,7 @@ import { FaMapPin, FaPhone, FaCalendar } from 'react-icons/fa';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
 import { contact } from '@/data/contact';
+import { sectionShell } from '@/components/ui/sectionShell';
 
 /**
  * Kontrolo postavimo blizu tega, na kar vpliva (§16 grouping & mapping):
@@ -34,7 +35,7 @@ const rows = [
 
 export default function VisitSection() {
   return (
-    <section id="visit" className="scroll-mt-24 bg-cream py-20">
+    <section id="visit" className={`${sectionShell} scroll-mt-28 bg-cream py-20`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
           <Reveal direction="left" className="flex flex-col gap-6">

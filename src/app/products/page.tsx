@@ -3,7 +3,7 @@ import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
 import { priceList, priceListCategories } from '@/data/priceList';
-import SectionBridge, { surface } from '@/components/ui/SectionBridge';
+import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
 
 export const metadata = {
   title: 'Naši izdelki — Domačija Tešlan',
@@ -15,15 +15,16 @@ const formatPrice = (price: number) => `${price.toFixed(2).replace('.', ',')} �
 
 export default function ProductsPage() {
   return (
-    <div className="min-h-screen bg-cream">
+    <>
       <PageHeader
         label="Domačija Tešlan"
         title="Naši izdelki"
         description="Lokalno pridelani izdelki z naše kmetije v Podgori"
       />
-      <SectionBridge from={surface.dark} to={surface.light} />
 
-      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
+      <div className={sectionStack}>
+      <section className={`${sectionShell} bg-cream px-4 py-16 md:py-20`}>
+      <div className="mx-auto max-w-6xl">
         {priceListCategories.map((category) => (
           <section key={category} className="mb-12 md:mb-16">
             <Reveal>
@@ -54,9 +55,9 @@ export default function ProductsPage() {
         ))}
       </div>
 
-      <SectionBridge from={surface.light} to={surface.mid} />
+      </section>
 
-      <section className="bg-green-mid py-12 md:py-16">
+      <section className={`${sectionShell} bg-green-mid py-12 md:py-16`}>
         <div className="mx-auto max-w-4xl px-4 text-center">
           <Reveal className="flex flex-col items-center gap-4">
             <h2 className="type-h2 text-cream">Želite naročiti?</h2>
@@ -82,8 +83,7 @@ export default function ProductsPage() {
           </Reveal>
         </div>
       </section>
-
-      <SectionBridge from={surface.mid} to={surface.dark} />
-    </div>
+      </div>
+    </>
   );
 }

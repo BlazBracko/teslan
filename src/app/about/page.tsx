@@ -4,7 +4,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
-import SectionBridge, { surface } from '@/components/ui/SectionBridge';
+import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
 
 export const metadata = {
   title: 'O nas — Domačija Tešlan',
@@ -72,15 +72,16 @@ const contactRows = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-cream">
+    <>
       <PageHeader
         label="Naša zgodba"
         title="O nas"
         description="Spoznajte Domačijo Tešlan in našo strast do ekološkega kmetovanja"
       />
-      <SectionBridge from={surface.dark} to={surface.light} />
 
-      <div className="mx-auto max-w-5xl px-4 py-12 md:py-20">
+      <div className={sectionStack}>
+      <section className={`${sectionShell} bg-cream px-4 py-16 md:py-20`}>
+      <div className="mx-auto max-w-5xl">
         <section className="mb-16 md:mb-24">
           <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
             <Reveal direction="left" className="flex flex-col gap-4">
@@ -170,9 +171,9 @@ export default function AboutPage() {
         </section>
       </div>
 
-      <SectionBridge from={surface.light} to={surface.mid} />
+      </section>
 
-      <section className="bg-green-mid py-12 md:py-16">
+      <section className={`${sectionShell} bg-green-mid py-12 md:py-16`}>
         <div className="mx-auto max-w-4xl px-4 text-center">
           <Reveal className="flex flex-col items-center gap-4">
             <h2 className="type-h2 text-cream">Pridite nas obiskat</h2>
@@ -186,8 +187,7 @@ export default function AboutPage() {
           </Reveal>
         </div>
       </section>
-
-      <SectionBridge from={surface.mid} to={surface.dark} />
-    </div>
+      </div>
+    </>
   );
 }

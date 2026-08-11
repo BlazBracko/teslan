@@ -1,7 +1,7 @@
 import PageHeader from '@/components/ui/PageHeader';
 import Reveal from '@/components/ui/Reveal';
 import { contact } from '@/data/contact';
-import SectionBridge, { surface } from '@/components/ui/SectionBridge';
+import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
 
 export const metadata = {
   title: 'Politika zasebnosti — Domačija Tešlan',
@@ -22,15 +22,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-cream">
+    <>
       <PageHeader
         label="Pravni dokumenti"
         title="Politika zasebnosti"
         description="Kako zbiramo, uporabljamo in varujemo vaše osebne podatke"
       />
-      <SectionBridge from={surface.dark} to={surface.light} />
 
-      <div className="mx-auto max-w-4xl px-4 py-12 md:py-16">
+      <div className={sectionStack}>
+      <section className={`${sectionShell} bg-cream px-4 py-16 md:py-20`}>
+      <div className="mx-auto max-w-4xl">
         <Reveal className="rounded-2xl border border-cream-dark bg-white p-8 md:p-12">
           <p className="type-body mb-8 text-ink-mid">
             Ta pravilnik o zasebnosti opisuje, kako Domačija Tešlan (v nadaljevanju: &quot;mi&quot;)
@@ -110,8 +111,8 @@ export default function PrivacyPolicyPage() {
           </Section>
         </Reveal>
       </div>
-
-      <SectionBridge from={surface.light} to={surface.dark} />
-    </div>
+      </section>
+      </div>
+    </>
   );
 }

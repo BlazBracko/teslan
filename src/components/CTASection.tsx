@@ -1,10 +1,11 @@
 import Reveal from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
+import { sectionShell } from '@/components/ui/sectionShell';
 
 export default function CTASection() {
   return (
-    <section className="bg-green-mid py-20">
+    <section className={`${sectionShell} bg-green-mid py-20`}>
       <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
         <Reveal className="flex flex-col items-center gap-6">
           <h2 className="type-h2 text-cream">Sveže iz kmetije, danes na vaši mizi</h2>

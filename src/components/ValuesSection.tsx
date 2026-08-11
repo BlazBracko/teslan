@@ -1,3 +1,4 @@
+import { sectionShell } from '@/components/ui/sectionShell';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import { cn } from '@/lib/utils';
 
@@ -64,7 +65,7 @@ export default function ValuesSection() {
   const [first, second, third] = values;
 
   return (
-    <section className="bg-cream px-6 py-20 md:px-10 md:py-24">
+    <section className={`${sectionShell} bg-cream px-6 py-20 md:px-10 md:py-24`}>
       <div className="mx-auto max-w-7xl">
         <Reveal className="mb-10">
           {/* Sekcija prej ni imela naslova in se je začela kar s karticami.

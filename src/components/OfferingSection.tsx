@@ -4,6 +4,7 @@ import Pressable from '@/components/ui/Pressable';
 import { priceListSummary, priceListTotal } from '@/data/priceList';
 import { products } from '@/data/products';
 import { cn } from '@/lib/utils';
+import { sectionShell } from '@/components/ui/sectionShell';
 
 const formatPrice = (price: number) => price.toFixed(2).replace('.', ',');
 
@@ -28,7 +29,7 @@ export default function OfferingSection() {
   const [velike, majhne] = [priceListSummary.slice(0, 3), priceListSummary.slice(3)];
 
   return (
-    <section className="bg-green-deep px-6 py-24 md:px-10">
+    <section className={`${sectionShell} bg-green-mid px-6 py-24 md:px-10`}>
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           onDark
