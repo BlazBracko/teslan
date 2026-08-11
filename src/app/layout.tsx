@@ -40,7 +40,7 @@ const dmSerifDisplay = DM_Serif_Display({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="sl" className={`${manrope.variable} ${dmSerifDisplay.variable}`}>
-      <body className="min-h-[100dvh] bg-cream">
+      <body className="min-h-[100dvh] bg-green-deep">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100 focus:rounded-full focus:bg-green-deep focus:px-5 focus:py-2.5 focus:text-cream type-nav"

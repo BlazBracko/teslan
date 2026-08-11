@@ -68,7 +68,15 @@
   }
 
   body {
-    background-color: var(--color-cream);
+    /* Temno zeleno, ne kremno.
+       iOS Safari obarva statusno vrstico in svojo spodnjo orodno vrstico
+       tako, da vzorči ozadje `body` — `theme-color` in ozadje `html` pri
+       tem ne zadostujeta. Kremen `body` je zato dajal svetla pasova nad
+       uro in pod stranjo.
+       Vsebina tega ne opazi: vsaka sekcija in vsak ovoj podstrani si
+       ozadje riše sam (bg-cream / bg-green-deep / bg-green-mid), zato je
+       ozadje `body` vidno le v teh robnih pasovih. */
+    background-color: var(--color-green-deep);
     color: var(--color-ink-mid);
     line-height: 1.7;
     overflow-x: clip;
