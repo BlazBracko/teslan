@@ -26,6 +26,34 @@ const navLinks = [
 /** Pot navzgor, po kateri otok zloži nazaj v pilulo. */
 const COLLAPSE_THRESHOLD = 56;
 
+/**
+ * Nad vrhom strani otok ostane viden ne glede na smer scrolla.
+ *
+ * Brez tega bi prvi zasuk kolesca navigacijo pospravil, še preden bi
+ * obiskovalec zapustil hero — in prav tam jo najbolj potrebuje. 96px je
+ * nekaj več od višine otoka, tako da izgine šele, ko je stran res v teku.
+ */
+const REVEAL_ABOVE = 96;
+
+/**
+ * Mrtvi pas, preden scroll šteje za spremembo smeri.
+ *
+ * Drsenje s sledilno ploščico in iOS gumitrak dajeta drobne nasprotne
+ * odmike; brez tega bi otok med enim samim potegom večkrat utripnil. Odmiki
+ * pod pragom se seštevajo, ker `prevY` posodobimo šele ob priznani
+ * spremembi — počasen, a vztrajen scroll otok torej vseeno pospravi.
+ */
+const DIRECTION_DEADZONE = 6;
+
+/**
+ * Kolikšen del svoje višine se otok umakne navzgor.
+ *
+ * Odstotek in ne piksli: veže se na višino otoka samega, zato drži tudi ko
+ * je ta na mobilnem nižji. 130 % pokrije še zgornji rob ovoja (`pt-3`),
+ * da spod roba zaslona ne ostane vidna črta.
+ */
+const HIDDEN_OFFSET = '-130%';
+
 function NavLink({
   href,
   label,
@@ -116,19 +144,54 @@ export default function Header() {
   const reduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [condensed, setCondensed] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { scrollY } = useScroll();
 
   const islandRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  /** Prejšnji priznani odmik scrolla — iz njega beremo smer. */
+  const prevY = useRef(0);
 
   useMotionValueEvent(scrollY, 'change', (y) => {
     setCondensed(y > 24);
+
+    // Odprt panel je modalno opravilo: scroll je takrat zaklenjen, otok pa
+    // se ne sme umakniti pod prstom.
+    if (menuOpen) return;
+
+    if (y < REVEAL_ABOVE) {
+      prevY.current = y;
+      setHidden(false);
+      return;
+    }
+
+    const delta = y - prevY.current;
+    if (Math.abs(delta) < DIRECTION_DEADZONE) return;
+    prevY.current = y;
+    setHidden(delta > 0);
   });
+
+  /**
+   * Tipkovnica mora doseči navigacijo tudi, ko je ta umaknjena.
+   *
+   * Umaknjen otok je še vedno v drevesu in njegove povezave so še vedno
+   * fokusabilne — brez tega bi tabulator odtaval na nekaj, kar se ne vidi.
+   * `onFocusCapture` na otoku ga vrne, še preden se fokus usede.
+   */
+  const revealOnFocus = useCallback(() => setHidden(false), []);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
+  /**
+   * Ob menjavi strani se otok vrne.
+   *
+   * Next ob navigaciji skoči na vrh, česar pa ni nujno videti kot dogodek
+   * scrolla — brez tega bi nova stran lahko odprla z umaknjeno navigacijo.
+   */
   useEffect(() => {
     setMenuOpen(false);
+    setHidden(false);
+    prevY.current = 0;
   }, [pathname]);
 
   // Če se okno razširi čez `md`, se otok vrne v namizno obliko — odprt
@@ -229,13 +292,18 @@ export default function Header() {
       <div className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 md:px-6 md:pt-4">
         <motion.div
           ref={islandRef}
+          onFocusCapture={revealOnFocus}
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -24 }}
           animate={
             reduceMotion
-              ? { opacity: 1 }
+              ? /* Pri zmanjšani animaciji se otok pretopi, namesto da odplava:
+                   umik je informacija, potovanje čez zaslon pa ne. */
+                { opacity: hidden ? 0 : 1 }
               : {
                   opacity: 1,
-                  y: 0,
+                  // Umik navzgor je `transform`, torej gre mimo layouta in
+                  // teče na compositorju (§11) — enako kot skrčenje spodaj.
+                  y: hidden ? HIDDEN_OFFSET : 0,
                   // Otok se ob scrollu skrči. Enakomeren `scale` je
                   // compositor-friendly in ne popači besedila, drugače kot
                   // animiranje širine ali korekcija merila pri `layout` (§11).
@@ -260,6 +328,10 @@ export default function Header() {
             border: '1px solid var(--material-island-edge)',
             boxShadow: 'var(--material-island-shadow)',
             willChange: 'transform',
+            /* Umaknjen otok ne sme loviti klikov. Nujno predvsem pri
+               zmanjšani animaciji, kjer ostane na mestu s `opacity: 0` in
+               bi drugače prestrezal klike na vsebino pod sabo. */
+            pointerEvents: hidden ? 'none' : 'auto',
           }}
           className="pointer-events-auto w-full max-w-6xl overflow-hidden"
         >
