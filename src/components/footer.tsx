@@ -52,7 +52,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href={contact.mapsUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                <a href={contact.directionsUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
                   Navodila za pot <span aria-hidden>→</span>
                 </a>
               </li>

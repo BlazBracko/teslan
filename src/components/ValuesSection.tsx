@@ -2,41 +2,27 @@ import { sectionShell } from '@/components/ui/sectionShell';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ikone so isti emojiji kot na `/about`, da se stran sama s sabo ne razhaja.
+ * Ujemanje po pomenu, ne po vrstnem redu: 📍 lokalno, ♻️ trajnostno, 🌱 pa
+ * na `/about` stoji ob „Ekološko“ in tu ob „Vedno sveže“ — oboje je klica.
+ */
 const values = [
   {
     id: 'local',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden>
-        <path d="M7 8h10M7 12h10M7 16h10M4 4h16v16H4V4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: '📍',
     title: 'Lokalno pridelano',
     description: 'Vsak pridelek raste na naši zemlji v Podgori. Brez posrednikov, neposredno z njive k vam.',
   },
   {
     id: 'fresh',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden>
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-        <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: '🌱',
     title: 'Vedno sveže',
     description: 'Pobrano zjutraj, pri vas popoldne. Naši izdelki ne potujejo po skladiščih in trgovinah.',
   },
   {
     id: 'sustainable',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" aria-hidden>
-        <path
-          d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
+    icon: '♻️',
     title: 'Trajnostno',
     description: 'Skrbimo za okolje z ekološkimi metodami pridelave in minimalno uporabo embalaže.',
   },
@@ -45,9 +31,13 @@ const values = [
 const cardClass =
   'rounded-2xl border border-t-[3px] border-cream-dark border-t-green-light bg-white p-7';
 
+/**
+ * Emoji ne podeduje `currentColor`, zato zeleni tinte ne potrebuje več —
+ * obarval bi ozadje, ne ikone. Ostane le velikost in poravnava.
+ */
 function ValueIcon({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-green-light/10 text-green-light">
+    <div aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center text-4xl leading-none">
       {children}
     </div>
   );

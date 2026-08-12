@@ -12,7 +12,18 @@ const rows = [
   {
     icon: FaMapPin,
     label: 'Naslov',
-    content: <span className="text-ink">{contact.address}</span>,
+    content: (
+      <a
+        href={contact.mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        /* `py` z izničujočim negativnim `my` poveča tarčo za prst z 22px na
+           44px, ne da bi premaknilo postavitev. */
+        className="-my-2.5 inline-block touch-manipulation py-2.5 text-ink transition-colors duration-200 hover:text-green-light"
+      >
+        {contact.address}
+      </a>
+    ),
   },
   {
     icon: FaPhone,

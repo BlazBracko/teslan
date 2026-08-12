@@ -26,7 +26,7 @@ export default function CTASection() {
               {contact.phoneDisplay}
             </Pressable>
 
-            <Pressable href={contact.mapsUrl} external variant="onDark">
+            <Pressable href={contact.directionsUrl} external variant="onDark">
               Navodila za pot <span aria-hidden>→</span>
             </Pressable>
           </div>

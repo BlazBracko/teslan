@@ -109,10 +109,14 @@ export default function AboutPage() {
               className="relative h-75 overflow-hidden rounded-2xl shadow-lg md:h-100"
             >
               <Image
-                src="/home2.jpg"
-                alt="Njive Domačije Tešlan v Podgori"
+                src="/sandi.jpg"
+                alt={`${contact.name} za stojnico Domačije Tešlan s svežo zelenjavo in šparglji`}
                 fill
                 className="object-cover"
+                /* Izvirnik je portretni (1536×2048), okvir pa ležeč. Obraz je
+                   na ~27 % višine, prt z logotipom pa zavzema spodnjih ~45 %;
+                   privzeti sredinski obrez bi obraz odrezal. */
+                style={{ objectPosition: '50% 32%' }}
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             </Reveal>
@@ -182,7 +186,7 @@ export default function AboutPage() {
             <p className="type-body on-material text-cream/85">
               Vedno smo veseli novih obrazov na naši kmetiji.
             </p>
-            <Pressable href={contact.mapsUrl} external variant="primary" className="mt-2">
+            <Pressable href={contact.directionsUrl} external variant="primary" className="mt-2">
               <FaMapMarkerAlt aria-hidden />
               Navodila za pot
             </Pressable>
