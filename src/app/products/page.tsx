@@ -13,6 +13,13 @@ export const metadata = {
     'Cenik izdelkov Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.',
 };
 
+/**
+ * Stran je statična, razpoložljivost sezonskih pridelkov pa je odvisna od
+ * meseca. Brez tega bi se mesec zamrznil ob buildu in „na zalogi“ bi ostalo
+ * napačno do naslednjega deploya. Dan je dovolj: sezone se merijo v mesecih.
+ */
+export const revalidate = 86400;
+
 export default function ProductsPage() {
   return (
     <>
@@ -28,7 +35,13 @@ export default function ProductsPage() {
       <div className="mx-auto max-w-6xl">
         {/* Vodoravna vrstica kategorij nad mrežo kartic. Prej je bilo tu
             devet sekcij druga pod drugo in ves cenik naenkrat. */}
-        <ProductBrowser items={priceList} categories={priceListCategories} />
+        <ProductBrowser
+          items={priceList}
+          categories={priceListCategories}
+          /* Mesec določi strežnik, da ga komponente ne berejo same — glej
+             opombo o `revalidate` zgoraj. */
+          month={new Date().getMonth() + 1}
+        />
       </div>
 
       </section>

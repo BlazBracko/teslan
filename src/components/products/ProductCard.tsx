@@ -5,6 +5,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { PriceListItem } from '@/data/priceList';
 import { springUI } from '@/lib/motion';
 import { usePress } from '@/components/ui/Pressable';
+import { stockFor } from '@/data/availability';
+import StockTag from './StockTag';
 
 const formatPrice = (price: number) => `${price.toFixed(2).replace('.', ',')} €`;
 
@@ -28,7 +30,13 @@ function ImagePlaceholder({ label }: { label: string }) {
  * `min-h` je nujen — brez njega bi se pri kratkem opisu stolpec s sliko
  * sesedel, ker višino vrstice določa vsebina.
  */
-export default function ProductCard({ item }: { item: PriceListItem }) {
+/**
+ * `month` prihaja od zunaj in se tu ne bere iz `new Date()`. Stran je
+ * statično prerenderirana, zato bi klic ob buildu vrednost zamrznil; poleg
+ * tega bi se strežniški in odjemalčev izris lahko razlikovala.
+ */
+export default function ProductCard({ item, month }: { item: PriceListItem; month: number }) {
+  const stock = stockFor(item, month);
   const reduceMotion = useReducedMotion();
   const { pressed, handlers } = usePress();
 
@@ -66,9 +74,12 @@ export default function ProductCard({ item }: { item: PriceListItem }) {
 
         {item.description && <p className="type-small text-ink-mid">{item.description}</p>}
 
-        <span className="type-small mt-auto self-start rounded-full bg-green-bright/15 px-3 py-1 text-green-mid">
-          {item.amount}
-        </span>
+        <div className="mt-auto flex flex-wrap items-center gap-2">
+          <span className="type-small rounded-full bg-cream px-3 py-1 text-ink-mid">
+            {item.amount}
+          </span>
+          <StockTag stock={stock} />
+        </div>
       </div>
     </motion.article>
   );

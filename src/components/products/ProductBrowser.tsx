@@ -20,9 +20,12 @@ import ProductCard from './ProductCard';
 export default function ProductBrowser({
   items,
   categories,
+  month,
 }: {
   items: PriceListItem[];
   categories: string[];
+  /** Trenutni mesec (1–12), izračunan na strežniku. */
+  month: number;
 }) {
   const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<string>(VSE);
@@ -68,7 +71,7 @@ export default function ProductBrowser({
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
               transition={reduceMotion ? crossFade : springUI}
             >
-              <ProductCard item={item} />
+              <ProductCard item={item} month={month} />
             </motion.div>
           ))}
         </AnimatePresence>

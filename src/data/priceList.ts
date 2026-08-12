@@ -1,3 +1,5 @@
+import type { Season } from './availability';
+
 /**
  * Cenik izdelkov.
  *
@@ -37,6 +39,16 @@ export interface PriceListItem {
    * na njih ni v sredini kadra, zato privzeti center obreže mimo.
    */
   imagePosition?: string;
+  /**
+   * Sezona za sveže pridelke. Če je nastavljena, se razpoložljivost izračuna
+   * iz meseca in `inStock` se ne upošteva.
+   */
+  season?: Season;
+  /**
+   * Zaloga za nesezonske izdelke. Privzeto na zalogi. To polje bo prevzela
+   * aplikacija z bazo.
+   */
+  inStock?: boolean;
 }
 
 export const priceList: PriceListItem[] = [
@@ -50,6 +62,9 @@ export const priceList: PriceListItem[] = [
     description: 'Ročno pobrani vsako jutro. Nežen okus, popolni za na žar ali v solato.',
     image: '/slika1.jpeg',
     imagePosition: '50% 100%',
+    // April–junij, kot navaja `data/products.ts`. Edini izdelek na ceniku,
+    // za katerega sezono res poznam.
+    season: { from: 4, to: 6 },
   },
   {
     id: 2,
