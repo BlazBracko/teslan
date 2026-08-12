@@ -1,115 +1,56 @@
+import Image from 'next/image';
 import SectionHeading from '@/components/ui/SectionHeading';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
-import { priceListSummary, priceListTotal } from '@/data/priceList';
-import { products } from '@/data/products';
-import { cn } from '@/lib/utils';
+import { offering, type OfferingGroupView } from '@/data/offering';
+import { priceListTotal } from '@/data/priceList';
 import { sectionShell } from '@/components/ui/sectionShell';
 
 const formatPrice = (price: number) => price.toFixed(2).replace('.', ',');
 
 /**
- * Pregled ponudbe po kategorijah.
+ * Pregled ponudbe: štiri ploščice, besedilo levo, fotografija desno.
  *
- * Nadomešča prejšnje Sezonske pridelke. Tam so bili šparglji in jagode
- * ponovljeni takoj pod svojima fotografskima sekcijama, kar ni povedalo
- * nič novega.
+ * Prej je bila tu nadzorna plošča zaloge — devet ploščic s številom izdelkov
+ * v veliki zeleni pisavi in cenovnim razponom, pod njimi še pas devetih
+ * ovalnih značk, skupaj trinajst škatel z besedilom in nobene fotografije v
+ * sekciji, ki govori o hrani. Bralo se je kot izvoz iz baze.
  *
- * Domača stran prej nikjer ni povedala, kako široka je ponudba —
- * obiskovalec je videl šparglje in jagode in sklepal, da je to vse. To je
- * bila največja vrzel; tu jo zapolnimo.
+ * Kar se je spremenilo:
  *
- * Vsa števila in cenovni razponi so izpeljani iz `data/priceList.ts`. Če
- * se cenik spremeni, se ta sekcija popravi sama.
+ *  - števila in cenovni razponi ven, imena dejanskih izdelkov noter
+ *    (razpon „2,50—14,00 €“ je statistika o množici, ne cena nečesa)
+ *  - devet kategorij združenih v štiri skupine, kot ljudje mislijo o hrani
+ *  - vsaka ploščica dobi fotografijo
+ *  - pas sezonskih značk je pobran v prvo ploščico, kamor spada
  *
- * Velikost ploščice sledi številu izdelkov: prve tri kategorije dobijo
- * širše mesto. To ni okras, ampak podatek — večja kategorija je večja.
+ * Odpadlo je tudi pravilo „večja kategorija dobi širšo ploščico“. Obiskovalec
+ * ne more zaznati, da je škatla širša, ker je v njej šest in ne dva izdelka,
+ * torej ni sporočalo ničesar, postavitev pa je razbilo.
+ *
+ * Rob med besedilom in sliko je raven, ne poševen. Cel vizualni jezik strani
+ * so mehki koncentrični zaobljeni pravokotniki (sekcija 28px, otok
+ * navigacije 22px, ploščica 16px); poševnica bi bila edina diagonala na
+ * strani in pri tej širini bi fotografijo obrezala v ozek trikotnik, v
+ * katerem se motiv izgubi.
  */
 export default function OfferingSection() {
-  const [velike, majhne] = [priceListSummary.slice(0, 3), priceListSummary.slice(3)];
-
   return (
     <section className={`${sectionShell} bg-green-mid px-6 py-24 md:px-10`}>
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-6xl">
         <SectionHeading
           onDark
           label="Naša ponudba"
           title="Več kot le sveža zelenjava"
-          description="Poleg sezonskih pridelkov z njive pri nas najdete začimbe, jajca, liofilizirano sadje, marmelade, olja, testenine in sokove."
-          className="mx-auto mb-4"
+          description={`Na ceniku je ${priceListTotal} izdelkov — od svežih špargljev z njive do domačih testenin, začimb in marmelad.`}
+          className="mx-auto mb-12"
         />
 
-        <Reveal className="mb-12 text-center" delay={0.15}>
-          <p className="type-label text-green-bright">
-            {priceListTotal} izdelkov v {priceListSummary.length} kategorijah
-          </p>
-        </Reveal>
-
-        <RevealGroup className="grid grid-cols-2 gap-4 md:grid-cols-12" stagger={0.05}>
-          {velike.map((kategorija) => (
-            <RevealItem
-              key={kategorija.name}
-              as="article"
-              className="col-span-2 rounded-2xl border border-cream/12 bg-cream/[0.06] p-6 md:col-span-4"
-            >
-              <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h3 className="type-h3 text-cream">{kategorija.name}</h3>
-                <span className="type-stat text-green-bright" style={{ fontSize: '1.75rem' }}>
-                  {kategorija.count}
-                </span>
-              </div>
-              <p className="type-small text-cream/60">
-                {formatPrice(kategorija.minPrice)} — {formatPrice(kategorija.maxPrice)} €
-              </p>
-            </RevealItem>
-          ))}
-
-          {majhne.map((kategorija) => (
-            <RevealItem
-              key={kategorija.name}
-              as="article"
-              className={cn(
-                'col-span-1 rounded-xl border border-cream/10 bg-cream/[0.04] p-4',
-                'md:col-span-2',
-              )}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="type-small font-semibold text-cream">{kategorija.name}</h3>
-                <span className="type-small font-bold text-green-bright">{kategorija.count}</span>
-              </div>
-              <p className="type-label mt-2 text-cream/45">
-                {kategorija.minPrice === kategorija.maxPrice
-                  ? `${formatPrice(kategorija.minPrice)} €`
-                  : `${formatPrice(kategorija.minPrice)}—${formatPrice(kategorija.maxPrice)} €`}
-              </p>
-            </RevealItem>
+        <RevealGroup className="grid gap-4 md:grid-cols-2" stagger={0.07}>
+          {offering.map((group) => (
+            <GroupTile key={group.name} group={group} />
           ))}
         </RevealGroup>
-
-        {/**
-         * Sezonsko sveže z njive.
-         *
-         * Cenik ima samo „Česen v prahu" — svežega česna in krompirja na
-         * njem ni. Brez tega pasu bi po zamenjavi sekcije izginila s strani,
-         * čeprav ju `meta description` izrecno obljublja. Podatki so iz
-         * `data/products.ts`.
-         */}
-        <div className="mt-14 border-t border-cream/10 pt-10">
-          <Reveal>
-            <h3 className="type-label mb-5 text-center text-cream/50">Sezonsko sveže z njive</h3>
-          </Reveal>
-          <RevealGroup className="flex flex-wrap justify-center gap-3" stagger={0.04}>
-            {products.map((product) => (
-              <RevealItem
-                key={product.id}
-                className="rounded-full border border-cream/12 bg-cream/[0.05] px-5 py-2.5"
-              >
-                <span className="type-small font-semibold text-cream">{product.name}</span>
-                <span className="type-small ml-2 text-cream/50">{product.season}</span>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-        </div>
 
         <Reveal className="mt-12 flex justify-center">
           <Pressable href="/products" variant="primary">
@@ -119,5 +60,62 @@ export default function OfferingSection() {
         </Reveal>
       </div>
     </section>
+  );
+}
+
+/**
+ * `min-h` je nujen: brez njega bi se pri kratkem besedilu stolpec s sliko
+ * sesedel, ker višino vrstice določa vsebina. Enaka rešitev kot pri karticah
+ * na `/products`.
+ */
+function GroupTile({ group }: { group: OfferingGroupView }) {
+  return (
+    <RevealItem
+      as="article"
+      className="flex min-h-44 overflow-hidden rounded-2xl border border-cream/12 bg-cream/[0.06] sm:min-h-48"
+    >
+      <div className="flex flex-1 flex-col gap-2 p-5 sm:p-6">
+        <h3 className="type-h3 text-cream">{group.name}</h3>
+        <p className="type-small text-cream/70">{group.blurb}</p>
+        <p className="type-label mt-auto pt-3 text-green-bright">
+          od {formatPrice(group.fromPrice)} €
+        </p>
+      </div>
+
+      {/* Ploskev pod izrezki ni okras. `jagode.png` je prosojen PNG, `cesen.jpg`
+          in `krompir.jpg` pa imata belo ozadje: na temno zeleni podlagi bi bel
+          JPEG pokazal bel kvadrat, prosojni PNG pa bi se utopil.
+          Ploskev je BELA in ne kremna — kremna se od belega ozadja izrezkov
+          ravno toliko razlikuje, da se vidi bel kvadrat v kvadratu. Isti prijem
+          kot bele kartice na `/products`. Prave fotografije jo prekrijejo od
+          roba do roba. */}
+      <div className="relative w-28 shrink-0 self-stretch bg-white sm:w-36 md:w-40">
+        {group.image ? (
+          <Image
+            src={group.image}
+            alt={group.imageAlt ?? group.name}
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
+            className={group.imageFit === 'cover' ? 'object-cover' : 'object-contain p-3'}
+          />
+        ) : (
+          <GroupImagePlaceholder label={group.name} />
+        )}
+      </div>
+    </RevealItem>
+  );
+}
+
+/**
+ * Nadomestna ploskev, kadar skupina še ni dobila fotografije.
+ *
+ * Namenoma tiha, enako kot na karticah izdelkov: ploščica ostane enotna z
+ * ostalimi tremi in dodajanje prave fotografije stran samo izboljša.
+ */
+function GroupImagePlaceholder({ label }: { label: string }) {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-green-light/12 to-green-bright/8 p-3">
+      <span className="type-label text-center leading-tight text-green-mid/45">{label}</span>
+    </div>
   );
 }

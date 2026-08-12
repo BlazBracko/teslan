@@ -257,31 +257,12 @@ export const priceList: PriceListItem[] = [
 /** Kategorije v vrstnem redu prvega pojava na ceniku. */
 export const priceListCategories = [...new Set(priceList.map((item) => item.category))];
 
-/** Povzetek kategorije za pregled ponudbe na domači strani. */
-export interface PriceListCategorySummary {
-  name: string;
-  count: number;
-  minPrice: number;
-  maxPrice: number;
-}
-
 /**
- * Izpeljano iz `priceList`, ne prepisano na roko — če se cenik spremeni,
- * se števila in cenovni razponi na domači strani popravijo sami.
- * Urejeno po številu izdelkov, da največje kategorije dobijo prostor.
+ * Skupno število izdelkov na ceniku.
+ *
+ * Tu je prej živel še `priceListSummary` s številom in cenovnim razponom po
+ * kategorijah. Odstranjen z ureditvijo pregleda ponudbe na domači strani —
+ * skupine so zdaj v `data/offering.ts`, cenovnih razponov pa nikjer ne
+ * kažemo več, ker so statistika o množici in ne cena nečesa.
  */
-export const priceListSummary: PriceListCategorySummary[] = priceListCategories
-  .map((name) => {
-    const items = priceList.filter((item) => item.category === name);
-    const prices = items.map((item) => item.price);
-    return {
-      name,
-      count: items.length,
-      minPrice: Math.min(...prices),
-      maxPrice: Math.max(...prices),
-    };
-  })
-  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'sl'));
-
-/** Skupno število izdelkov na ceniku. */
 export const priceListTotal = priceList.length;
