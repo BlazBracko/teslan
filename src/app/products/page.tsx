@@ -1,6 +1,7 @@
 import PageHeader from '@/components/ui/PageHeader';
 import PageBackdrop from '@/components/ui/PageBackdrop';
-import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
+import Reveal from '@/components/ui/Reveal';
+import ProductBrowser from '@/components/products/ProductBrowser';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
 import { priceList, priceListCategories } from '@/data/priceList';
@@ -11,8 +12,6 @@ export const metadata = {
   description:
     'Cenik izdelkov Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.',
 };
-
-const formatPrice = (price: number) => `${price.toFixed(2).replace('.', ',')} €`;
 
 export default function ProductsPage() {
   return (
@@ -27,34 +26,9 @@ export default function ProductsPage() {
       <div className={sectionStack}>
       <section className={`${sectionShell} bg-cream px-4 py-16 md:py-20`}>
       <div className="mx-auto max-w-6xl">
-        {priceListCategories.map((category) => (
-          <section key={category} className="mb-12 md:mb-16">
-            <Reveal>
-              <h2 className="type-h2 mb-6 border-b-2 border-green-bright pb-3">{category}</h2>
-            </Reveal>
-
-            <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" stagger={0.04}>
-              {priceList
-                .filter((item) => item.category === category)
-                .map((item) => (
-                  <RevealItem
-                    key={item.id}
-                    as="article"
-                    className="rounded-xl border border-cream-dark bg-white p-5"
-                  >
-                    <div className="mb-3 flex items-start justify-between gap-2">
-                      <h3 className="type-body font-semibold text-green-deep">{item.name}</h3>
-                      {/* Cena je display font — v tej velikosti rabi tesnejši tracking (§15). */}
-                      <span className="type-h3 whitespace-nowrap">{formatPrice(item.price)}</span>
-                    </div>
-                    <span className="type-small inline-block rounded-full bg-green-bright/15 px-3 py-1 text-green-mid">
-                      {item.amount}
-                    </span>
-                  </RevealItem>
-                ))}
-            </RevealGroup>
-          </section>
-        ))}
+        {/* Vodoravna vrstica kategorij nad mrežo kartic. Prej je bilo tu
+            devet sekcij druga pod drugo in ves cenik naenkrat. */}
+        <ProductBrowser items={priceList} categories={priceListCategories} />
       </div>
 
       </section>
