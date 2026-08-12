@@ -38,11 +38,18 @@ const contactRows = [
     icon: FaMapMarkerAlt,
     label: 'Naslov',
     content: (
-      <>
+      <a
+        href={contact.mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        /* Zeleno kot telefon in e-pošta v isti kartici — vse tri vrstice so
+           povezave, zato morajo biti videti enako. */
+        className="-my-2.5 inline-block touch-manipulation py-2.5 text-green-mid transition-colors duration-200 hover:text-green-light"
+      >
         Podgora 15
         <br />
         8351 Straža pri Novem mestu
-      </>
+      </a>
     ),
   },
   {
