@@ -72,3 +72,16 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Ob prvem deployu po K10 seed (`seed:if-empty`) na stagingu doda demo darila (malo in veliko škatlo, programa „Okusi Dolenjske“ in „Za kuharje“, opisi z „[DEMO]“), ker v bazi še ni nobene škatle in nobenega programa. Kasneje izbrisanih daril ne vrne; če jih ne želite, škatlo označite kot neaktivno ali program kot neobjavljen.
 - Lastnik v adminu (*Darila*) vnese prave tipe škatel (slike, cene, zalogo) in programe. Velikost izdelka v programu se vpiše z oznako (npr. „41 ml (15 g)“) ali pusti prazna za prvo velikost.
 - Slike škatel v demo podatkih niso nastavljene (ni fotografij); stran pokaže nadomestno ploskev z ikono darila.
+
+### K11 Pravne strani
+- Ni novih zunanjih ključev in ni preskočenih preizkusov.
+- Nove strani `/pogoji` (splošni pogoji poslovanja), `/odstop` (odstop od pogodbe z obrazcem za kopiranje) in posodobljena `/privacyPolicy` so **osnutki** po ZVPot-1 in GDPR. Na stagingu (`NOINDEX=1`) imajo na vrhu obvestilo „Osnutek – v pregledu“; v produkciji ga ni, zato morata **lastnik in računovodja/pravnik besedila pregledati pred prehodom v produkcijo** (§12).
+- **Podatki prodajalca**: v *Nastavitve trgovine → Podatki prodajalca* vnesite naziv, davčno številko in KMG-MID (ter matično številko, če obstaja). Dokler niso vpisani, pravne strani na teh mestih kažejo `[manjka: …]`. Matična številka ni obvezna in se brez vpisa ne prikaže.
+- Odločitve v osnutku, ki jih mora lastnik potrditi:
+  - **Izvensodno reševanje sporov (IRPS)**: pogoji navajajo, da prodajalec ne priznava nobenega izvajalca IRPS. Če kmetija izvajalca izbere, je treba besedilo v `src/app/(frontend)/pogoji/page.tsx` (poglavje 12) popraviti. Povezave na evropsko platformo za spletno reševanje sporov (SRPS/ODR) ni, ker je platforma od julija 2025 ukinjena.
+  - **Izjeme od odstopa**: hitro pokvarljivo blago (sveža zelenjava, sadje, jajca), živila, ki jih kupec po dobavi odpre, in sestavljene darilne škatle s sporočilom na kartici. Škatle brez sporočila in neodprti izdelki imajo pravico do odstopa.
+  - **Račun**: pogoji pravijo, da potrdilo naročila ni račun in da račun izda prodajalec v skladu s predpisi (način izdaje določi računovodja).
+  - **Rok pošiljanja**: „praviloma v nekaj delovnih dneh, najpozneje v 30 dneh“. Če želite konkreten rok, ga vpišite v poglavje 6 pogojev.
+  - **Obdelovalci**: Stripe (Irska), Resend, Cloudflare in Railway (ZDA) s prenosom na podlagi okvira EU-ZDA oz. standardnih pogodbenih klavzul. Lastnik preveri, da ima s ponudniki sprejete pogodbe o obdelavi (DPA), ki so običajno del njihovih pogojev.
+  - **Hramba**: podatki o naročilih praviloma 10 let po koncu leta izdaje računa (davčni predpisi).
+- Datum zadnje posodobitve na straneh je konstanta `POSODOBLJENO` v `src/pravno/podatki.ts`; ob vsaki vsebinski spremembi ga posodobite.

@@ -1,10 +1,7 @@
 /**
  * Povezave glave (Z7) in noge (Z8) na enem mestu.
  *
- * Glava in noga kažeta samo na strani, ki že obstajajo: „Splošne pogoje“ in
- * „Odstop od pogodbe“ doda K11 (`/pogoji`, `/odstop`). Do takrat bi bile
- * povezave na 404. Košarica ni v seznamu,
- * ker ima v glavi svojo ikono s številom kosov.
+ * Košarica ni v seznamu, ker ima v glavi svojo ikono s številom kosov.
  */
 export interface Povezava {
   href: string;
@@ -34,12 +31,16 @@ export const POT_KOSARICE = "/kosarica";
 /** Blagajna (K7). */
 export const POT_BLAGAJNE = "/blagajna";
 
-/** Splošni pogoji (povezava ob potrditvi na blagajni; celotno besedilo doda K11). */
+/** Pravne strani (Z8, Z61): noga, blagajna in sklici med pravnimi stranmi. */
 export const POT_POGOJEV = "/pogoji";
-
+export const POT_ODSTOPA = "/odstop";
 export const POT_ZASEBNOSTI = "/privacyPolicy";
 
-export const PRAVNE_POVEZAVE: Povezava[] = [{ href: "/privacyPolicy", oznaka: "Politika zasebnosti" }];
+export const PRAVNE_POVEZAVE: Povezava[] = [
+  { href: POT_POGOJEV, oznaka: "Splošni pogoji" },
+  { href: POT_ODSTOPA, oznaka: "Odstop od pogodbe" },
+  { href: POT_ZASEBNOSTI, oznaka: "Politika zasebnosti" },
+];
 
 /** Ali je povezava aktivna na dani poti (podstrani izdelkov štejejo k „Izdelki“). */
 export function jeAktivna(href: string, pot: string): boolean {

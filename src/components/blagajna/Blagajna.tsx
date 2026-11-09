@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LuCircleAlert, LuInfo, LuRefreshCw, LuShoppingBag } from "react-icons/lu";
 import { Zneski } from "@/components/narocilo/Zneski";
-import { POT_KOSARICE, POT_POGOJEV, POT_ZASEBNOSTI } from "@/components/postavitev/navigacija";
+import { POT_KOSARICE, POT_ODSTOPA, POT_POGOJEV, POT_ZASEBNOSTI } from "@/components/postavitev/navigacija";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -609,6 +609,10 @@ function ObrazecBlagajne({
                 Vaše podatke uporabimo samo za izvedbo naročila, gl.{" "}
                 <Link href={POT_ZASEBNOSTI} target="_blank" className="underline underline-offset-4">
                   politiko zasebnosti
+                </Link>
+                . O pravici do odstopa in izjemah (sveža živila, darilne škatle s sporočilom) več v{" "}
+                <Link href={POT_ODSTOPA} target="_blank" className="underline underline-offset-4">
+                  odstopu od pogodbe
                 </Link>
                 .
               </>
