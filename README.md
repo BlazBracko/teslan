@@ -2,25 +2,36 @@
 
 Spletna stran in (v nastajanju) spletna trgovina Domačije Tešlan. Načrt, ki je vir resnice za razvoj, je v [`docs/nacrti/spletna-trgovina.md`](docs/nacrti/spletna-trgovina.md); kar čaka na lastnika (ključi, nastavitve), je zbrano v [`docs/nacrti/spletna-trgovina-predaja.md`](docs/nacrti/spletna-trgovina-predaja.md).
 
-> Ta README je osnutek iz koraka K1. Razdelki o bazi, seedu in deployu se dopolnijo v K3, K4 in K13.
+> Ta README je osnutek. Razdelka o seedu in predaji se dopolnita v K4 in K13.
 
 ## Tehnologija
 
-Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Framer Motion, Zod. Testi: Vitest (enote, integracija) in Playwright (e2e). Gostovanje: Railway.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Framer Motion, Zod, Payload CMS 3 (admin na `/admin`) s Postgres. Testi: Vitest (enote, integracija) in Playwright (e2e). Gostovanje: Railway.
 
 ## Zahteve
 
 - Node.js `>=22.23.4 <23` (gl. `engines` v `package.json`)
 - npm 10+
-- Od K3 naprej: Docker za lokalni Postgres
+- Docker (Compose v2) za lokalni Postgres
 
 ## Zagon
 
 ```bash
 npm ci
-cp .env.example .env.local   # izpolnite, kar potrebujete; v K1 ni obveznih spremenljivk
-npm run dev                  # http://localhost:3000
+docker compose up -d         # Postgres 17 na portu 5432 (baza teslan in teslan_test)
+cp .env.example .env.local   # nastavite DATABASE_URL in PAYLOAD_SECRET (gl. spodaj)
+npm run migrate              # zgradi shemo baze z migracijami
+npm run dev                  # stran: http://localhost:3000, admin: http://localhost:3000/admin
 ```
+
+Za lokalni razvoj v `.env.local` zadoščata:
+
+```bash
+DATABASE_URL=postgres://teslan:teslan@localhost:5432/teslan
+PAYLOAD_SECRET=<izhod ukaza: openssl rand -hex 32>
+```
+
+Ob prvem obisku `/admin` (prazna baza) se odpre obrazec za prvega uporabnika, ki je vedno administrator.
 
 ## Skripte
 
@@ -31,13 +42,18 @@ npm run dev                  # http://localhost:3000
 | `npm run typecheck` | `next typegen` + `tsc --noEmit` |
 | `npm run lint` | ESLint (`eslint .`) |
 | `npm test` | Vitest (enkratni zagon); `npm run test:watch` za sprotni način |
-| `npm run test:e2e` | Playwright na produkcijski gradnji (sam zgradi in zažene strežnika na portih 3100 in 3101) |
+| `npm run test:e2e` | Playwright na produkcijski gradnji (izprazni in migrira testno bazo, zgradi in zažene strežnika na portih 3100 in 3101) |
+| `npm run migrate` | izvede nove migracije Payload (`src/migrations`) |
+| `npm run migrate:create -- <ime>` | ustvari migracijo iz sprememb zbirk |
+| `npm run migrate:status` | pokaže, katere migracije so izvedene |
+| `npm run generate:types` / `generate:importmap` | osveži `src/payload-types.ts` in import map admina |
+| `npm run preveri:payload` | vse tri zgornje naenkrat; CI zahteva, da za njimi ni sprememb |
 
 Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo. Ista gradnja teče dvakrat: na portu 3100 kot produkcija in na 3101 z `NOINDEX=1` kot staging; testi v `e2e/noindex/` tečejo samo proti drugemu.
 
 ## Identiteta in komponente
 
-- Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/globals.css`](src/app/globals.css) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.
+- Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/(frontend)/globals.css`](<src/app/(frontend)/globals.css>) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.
 - Knjižnica komponent je v [`src/components/ui/`](src/components/ui/) (gumb, polja, izbirniki, dialog, predal, zavihki, oznake, kartica, cena, obvestila, okostje, prazno stanje). Interaktivni deli so na Radix primitivih, gibanje (vzmeti) je v [`src/lib/motion.ts`](src/lib/motion.ts). Ikone: Lucide prek `react-icons/lu`.
 - Slogovni vodnik `/styleguide` pokaže vse to v vseh stanjih, a samo pri `NOINDEX=1` (staging, lokalno z `NOINDEX=1 npm run dev`); v produkciji vrne 404.
 - `src/components/ui/tokeni.test.ts` preverja kontraste parov besedilo/ozadje (WCAG 2.2 AA) in da nove komponente ne vsebujejo surovih barv.
@@ -53,12 +69,25 @@ Vse spremenljivke so opisane v [`.env.example`](.env.example) in jih ob zagonu s
 
 ## CI
 
-`.github/workflows/ci.yml` teče na PR-jih v `staging` in `main` ter na pushu v `staging`: typecheck, lint, Vitest, Playwright (s Postgres 17 servisom za integracijske teste od K3 naprej).
+`.github/workflows/ci.yml` teče na PR-jih v `staging` in `main` ter na pushu v `staging`: typecheck, preverjanje generiranih datotek in migracij Payload (`npm run preveri:payload`), lint, Vitest, Playwright; vse s Postgres 17 servisom (testna baza).
 
 ## Razvojni tok
 
 Vsak korak načrta je ena veja `nacrt/kN-<kratko>` iz najnovejšega `staging` in en PR v `staging`, ki se združi z merge commitom, ko je CI zelen.
 
-## Baza, seed, deploy
+## Payload, baza in migracije
 
-Dopolni se v K3 (Payload, Postgres, migracije, `railway.json`) in K4 (seed).
+- Konfiguracija je v [`src/payload.config.ts`](src/payload.config.ts), zbirke v [`src/payload/kolekcije/`](src/payload/kolekcije/), pravila dostopa v [`src/payload/dostop.ts`](src/payload/dostop.ts).
+- `src/app/(frontend)/` je javna stran (svoj korenski layout), `src/app/(payload)/` pa admin in REST API (`/admin`, `/api/...`), ki ju ustvari Payload.
+- Admin je v slovenščini (prevod `sl` iz `@payloadcms/translations`), vsako polje ima opis.
+- **Vloge**: `admin` ureja vse; `urednik` ureja vsebino trgovine in svoj račun, drugih uporabnikov (in od K4 nastavitev trgovine) ne vidi. Prvi uporabnik je vedno admin; nadaljnje doda admin v *Nastavitve → Uporabniki*.
+- **Slike** (`media`, opis `alt` je obvezen): ko so nastavljene vse `S3_*` spremenljivke, gredo v Cloudflare R2 in se strežejo z `S3_PUBLIC_URL`; sicer na lokalni disk v `media/` (ni v gitu).
+- **Shema se spreminja samo z migracijami**, tudi lokalno (`push` je izklopljen): po spremembi zbirke poženite `npm run migrate:create -- <ime>`, preglejte novo datoteko v `src/migrations`, nato `npm run migrate`. Isti ukaz teče pred vsakim deployem.
+- **Lokalni Postgres** (`docker-compose.yml`) ima fiksno ime projekta `teslan`, zato si vse kopije repa (tudi git worktreeji) delijo en vsebnik. Razvoj uporablja bazo `teslan`, testi `teslan_test`.
+- **Testi** tečejo na `teslan_test` (ali `TEST_DATABASE_URL`, ime se mora končati s `_test`) in jo sami izpraznijo: integracijski testi Vitest (`*.int.test.ts`) pred zagonom, Playwright pa v `e2e/priprava.ts`.
+
+## Deploy (Railway)
+
+[`railway.json`](railway.json): gradnja `npm run build`, pred deployem `npm run migrate`, zagon `npm run start`. Od K4 naprej pred deployem teče še `npm run seed:if-empty`.
+
+V okolju morata biti nastavljena `DATABASE_URL` (Railway Postgres) in `PAYLOAD_SECRET`; brez njiju se produkcijski strežnik ne zažene. Za slike na stagingu in v produkciji so potrebne še `S3_*` spremenljivke (R2), sicer se slike shranijo na disk vsebnika in se ob naslednjem deployu izgubijo.

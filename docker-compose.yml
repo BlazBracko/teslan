@@ -1,0 +1,37 @@
+# Lokalni Postgres za razvoj in teste (načrt §8, K3).
+# Ime projekta je fiksno, zato si vse kopije repa (tudi git worktreeji) delijo
+# en vsebnik na portu 5432: baza "teslan" za razvoj, "teslan_test" za teste.
+# Datoteka nima poti do datotek v repu, zato zagon iz druge kopije vsebnika
+# ne ustvari na novo.
+#   docker compose up -d
+name: teslan
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: teslan
+      POSTGRES_PASSWORD: teslan
+      POSTGRES_DB: teslan
+    configs:
+      # Ob prvem zagonu (prazen volumen) ustvari še bazo za teste.
+      - source: testna-baza
+        target: /docker-entrypoint-initdb.d/01-testna-baza.sql
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teslan -d teslan"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+configs:
+  testna-baza:
+    content: |
+      CREATE DATABASE teslan_test OWNER teslan;
+
+volumes:
+  pgdata:

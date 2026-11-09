@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { testnoOkolje } from "./src/test/testna-baza";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const PORT_NOINDEX = PORT + 1;
@@ -13,6 +14,9 @@ const baseURLNoindex = `http://localhost:${PORT_NOINDEX}`;
  * Ista gradnja teče dvakrat: kot produkcija (brez NOINDEX) in kot staging
  * (`NOINDEX=1`). Testi v `e2e/noindex/` tečejo samo proti drugi. Strežnika
  * se zaženeta po vrsti, zato drugi počaka na gradnjo prvega.
+ *
+ * Oba uporabljata testno bazo (`teslan_test`), ki jo `e2e/priprava.ts` pred
+ * testi izprazni in migrira.
  */
 const chromium = {
   ...devices["Desktop Chrome"],
@@ -24,6 +28,7 @@ const chromium = {
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  globalSetup: "./e2e/priprava.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
@@ -48,14 +53,14 @@ export default defineConfig({
         ? `npm run start -- --port ${PORT}`
         : `npm run build && npm run start -- --port ${PORT}`,
       url: baseURL,
-      env: { NOINDEX: "" },
+      env: { ...testnoOkolje(), NOINDEX: "" },
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
     },
     {
       command: `npm run start -- --port ${PORT_NOINDEX}`,
       url: baseURLNoindex,
-      env: { NOINDEX: "1" },
+      env: { ...testnoOkolje(), NOINDEX: "1" },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
