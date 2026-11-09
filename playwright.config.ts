@@ -16,8 +16,11 @@ const baseURLNoindex = `http://localhost:${PORT_NOINDEX}`;
  * se zaženeta po vrsti, zato drugi počaka na gradnjo prvega.
  *
  * Oba uporabljata testno bazo (`teslan_test`), ki jo `e2e/priprava.ts` pred
- * testi izprazni in migrira.
+ * testi izprazni, migrira in napolni s seedom. Strežnika Playwright zažene
+ * pred `globalSetup`, zato preverjanje pripravljenosti ne sme brati kataloga
+ * (`/api/users/me` ga ne), sicer bi strežnik predpomnil prazno bazo.
  */
+const pripravljen = (izvor: string) => `${izvor}/api/users/me`;
 const chromium = {
   ...devices["Desktop Chrome"],
   launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
@@ -52,14 +55,14 @@ export default defineConfig({
       command: process.env.E2E_SKIP_BUILD
         ? `npm run start -- --port ${PORT}`
         : `npm run build && npm run start -- --port ${PORT}`,
-      url: baseURL,
+      url: pripravljen(baseURL),
       env: { ...testnoOkolje(), NOINDEX: "" },
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
     },
     {
       command: `npm run start -- --port ${PORT_NOINDEX}`,
-      url: baseURLNoindex,
+      url: pripravljen(baseURLNoindex),
       env: { ...testnoOkolje(), NOINDEX: "1" },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

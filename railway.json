@@ -4,7 +4,7 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "preDeployCommand": ["npm run migrate"],
+    "preDeployCommand": ["npm run pripravi-bazo"],
     "startCommand": "npm run start"
   }
 }

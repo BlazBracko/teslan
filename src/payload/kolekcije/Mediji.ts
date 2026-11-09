@@ -1,6 +1,8 @@
 import path from "node:path";
 import type { CollectionConfig } from "payload";
+import { OZNAKA_KATALOG } from "../../katalog/oznake";
 import { urednikAliAdmin, vsi } from "../dostop";
+import { hookiRevalidacije } from "../revalidacija";
 
 /**
  * Slike (Z83). Datoteke gredo v Cloudflare R2, ko so nastavljene S3
@@ -20,6 +22,8 @@ export const Mediji: CollectionConfig = {
     update: urednikAliAdmin,
     delete: urednikAliAdmin,
   },
+  // Opis ali obrez slike se pokaže na javnih straneh (Z17).
+  hooks: hookiRevalidacije(OZNAKA_KATALOG),
   upload: {
     // Lokalni disk (razvoj, testi); z R2 se ne uporablja.
     staticDir: path.resolve(process.cwd(), "media"),

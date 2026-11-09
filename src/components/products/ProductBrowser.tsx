@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import type { PriceListItem } from '@/data/priceList';
 import { crossFade, springUI } from '@/lib/motion';
 import CategoryBar, { VSE } from './CategoryBar';
-import ProductCard from './ProductCard';
+import ProductCard, { type VrsticaCenika } from './ProductCard';
 
 /**
  * Brskanje po ceniku: vodoravna vrstica kategorij nad mrežo kartic.
@@ -14,18 +13,14 @@ import ProductCard from './ProductCard';
  * bili ostali izdelki odsotni iz strežniško izrisanega HTML, torej tudi iz
  * tega, kar vidijo iskalniki.
  *
- * Filtriranje je na odjemalcu, zato je stran še naprej statično
- * prerenderirana in ob kliku ni čakanja na strežnik.
+ * Filtriranje je na odjemalcu, zato ob kliku ni čakanja na strežnik.
  */
 export default function ProductBrowser({
   items,
   categories,
-  month,
 }: {
-  items: PriceListItem[];
+  items: VrsticaCenika[];
   categories: string[];
-  /** Trenutni mesec (1–12), izračunan na strežniku. */
-  month: number;
 }) {
   const reduceMotion = useReducedMotion();
   const [selected, setSelected] = useState<string>(VSE);
@@ -71,7 +66,7 @@ export default function ProductBrowser({
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
               transition={reduceMotion ? crossFade : springUI}
             >
-              <ProductCard item={item} month={month} />
+              <ProductCard item={item} />
             </motion.div>
           ))}
         </AnimatePresence>

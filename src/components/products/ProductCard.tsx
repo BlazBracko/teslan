@@ -2,13 +2,29 @@
 
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
-import type { PriceListItem } from '@/data/priceList';
+import type { SlikaPogled } from '@/katalog/podatki';
+import { formatirajCeno } from '@/lib/denar';
 import { springUI } from '@/lib/motion';
 import { usePress } from '@/components/ui/Pressable';
-import { stockFor } from '@/data/availability';
-import StockTag from './StockTag';
+import StockTag, { type Stock } from './StockTag';
 
-const formatPrice = (price: number) => `${price.toFixed(2).replace('.', ',')} €`;
+/**
+ * Ena vrstica cenika: izdelek v eni velikosti. Podatki in razpoložljivost so
+ * iz CMS, izračunani na strežniku (`app/(frontend)/products/page.tsx`).
+ * Prehodno do K5, ki stran zgradi na novo.
+ */
+export interface VrsticaCenika {
+  id: string;
+  name: string;
+  /** Pakiranje oz. velikost. */
+  amount: string;
+  /** Cena v centih; `null` pri izdelkih, ki niso naročljivi. */
+  price: number | null;
+  category: string;
+  description?: string | null;
+  image?: SlikaPogled | null;
+  stock: Stock;
+}
 
 /**
  * Mirna nadomestna ploskev, kadar izdelek še ni dobil slike.
@@ -30,13 +46,8 @@ function ImagePlaceholder({ label }: { label: string }) {
  * `min-h` je nujen — brez njega bi se pri kratkem opisu stolpec s sliko
  * sesedel, ker višino vrstice določa vsebina.
  */
-/**
- * `month` prihaja od zunaj in se tu ne bere iz `new Date()`. Stran je
- * statično prerenderirana, zato bi klic ob buildu vrednost zamrznil; poleg
- * tega bi se strežniški in odjemalčev izris lahko razlikovala.
- */
-export default function ProductCard({ item, month }: { item: PriceListItem; month: number }) {
-  const stock = stockFor(item, month);
+export default function ProductCard({ item }: { item: VrsticaCenika }) {
+  const { stock } = item;
   const reduceMotion = useReducedMotion();
   const { pressed, handlers } = usePress();
 
@@ -51,14 +62,16 @@ export default function ProductCard({ item, month }: { item: PriceListItem; mont
       <div className="relative w-32 shrink-0 self-stretch sm:w-44 md:w-52">
         {item.image ? (
           <Image
-            src={item.image}
-            alt={item.name}
+            src={item.image.url}
+            alt={item.image.alt}
             fill
             sizes="(max-width: 640px) 128px, (max-width: 768px) 176px, 208px"
-            /* Izrezki na beli oz. prosojni podlagi se z `cover` obrežejo,
-               zato jih vsebujemo; fotografije pa napolnijo stolpec. */
-            className={item.imageFit === 'contain' ? 'object-contain p-3' : 'object-cover'}
-            style={item.imagePosition ? { objectPosition: item.imagePosition } : undefined}
+            className="object-cover"
+            style={
+              item.image.zarisce
+                ? { objectPosition: `${item.image.zarisce.x}% ${item.image.zarisce.y}%` }
+                : undefined
+            }
           />
         ) : (
           <ImagePlaceholder label={item.category} />
@@ -69,7 +82,9 @@ export default function ProductCard({ item, month }: { item: PriceListItem; mont
         <div className="flex items-start justify-between gap-3">
           <h3 className="type-body font-semibold text-green-deep">{item.name}</h3>
           {/* Cena je display font — v tej velikosti rabi tesnejši tracking (§15). */}
-          <span className="type-h3 whitespace-nowrap">{formatPrice(item.price)}</span>
+          {item.price !== null && (
+            <span className="type-h3 whitespace-nowrap">{formatirajCeno(item.price)}</span>
+          )}
         </div>
 
         {item.description && <p className="type-small text-ink-mid">{item.description}</p>}
