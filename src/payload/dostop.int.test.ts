@@ -176,7 +176,8 @@ describe("mediji (Z83)", () => {
       user: urednik,
       overrideAccess: false,
     });
-    expect(medij.url).toMatch(/^\/api\/media\/file\/logo-test.*\.png$/);
+    // Z nastavljenim NEXT_PUBLIC_SITE_URL (CI) je naslov absoluten.
+    expect(medij.url).toMatch(/^(https?:\/\/[^/]+)?\/api\/media\/file\/logo-test.*\.png$/);
     expect(medij.width).toBeGreaterThan(0);
   });
 
