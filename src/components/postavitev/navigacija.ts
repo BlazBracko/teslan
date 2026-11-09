@@ -2,9 +2,9 @@
  * Povezave glave (Z7) in noge (Z8) na enem mestu.
  *
  * Glava in noga kažeta samo na strani, ki že obstajajo: „Darila“ doda K10
- * (`/darila`), ikono košarice K6 (`/kosarica`), „Splošne pogoje“ in
- * „Odstop od pogodbe“ pa K11 (`/pogoji`, `/odstop`). Do takrat bi bile
- * povezave na 404.
+ * (`/darila`), „Splošne pogoje“ in „Odstop od pogodbe“ pa K11 (`/pogoji`,
+ * `/odstop`). Do takrat bi bile povezave na 404. Košarica ni v seznamu,
+ * ker ima v glavi svojo ikono s številom kosov.
  */
 export interface Povezava {
   href: string;
@@ -16,6 +16,9 @@ export const GLAVNA_NAVIGACIJA: Povezava[] = [
   { href: "/products", oznaka: "Izdelki" },
   { href: "/about", oznaka: "O nas" },
 ];
+
+/** Stran košarice (ikona v glavi, Z7). */
+export const POT_KOSARICE = "/kosarica";
 
 export const PRAVNE_POVEZAVE: Povezava[] = [{ href: "/privacyPolicy", oznaka: "Politika zasebnosti" }];
 

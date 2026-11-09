@@ -157,7 +157,15 @@ test.describe("S14: samo prikaz in neobjavljeni izdelki", () => {
 });
 
 test.describe("dostopnost javnih strani (Z6)", () => {
-  for (const pot of ["/", "/products", "/products/cesen-v-prahu", "/products/jagode", "/about", "/privacyPolicy"]) {
+  for (const pot of [
+    "/",
+    "/products",
+    "/products/cesen-v-prahu",
+    "/products/jagode",
+    "/kosarica",
+    "/about",
+    "/privacyPolicy",
+  ]) {
     test(`${pot} nima resnih ali kritičnih kršitev (axe)`, async ({ page }) => {
       await page.goto(pot);
       const rezultat = await new AxeBuilder({ page })
