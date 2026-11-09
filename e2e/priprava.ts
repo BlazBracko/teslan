@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
 import { testnoOkolje } from "../src/test/testna-baza";
+import { DNEVNIK_EPOSTE } from "./eposta";
 
 /**
  * Pred e2e testi: testna baza se izprazni, na novo zgradi z migracijami iz
@@ -12,7 +13,8 @@ import { testnoOkolje } from "../src/test/testna-baza";
  *
  * Playwright strežnika zažene pred tem korakom; kataloga do prvega testa ne
  * bereta (gl. `playwright.config.ts`). Predpomnjeni podatki prejšnjih zagonov
- * (`.next/cache/fetch-cache`) se izbrišejo, da testi vidijo sveži seed.
+ * (`.next/cache/fetch-cache`) se izbrišejo, da testi vidijo sveži seed, in
+ * dnevnik e-pošte prejšnjega zagona.
  */
 export default function priprava() {
   const env = {
@@ -31,4 +33,5 @@ export default function priprava() {
   });
   execFileSync("npx", ["payload", "run", "e2e/testni-podatki.ts"], { env, stdio: "inherit" });
   rmSync(".next/cache/fetch-cache", { recursive: true, force: true });
+  rmSync(DNEVNIK_EPOSTE, { force: true });
 }

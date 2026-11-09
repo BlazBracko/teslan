@@ -5,11 +5,13 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { sl } from "@payloadcms/translations/languages/sl";
 import { buildConfig } from "payload";
 import sharp from "sharp";
+import { dnevnikEposte, razberiPosiljatelja } from "./eposta/dnevnik";
 import { preberiOkolje } from "./env";
 import { NastavitveTrgovine } from "./payload/globali/NastavitveTrgovine";
 import { Izdelki } from "./payload/kolekcije/Izdelki";
 import { Kategorije } from "./payload/kolekcije/Kategorije";
 import { Mediji } from "./payload/kolekcije/Mediji";
+import { Narocila } from "./payload/kolekcije/Narocila";
 import { SkupinePonudbe } from "./payload/kolekcije/SkupinePonudbe";
 import { Uporabniki } from "./payload/kolekcije/Uporabniki";
 import { shrambaSlik } from "./payload/shramba";
@@ -38,9 +40,14 @@ export default buildConfig({
     supportedLanguages: { sl },
     fallbackLanguage: "sl",
   },
-  collections: [Izdelki, Kategorije, SkupinePonudbe, Mediji, Uporabniki],
+  collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, Mediji, Uporabniki],
   globals: [NastavitveTrgovine],
   editor: lexicalEditor(),
+  // Do K9 (Resend) se e-pošta izpiše v log strežnika (Z58).
+  email: dnevnikEposte({
+    posiljatelj: razberiPosiljatelja(env.EMAIL_FROM),
+    datoteka: env.EPOSTA_DNEVNIK,
+  }),
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL ?? "" },
     // Shema se spreminja samo z migracijami v `src/migrations` (tudi lokalno),

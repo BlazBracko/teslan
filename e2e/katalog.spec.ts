@@ -163,6 +163,8 @@ test.describe("dostopnost javnih strani (Z6)", () => {
     "/products/cesen-v-prahu",
     "/products/jagode",
     "/kosarica",
+    "/blagajna",
+    "/pogoji",
     "/about",
     "/privacyPolicy",
   ]) {
