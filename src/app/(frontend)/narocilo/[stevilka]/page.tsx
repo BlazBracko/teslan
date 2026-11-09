@@ -4,15 +4,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPayload } from "payload";
 import { LuCircleCheck, LuMapPin, LuPhone } from "react-icons/lu";
+import { IzprazniKosarico } from "@/components/narocilo/IzprazniKosarico";
 import { Zneski } from "@/components/narocilo/Zneski";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { naloziKontakt, naloziNastavitve } from "@/katalog/podatki";
 import { formatirajCeno } from "@/lib/denar";
+import { ponudnikPlacil } from "@/narocila/placila";
 import { narociloPogled, OZNAKE_DOSTAVE, OZNAKE_PLACILA, type NarociloPogled } from "@/narocila/pogled";
+import { narociloZZetonom, RAZLOG_NEPLACANO, uskladiSPonudnikom } from "@/narocila/potek-placila";
 import { OZNAKE_STATUSOV } from "@/narocila/statusi";
-import { OBLIKA_STEVILKE, zetonaSeUjemata } from "@/narocila/stevilka";
+import { OBLIKA_STEVILKE } from "@/narocila/stevilka";
+import { PARAMETER_PLACILA } from "@/narocila/stripe";
 
 /** Vedno sveže stanje naročila (status se spreminja v adminu). */
 export const dynamic = "force-dynamic";
@@ -26,25 +30,36 @@ export const metadata: Metadata = {
 
 type Parametri = {
   params: Promise<{ stevilka: string }>;
-  searchParams: Promise<{ k?: string | string[] }>;
+  searchParams: Promise<{ k?: string | string[]; [PARAMETER_PLACILA]?: string | string[] }>;
 };
 
 /**
  * Naročilo po številki in žetonu (Z32). Brez pravilnega žetona stran vrne
  * 404, ne glede na to, ali naročilo obstaja.
+ *
+ * Ko se kupec vrne s plačila (`?placilo=1`) in naročilo še čaka na
+ * plačilo, se stanje preveri neposredno pri Stripu: kupec takoj vidi
+ * plačano naročilo, tudi če dogodek webhooka še ni prispel (obdelava je
+ * ista in idempotentna, Z41).
  */
-async function najdiNarocilo(stevilka: string, zeton: string | undefined): Promise<NarociloPogled | null> {
+async function najdiNarocilo(
+  stevilka: string,
+  zeton: string | undefined,
+  poPlacilu: boolean,
+): Promise<NarociloPogled | null> {
   if (!OBLIKA_STEVILKE.test(stevilka) || !zeton) return null;
   const payload = await getPayload({ config });
-  const { docs } = await payload.find({
-    collection: "narocila",
-    where: { stevilka: { equals: stevilka } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  const narocilo = docs[0];
-  if (!narocilo || !zetonaSeUjemata(narocilo.zeton, zeton)) return null;
+  let narocilo = await narociloZZetonom(payload, stevilka, zeton);
+  if (!narocilo) return null;
+  const ponudnik = ponudnikPlacil();
+  if (poPlacilu && ponudnik && narocilo.status === "caka-placilo") {
+    try {
+      const izid = await uskladiSPonudnikom(payload, ponudnik, narocilo, { prekini: false, razlog: RAZLOG_NEPLACANO });
+      if (izid !== "caka" && izid !== "prezrto") narocilo = (await narociloZZetonom(payload, stevilka, zeton)) ?? narocilo;
+    } catch (napaka) {
+      payload.logger.error({ err: napaka, narocilo: stevilka }, "Stanja plačila ni bilo mogoče preveriti pri Stripu");
+    }
+  }
   return narociloPogled(narocilo);
 }
 
@@ -65,7 +80,7 @@ function Uvod({ n, email }: { n: NarociloPogled; email: string }) {
     case "poslano":
       return <>Naročilo je na poti k vam.</>;
     case "caka-placilo":
-      return <>Naročilo čaka na plačilo s kartico.</>;
+      return <>Plačila s kartico še nismo prejeli. Če ste plačali, bo potrjeno v nekaj trenutkih; osvežite stran.</>;
     default:
       return (
         <>
@@ -79,8 +94,10 @@ function Uvod({ n, email }: { n: NarociloPogled; email: string }) {
 }
 
 export default async function NarociloPage({ params, searchParams }: Parametri) {
-  const [{ stevilka }, { k }] = await Promise.all([params, searchParams]);
-  const n = await najdiNarocilo(decodeURIComponent(stevilka), typeof k === "string" ? k : undefined);
+  const [{ stevilka }, iskanje] = await Promise.all([params, searchParams]);
+  const { k } = iskanje;
+  const poPlacilu = iskanje[PARAMETER_PLACILA] === "1";
+  const n = await najdiNarocilo(decodeURIComponent(stevilka), typeof k === "string" ? k : undefined, poPlacilu);
   if (!n) notFound();
 
   const [nastavitve, kontakt] = await Promise.all([naloziNastavitve(), naloziKontakt()]);
@@ -88,6 +105,7 @@ export default async function NarociloPage({ params, searchParams }: Parametri) 
 
   return (
     <Container size="prose" className="flex flex-col gap-10 py-10 md:py-14">
+      {poPlacilu && n.status !== "preklicano" && <IzprazniKosarico />}
       <header className="flex flex-col gap-4">
         {novo && (
           <p className="flex items-center gap-2 type-small font-semibold text-success">

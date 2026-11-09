@@ -2,6 +2,7 @@ import type { Payload } from "payload";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Izdelki, Narocila, User } from "@/payload-types";
 import { payloadNaCistiBazi } from "@/test/payload";
+import { NadomestniPonudnik } from "@/test/placila";
 import { oddajNarocilo, SPOROCILO_ZAPRTA_TRGOVINA, type RezultatOddaje } from "./oddaja";
 
 /**
@@ -36,7 +37,11 @@ const postavka = (izdelek: Izdelki, kolicina = 1, velikost = 0) => ({
 });
 
 const oddaj = (kosarica: unknown[], obrazecPopravki: Record<string, unknown> = {}, kartica = false) =>
-  oddajNarocilo(payload, { obrazec: { ...obrazec, ...obrazecPopravki }, kosarica }, { kartica, zdaj: ZDAJ });
+  oddajNarocilo(
+    payload,
+    { obrazec: { ...obrazec, ...obrazecPopravki }, kosarica },
+    { placila: kartica ? new NadomestniPonudnik() : null, izvor: "https://trgovina.test", zdaj: ZDAJ },
+  );
 
 async function zaloga(izdelek: Izdelki, velikost = 0): Promise<number | null | undefined> {
   const doc = await payload.findByID({ collection: "izdelki", id: izdelek.id });
@@ -153,7 +158,7 @@ describe("oddaja ob prevzemu (Z30–Z32, Z43)", () => {
         payload,
         { obrazec, kosarica: [postavka(cesen)] },
         // 31. 12. ob 23.30 UTC je v Ljubljani že novo leto.
-        { kartica: false, zdaj: new Date("2026-12-31T23:30:00Z") },
+        { placila: null, zdaj: new Date("2026-12-31T23:30:00Z") },
       ),
     );
     expect(novoLeto.stevilka).toBe("T-2027-0001");

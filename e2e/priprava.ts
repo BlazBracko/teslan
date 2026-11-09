@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
 import { testnoOkolje } from "../src/test/testna-baza";
 import { DNEVNIK_EPOSTE } from "./eposta";
+import { PRAVI_STRIPE, RAZLOG_BREZ_PRAVEGA_STRIPA } from "./stripe";
 
 /**
  * Pred e2e testi: testna baza se izprazni, na novo zgradi z migracijami iz
@@ -34,4 +35,5 @@ export default function priprava() {
   execFileSync("npx", ["payload", "run", "e2e/testni-podatki.ts"], { env, stdio: "inherit" });
   rmSync(".next/cache/fetch-cache", { recursive: true, force: true });
   rmSync(DNEVNIK_EPOSTE, { force: true });
+  if (!PRAVI_STRIPE) console.warn(`\n⚠ ${RAZLOG_BREZ_PRAVEGA_STRIPA}\n`);
 }

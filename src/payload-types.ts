@@ -155,7 +155,7 @@ export interface Narocila {
    */
   nacinPlacila: 'kartica' | 'ob-prevzemu';
   /**
-   * Pri kartici se označi samo. Pri plačilu ob prevzemu ga označite, ko kupec plača.
+   * Pri kartici se označi samo, ko Stripe potrdi plačilo. Pri plačilu ob prevzemu ga označite, ko kupec plača.
    */
   placano?: boolean | null;
   kupecPrikaz?: string | null;

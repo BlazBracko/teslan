@@ -1,46 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { dodaj, dostava, ikona, izpolniKontakt, placilo, soglasje, velikost, zalogaIzdelka } from "./blagajna-pomocniki";
 import { prebranaEposta } from "./eposta";
 
 /**
  * Blagajna in naročila (K7: Z22, Z25, Z30–Z32, Z43, T2, T4, S9, S10).
+ * Plačilo s kartico (K8) preverja `placilo.spec.ts`.
  * Naročila oddajajo samo testi v tej datoteki, vsak na svojem izdelku, da
  * vzporedni testi ne vplivajo na zalogo: aronija sok (S9), suhi peteršilj
  * (Z30), testenine s šparglji (past za robote). Ostali testi le polnijo
  * košarico.
  */
-
-const ikona = (page: Page) => page.getByRole("banner").getByRole("link", { name: /^Košarica/ });
-
-async function dodaj(page: Page, slug: string, velikost: RegExp | null = null) {
-  await page.goto(`/products/${slug}`);
-  if (velikost) await page.getByRole("radiogroup").getByRole("radio", { name: velikost }).click();
-  await page.getByRole("button", { name: "V košarico" }).click();
-  await expect(page.getByText("Dodano v košarico", { exact: true }).last()).toBeVisible();
-}
-
-/** Id izdelka, prve velikosti in njena zaloga prek javnega REST. */
-async function velikost(request: APIRequestContext, slug: string) {
-  const odziv = await request.get(`/api/izdelki?where[slug][equals]=${slug}&depth=0`);
-  expect(odziv.ok()).toBe(true);
-  const { docs } = (await odziv.json()) as {
-    docs: Array<{ id: number; velikosti: Array<{ id: string; zaloga: number }> }>;
-  };
-  return { izdelekId: docs[0].id, velikostId: docs[0].velikosti[0].id, zaloga: docs[0].velikosti[0].zaloga };
-}
-
-const zalogaIzdelka = async (request: APIRequestContext, slug: string) => (await velikost(request, slug)).zaloga;
-
-async function izpolniKontakt(page: Page, ime = "Ana") {
-  await page.getByRole("textbox", { name: "Ime", exact: true }).fill(ime);
-  await page.getByRole("textbox", { name: "Priimek", exact: true }).fill("Novak");
-  await page.getByRole("textbox", { name: "E-pošta", exact: true }).fill("ana.novak@primer.si");
-  await page.getByRole("textbox", { name: "Telefon", exact: true }).fill("040 123 456");
-}
-
-const soglasje = (page: Page) => page.getByRole("checkbox", { name: /Strinjam se s splošnimi pogoji/ });
-const dostava = (page: Page) => page.getByRole("radiogroup", { name: "Način dostave" });
-const placilo = (page: Page) => page.getByRole("radiogroup", { name: "Način plačila" });
 
 test.describe("blagajna (Z25, T2, T4)", () => {
   test("S9: naročilo za prevzem s plačilom ob prevzemu od košarice do potrdila", async ({ page, request }) => {
@@ -110,9 +80,10 @@ test.describe("blagajna (Z25, T2, T4)", () => {
     await expect(page.getByLabel("Ulica in hišna številka")).toBeVisible();
     await expect(page.getByTestId("postnina")).toHaveText(/5,00\s€/);
     await expect(page.getByTestId("skupaj")).toHaveText(/10,00\s€/);
-    // Kartica bo na voljo s K8; do takrat pošte ni mogoče oddati.
-    await expect(page.getByText("Pošiljanje po pošti ta čas ni mogoče")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Oddaj naročilo" })).toBeDisabled();
+    // Kartica (K8) je na voljo, gumb vodi na plačilo.
+    await expect(placilo(page).getByRole("radio", { name: /S kartico/ })).toBeEnabled();
+    await placilo(page).getByRole("radio", { name: /S kartico/ }).click();
+    await expect(page.getByRole("button", { name: "Na plačilo" })).toBeEnabled();
 
     // Nazaj na prevzem: obe plačili, naslova ni več.
     await dostava(page).getByRole("radio", { name: /Prevzem na kmetiji/ }).click();
