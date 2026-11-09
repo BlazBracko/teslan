@@ -1,5 +1,5 @@
 import './globals.css';
-import { Manrope, DM_Serif_Display } from 'next/font/google';
+import { Fraunces, Inter } from 'next/font/google';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 
@@ -21,25 +21,28 @@ export const viewport = {
   themeColor: '#1a3a2a',
 };
 
-// Oba fonta se izpostavita kot CSS spremenljivki. Literalno ime
-// družine ("Manrope", "DM Serif Display") ne deluje — next/font
-// generira hashirano ime, zato sme na fonta kazati samo ta var.
-const manrope = Manrope({
+// Pisavi identitete (Z1): Fraunces za naslove, Inter za besedilo in
+// vmesnik. Obe sta spremenljivi z osjo optične velikosti in obe imata
+// latin-ext (č, š, ž). Izpostavita se kot CSS spremenljivki, ki ju
+// `globals.css` preslika v `--font-display` in `--font-sans`; literalno
+// ime družine ne deluje, ker ga next/font hashira.
+const fraunces = Fraunces({
   subsets: ['latin', 'latin-ext'],
+  axes: ['opsz', 'SOFT'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-fraunces',
 });
 
-const dmSerifDisplay = DM_Serif_Display({
-  weight: '400',
+const inter = Inter({
   subsets: ['latin', 'latin-ext'],
+  axes: ['opsz'],
   display: 'swap',
-  variable: '--font-dm-serif-display',
+  variable: '--font-inter',
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sl" className={`${manrope.variable} ${dmSerifDisplay.variable}`}>
+    <html lang="sl" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-[100dvh] bg-green-deep">
         <a
           href="#main"
