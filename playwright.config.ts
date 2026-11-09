@@ -17,10 +17,11 @@ const baseURLNoindex = `http://localhost:${PORT_NOINDEX}`;
  *
  * Oba uporabljata testno bazo (`teslan_test`), ki jo `e2e/priprava.ts` pred
  * testi izprazni, migrira in napolni s seedom. Strežnika Playwright zažene
- * pred `globalSetup`, zato preverjanje pripravljenosti ne sme brati kataloga
- * (`/api/users/me` ga ne), sicer bi strežnik predpomnil prazno bazo.
+ * pred `globalSetup`, zato preverjanje pripravljenosti ne sme seči v bazo
+ * (statična datoteka): sicer bi se Payload povezal na bazo, ki jo priprava
+ * nato izbriše, strežnik pa bi lahko predpomnil prazen katalog.
  */
-const pripravljen = (izvor: string) => `${izvor}/api/users/me`;
+const pripravljen = (izvor: string) => `${izvor}/logo.png`;
 const chromium = {
   ...devices["Desktop Chrome"],
   launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE

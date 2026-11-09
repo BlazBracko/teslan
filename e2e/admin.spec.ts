@@ -19,8 +19,17 @@ const urednik = {
   geslo: "geslo-urednika-123",
 };
 
+/**
+ * Obrazci admina delujejo šele po hidraciji; klik prej se izgubi (v CI, ko
+ * vzporedni testi obremenijo strežnik, se je to dogajalo).
+ */
+async function pocakajNaObrazec(page: Page) {
+  await page.waitForLoadState("networkidle");
+}
+
 async function prijava(page: Page, uporabnik: { email: string; geslo: string }) {
   await page.goto("/admin/login");
+  await pocakajNaObrazec(page);
   await page.locator("#field-email").fill(uporabnik.email);
   await page.locator("#field-password").fill(uporabnik.geslo);
   await page.getByRole("button", { name: "Prijava" }).click();
@@ -44,6 +53,7 @@ test("prvi zagon ustvari administratorja v slovenskem vmesniku", async ({ page }
   // Prvi uporabnik je vedno admin, zato vloge ni mogoče izbrati.
   await expect(page.locator("#field-vloga")).toHaveCount(0);
   await expect(page.getByText("Prikazano v adminu")).toBeVisible();
+  await pocakajNaObrazec(page);
 
   await page.locator("#field-email").fill(admin.email);
   await page.locator("#field-password").fill(admin.geslo);
