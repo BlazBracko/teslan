@@ -9,6 +9,7 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 | `DATABASE_URL` (Railway Postgres za staging) | K3 | **brez nadomestka na stagingu**: strežnik se ne zažene, `npm run migrate` pred deployem pade (lokalno in v CI Postgres v Dockerju) | Railway → staging → dodajte Postgres, spremenljivko povežite s storitvijo |
 | `PAYLOAD_SECRET` (staging) | K3 | **brez nadomestka na stagingu**: strežnik se ne zažene | Railway → staging → Variables (`openssl rand -hex 32`) |
 | `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL` (R2 `teslan-staging`) | K3 | lokalni disk (`media/`); na Railwayu se slike ob vsakem deployu izgubijo | Cloudflare R2 + Railway → staging → Variables |
+| `STRIPE_SECRET_KEY` (testni `sk_test_…` za staging), `STRIPE_WEBHOOK_SECRET` | K8 | brez njiju je plačilo s kartico na blagajni onemogočeno, zato tudi pošiljanje po pošti (samo kartica, Z22); prevzem s plačilom ob prevzemu deluje | Stripe → Developers → API keys; Webhooks → endpoint `https://<staging>/api/stripe/webhook` z dogodki `checkout.session.completed`, `checkout.session.expired` (neobvezno še `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`) → Signing secret; oboje v Railway → staging → Variables |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (staging) | K4 | brez njiju seed administratorja ne ustvari; prvega uporabnika (vedno administrator) ustvarite na `/admin` | Railway → staging → Variables (geslo vsaj 12 znakov) |
 
 ## Preskočeni preizkusi
@@ -16,6 +17,8 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 | Preizkus | Razlog | Kaj ga omogoči |
 |---|---|---|
 | Nalaganje slik v R2 (Z83, S19) | ni R2 ključev; testi preverijo lokalni disk in sestavo javnega URL-ja | R2 bucket in `S3_*` na stagingu, ročni preizkus v adminu (K13) |
+| S11 s pravim Stripom (`e2e/stripe-pravi.spec.ts`: kartica 4242 4242 4242 4242, prekinitev) | ni testnih ključev Stripe; isti tok (blagajna → Checkout → podpisan webhook → potrdilo, prekinitev) preveri `e2e/placilo.spec.ts` z nadomestnim Stripom (`e2e/stripe-nadomestek.ts`), logiko pa integracijski testi (S8) | GitHub secrets `STRIPE_SECRET_KEY` (testni) in `STRIPE_WEBHOOK_SECRET` (poljuben `whsec_…`, ali iz `stripe listen`) ter ju dodati v okolje koraka Playwright v `.github/workflows/ci.yml`; lokalno: ključa v okolju pred `npm run test:e2e` |
+| Testno kartično naročilo prek webhooka na stagingu (S19) | ni Stripe računa in webhooka za staging | ključa in webhook zgoraj, nato ročni preizkus (K13) |
 
 ## Dnevnik po korakih
 
@@ -52,3 +55,13 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Omejitev naročil na IP vzame zadnji vnos glave `X-Forwarded-For` (naslov, ki ga vidi Railwayev posrednik). Če se izkaže, da Railway glave ne doda tako, je treba to preveriti na stagingu (K13).
 - `/pogoji` je začasna stran z osnovnimi podatki (blagajna jo potrebuje za potrditev pogojev); celotno besedilo in povezave v nogi doda K11.
 - Ni preskočenih preizkusov.
+
+### K8 Stripe
+- Nova spremenljivka za staging: `STRIPE_SECRET_KEY` in `STRIPE_WEBHOOK_SECRET` (obe ali nobena, gl. tabelo zgoraj). **Dokler ju ni, je kartica na blagajni onemogočena in naročil po pošti ni mogoče oddati**; prevzem s plačilom ob prevzemu deluje.
+- Webhook endpoint v Stripu: `https://<staging>/api/stripe/webhook`, dogodka `checkout.session.completed` in `checkout.session.expired`. Pot mora ostati dosegljiva brez Basic Auth (K12 jo izvzame, Z74).
+- `NEXT_PUBLIC_SITE_URL` mora biti na stagingu nastavljen: iz njega se sestavita naslova, kamor Stripe vrne kupca (potrdilo naročila, `/blagajna/preklic`). Brez njega se uporabi naslov zahteve.
+- Načini plačila se v Checkoutu prikažejo po nastavitvah v Stripu (kartice; Apple Pay in Google Pay vklopite v *Settings → Payment methods*; za Apple Pay na lastni domeni Stripe ne zahteva ničesar, ker je stran gostovana).
+- Varovalka: če dogodek webhooka ne pride (npr. napačna skrivnost), se kartična naročila, ki čakajo na plačilo dlje kot 35 minut, ob naslednji oddaji naročila uskladijo s Stripom (preklic in vrnitev zaloge oz. potrditev plačila). Potrdilo po vrnitvi s plačila stanje vedno preveri pri Stripu, zato kupec plačano naročilo vidi tudi brez webhooka.
+- Vračila ostajajo ročna v Stripu (izven obsega). Če kupec plača naročilo, ki ga je Sandi medtem preklical, se naročilo označi kot plačano z interno opombo „Znesek vrnite kupcu v Stripu.“
+- `STRIPE_API_URL` je samo za e2e teste (nadomestni Stripe); na stagingu in v produkciji ga ne nastavljajte.
+- Preskočen preizkus: S11 s pravim Stripom (gl. tabelo preskočenih preizkusov).

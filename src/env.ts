@@ -51,6 +51,8 @@ export const envShema = z
     STRIPE_WEBHOOK_SECRET: neobvezno(
       z.string().startsWith("whsec_", { message: "mora se začeti z whsec_" }),
     ),
+    // Samo za teste: naslov nadomestnega Stripe API (e2e/stripe-nadomestek.ts).
+    STRIPE_API_URL: neobvezno(url),
 
     // E-pošta (K9)
     RESEND_API_KEY: neobvezno(

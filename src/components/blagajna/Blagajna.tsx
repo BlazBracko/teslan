@@ -31,6 +31,9 @@ import { OZNAKE_PLACILA } from "@/narocila/pogled";
  * se preveri v brskalniku in še enkrat na strežniku z isto shemo. Ob
  * uspehu se košarica izprazni in kupec gre na potrdilo naročila.
  *
+ * Pri kartici (T3) gre kupec na Stripe Checkout; košarica se izprazni šele
+ * na potrdilu po plačilu, zato ob prekinitvi plačila ostane (T3 korak 4).
+ *
  * Nakupni tok je brez okrasnih animacij (Z2).
  */
 
@@ -59,6 +62,8 @@ type Napaka =
 export interface BlagajnaProps {
   trgovinaOdprta: boolean;
   kartica: boolean;
+  /** Kupec se je vrnil s Stripa, ker je plačilo prekinil. */
+  placiloPrekinjeno?: boolean;
   navodilaZaPrevzem: string | null;
   naslovKmetije: string | null;
   telefon: string | null;
@@ -70,7 +75,17 @@ export function Blagajna(props: BlagajnaProps) {
   const [rezultat, setRezultat] = useState<{ za: PostavkaKosarice[]; pregled: PregledKosarice } | null>(null);
   const [napakaPreverjanja, setNapakaPreverjanja] = useState<PostavkaKosarice[] | null>(null);
   const [poskus, setPoskus] = useState(0);
-  const [oddano, setOddano] = useState(false);
+  const [oddano, setOddano] = useState<"potrdilo" | "placilo" | null>(null);
+
+  // Kupec se s Stripa vrne z gumbom Nazaj: stran iz predpomnilnika brskalnika
+  // ne sme ostati pri „Odpiram stran za plačilo …“.
+  useEffect(() => {
+    const obPrikazu = (e: PageTransitionEvent) => {
+      if (e.persisted) setOddano(null);
+    };
+    window.addEventListener("pageshow", obPrikazu);
+    return () => window.removeEventListener("pageshow", obPrikazu);
+  }, []);
 
   useEffect(() => {
     if (!kosarica || kosarica.length === 0 || oddano) return;
@@ -93,7 +108,7 @@ export function Blagajna(props: BlagajnaProps) {
   if (oddano) {
     return (
       <p role="status" className="type-body text-ink-muted">
-        Naročilo je oddano. Odpiram potrdilo …
+        {oddano === "placilo" ? "Naročilo je oddano. Odpiram stran za plačilo …" : "Naročilo je oddano. Odpiram potrdilo …"}
       </p>
     );
   }
@@ -168,12 +183,25 @@ export function Blagajna(props: BlagajnaProps) {
   }
 
   return (
-    <ObrazecBlagajne
-      {...props}
-      kosarica={kosarica}
-      pregled={pregled}
-      obOddaji={() => setOddano(true)}
-    />
+    <div className="flex flex-col gap-8">
+      {props.placiloPrekinjeno && <ObvestiloOPrekinitvi />}
+      <ObrazecBlagajne {...props} kosarica={kosarica} pregled={pregled} obOddaji={setOddano} />
+    </div>
+  );
+}
+
+function ObvestiloOPrekinitvi() {
+  return (
+    <div role="status" className="flex gap-3 rounded-lg bg-warning-soft p-4 type-small text-warning">
+      <LuCircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+      <div className="flex flex-col gap-1">
+        <p className="font-semibold">Plačilo je bilo prekinjeno</p>
+        <p>
+          Kartica ni bila bremenjena in naročilo je preklicano. Izdelki so še v košarici, zato lahko naročilo
+          oddate znova.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -225,12 +253,13 @@ function ObrazecBlagajne({
 }: BlagajnaProps & {
   kosarica: PostavkaKosarice[];
   pregled: PregledKosarice;
-  obOddaji: () => void;
+  obOddaji: (kam: "potrdilo" | "placilo") => void;
 }) {
   const router = useRouter();
   const povzetekNapakRef = useRef<HTMLDivElement>(null);
   const [nacinDostave, setNacinDostave] = useState<NacinDostave>("prevzem");
-  const [izbranoPlacilo, setIzbranoPlacilo] = useState<NacinPlacila | undefined>(kartica ? undefined : "ob-prevzemu");
+  // Pri prevzemu je privzeto plačilo ob prevzemu; kupec lahko izbere kartico.
+  const [izbranoPlacilo, setIzbranoPlacilo] = useState<NacinPlacila>("ob-prevzemu");
   const [soglasje, setSoglasje] = useState(false);
   const [napake, setNapake] = useState<NapakeBlagajne>({});
   const [napaka, setNapaka] = useState<Napaka | null>(null);
@@ -239,8 +268,13 @@ function ObrazecBlagajne({
   const { dostava } = pregled;
   const posta = nacinDostave === "posta";
   const placila = dovoljenaPlacila(nacinDostave);
-  // Pri pošti je plačilo samo s kartico (Z22); izbira ob prevzemu tedaj ne velja.
-  const nacinPlacila = izbranoPlacilo && placila.includes(izbranoPlacilo) ? izbranoPlacilo : undefined;
+  // Pri pošti je plačilo samo s kartico (Z22): izbira ob prevzemu tedaj ne
+  // velja in je kartica, če je na voljo, izbrana sama.
+  const nacinPlacila = placila.includes(izbranoPlacilo)
+    ? izbranoPlacilo
+    : placila.length === 1 && (placila[0] !== "kartica" || kartica)
+      ? placila[0]
+      : undefined;
   const karticaEdina = posta && !kartica;
 
   const znesek = izracunajZnesek(
@@ -299,7 +333,13 @@ function ObrazecBlagajne({
     try {
       const r = await oddajNarociloNaStrezniku({ obrazec, kosarica, [IME_PASTI]: besedilo(IME_PASTI) });
       if (r.ok) {
-        obOddaji();
+        if (r.placilo) {
+          // Košarica ostane, dokler plačilo ni opravljeno (T3 korak 4).
+          obOddaji("placilo");
+          window.location.assign(r.placilo);
+          return;
+        }
+        obOddaji("potrdilo");
         izprazniKosarico();
         router.replace(r.pot);
         return;
@@ -462,7 +502,7 @@ function ObrazecBlagajne({
                     p === "kartica"
                       ? kartica
                         ? "Varno plačilo s kartico, Apple Pay ali Google Pay."
-                        : "Plačilo s kartico bo na voljo v kratkem."
+                        : "Plačilo s kartico trenutno ni na voljo."
                       : "Plačate ob prevzemu na kmetiji."
                   }
                 />
@@ -549,10 +589,12 @@ function ObrazecBlagajne({
             }
           />
           <Button type="submit" size="lg" block loading={posiljam} disabled={karticaEdina}>
-            Oddaj naročilo
+            {nacinPlacila === "kartica" ? "Na plačilo" : "Oddaj naročilo"}
           </Button>
           <p className="type-caption text-ink-subtle">
-            Z oddajo se zavežete k plačilu. Potrdilo dobite na e-pošto; to ni račun.
+            {nacinPlacila === "kartica"
+              ? "Plačate na varni strani Stripe. Potrdilo dobite na e-pošto, ko je plačilo opravljeno; to ni račun."
+              : "Z oddajo se zavežete k plačilu. Potrdilo dobite na e-pošto; to ni račun."}
           </p>
         </div>
       </aside>

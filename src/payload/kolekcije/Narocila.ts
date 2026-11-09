@@ -1,7 +1,15 @@
-import { ValidationError, type CollectionBeforeChangeHook, type CollectionConfig, type Field, type FieldAccess } from "payload";
+import {
+  ValidationError,
+  type CollectionAfterChangeHook,
+  type CollectionBeforeChangeHook,
+  type CollectionConfig,
+  type Field,
+  type FieldAccess,
+} from "payload";
 import { OZNAKA_KATALOG } from "../../katalog/oznake";
 import { formatirajCeno } from "../../lib/denar";
 import { oznaciZalogoVrnjeno, povecajZalogo, sejaBaze } from "../../narocila/baza";
+import { ponudnikPlacil } from "../../narocila/placila";
 import { OZNAKE_STATUSOV, razlogNedovoljenegaPrehoda, STATUSI, type StatusNarocila } from "../../narocila/statusi";
 import { urednikAliAdmin } from "../dostop";
 import { razveljavi } from "../revalidacija";
@@ -66,6 +74,29 @@ const prehodInPreklic: CollectionBeforeChangeHook = async ({ data, originalDoc, 
   return data;
 };
 
+/**
+ * Če naročilo, ki čaka na plačilo s kartico, prekliče Sandi v adminu, se
+ * seja Stripe Checkout takoj izteče, da kupec ne more plačati preklicanega
+ * naročila (Z42). Preklici iz obdelave plačil (`context.brezStripa`) sejo
+ * že imajo potečeno. Napaka Stripa shranjevanja ne ustavi.
+ */
+const iztekSejeObPreklicu: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
+  if (
+    operation === "update" &&
+    previousDoc?.status === "caka-placilo" &&
+    doc.status === "preklicano" &&
+    doc.stripeSessionId &&
+    !req.context.brezStripa
+  ) {
+    try {
+      await ponudnikPlacil()?.prekiniSejo(doc.stripeSessionId);
+    } catch (napaka) {
+      req.payload.logger.error({ err: napaka, narocilo: doc.stevilka }, "Seje Stripe ob preklicu ni bilo mogoče izteči");
+    }
+  }
+  return doc;
+};
+
 export const Narocila: CollectionConfig = {
   slug: "narocila",
   labels: { singular: "Naročilo", plural: "Naročila" },
@@ -95,6 +126,7 @@ export const Narocila: CollectionConfig = {
         if (req.context.zalogaVrnjena) razveljavi(OZNAKA_KATALOG, req);
         return doc;
       },
+      iztekSejeObPreklicu,
     ],
   },
   fields: [
@@ -170,7 +202,8 @@ export const Narocila: CollectionConfig = {
           defaultValue: false,
           admin: {
             width: "34%",
-            description: "Pri kartici se označi samo. Pri plačilu ob prevzemu ga označite, ko kupec plača.",
+            description:
+              "Pri kartici se označi samo, ko Stripe potrdi plačilo. Pri plačilu ob prevzemu ga označite, ko kupec plača.",
           },
         },
       ],

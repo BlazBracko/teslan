@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { DNEVNIK_EPOSTE } from "./e2e/eposta";
+import { NADOMESTEK, PRAVI_STRIPE } from "./e2e/stripe";
 import { testnoOkolje } from "./src/test/testna-baza";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
@@ -28,9 +29,26 @@ const baseURLNoindex = `http://localhost:${PORT_NOINDEX}`;
  *
  * Projekt `zaprta-trgovina` (S15) zapre trgovino v nastavitvah, zato teče
  * šele, ko so ostali testi končani, in jo na koncu spet odpre.
+ *
+ * Plačila s kartico (K8): brez pravih testnih ključev Stripe v okolju
+ * strežnika kličeta nadomestni Stripe (`e2e/stripe-nadomestek.ts`), gl.
+ * `e2e/stripe.ts`.
  */
+const PORT_STRIPE = PORT + 5;
+const okoljeStripe: Record<string, string> = PRAVI_STRIPE
+  ? {
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
+      STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
+      STRIPE_API_URL: "",
+    }
+  : {
+      STRIPE_SECRET_KEY: NADOMESTEK.kljuc,
+      STRIPE_WEBHOOK_SECRET: NADOMESTEK.skrivnost,
+      STRIPE_API_URL: `http://localhost:${PORT_STRIPE}`,
+    };
 const okoljeStreznika = {
   ...testnoOkolje(),
+  ...okoljeStripe,
   EPOSTA_DNEVNIK: DNEVNIK_EPOSTE,
   OMEJITEV_NAROCIL_NA_IP: "1000",
 };
@@ -71,6 +89,17 @@ export default defineConfig({
     },
   ],
   webServer: [
+    ...(PRAVI_STRIPE
+      ? []
+      : [
+          {
+            command: "node e2e/stripe-nadomestek.ts",
+            url: `http://localhost:${PORT_STRIPE}/zdravje`,
+            env: { STRIPE_NADOMESTEK_PORT: String(PORT_STRIPE), STRIPE_WEBHOOK_SECRET: NADOMESTEK.skrivnost },
+            reuseExistingServer: !process.env.CI,
+            timeout: 30_000,
+          },
+        ]),
     {
       command: process.env.E2E_SKIP_BUILD
         ? `npm run start -- --port ${PORT}`

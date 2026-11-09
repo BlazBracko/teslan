@@ -55,6 +55,12 @@ Ob prvem obisku `/admin` (prazna baza) se odpre obrazec za prvega uporabnika, ki
 
 Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo. Ista gradnja teče dvakrat: na portu 3100 kot produkcija in na 3101 z `NOINDEX=1` kot staging; testi v `e2e/noindex/` tečejo samo proti drugemu.
 
+Plačila s kartico v e2e: brez testnih ključev Stripe v okolju Playwright zažene nadomestni Stripe ([`e2e/stripe-nadomestek.ts`](e2e/stripe-nadomestek.ts)) in tok s kartico preveri `e2e/placilo.spec.ts`; s `STRIPE_SECRET_KEY` (testni) in `STRIPE_WEBHOOK_SECRET` v okolju strežnika uporabljata pravi Stripe in teče `e2e/stripe-pravi.spec.ts` (S11).
+
+## Plačila (Stripe)
+
+Kartično plačilo teče prek gostovanega Stripe Checkout ([`src/narocila/stripe.ts`](src/narocila/stripe.ts)). Naročilo nastane s statusom „Čaka na plačilo“ in rezervirano zalogo; webhook `/api/stripe/webhook` ga ob plačilu označi kot plačano (status „Novo“, e-pošta E1 in E2), ob izteku seje (30 min) ali prekinitvi pa prekliče in vrne zalogo ([`src/narocila/potek-placila.ts`](src/narocila/potek-placila.ts)). Lokalno webhook posredujete s Stripe CLI: `stripe listen --forward-to localhost:3000/api/stripe/webhook` (izpisano skrivnost nastavite kot `STRIPE_WEBHOOK_SECRET`). Brez ključev je kartica na blagajni onemogočena.
+
 ## Identiteta in komponente
 
 - Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/(frontend)/globals.css`](<src/app/(frontend)/globals.css>) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.

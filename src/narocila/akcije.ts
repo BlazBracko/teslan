@@ -7,14 +7,28 @@ import { okolje } from "@/env";
 import { IME_PASTI } from "./obrazec";
 import { oddajNarocilo, type RezultatOddaje } from "./oddaja";
 import { ipIzGlav, NAROCIL_NA_IP, OKNO_OMEJITVE_MS, OmejitevNarocil } from "./omejitev";
-import { karticaNaVoljo } from "./placila";
+import { pocistiNeplacana } from "./potek-placila";
+import { ponudnikPlacil } from "./placila";
 
 /**
  * Strežniška akcija blagajne (Z25–Z27, Z30). Vnos iz brskalnika je
  * nezaupanja vreden: obrazec, košarico, stikalo trgovine, zalogo in cene
  * preveri `oddajNarocilo` na strežniku. Pred tem: past za robote in
  * omejitev naročil na IP (Z26).
+ *
+ * Pri plačilu s kartico (K8) gre kupec na Stripe Checkout; povratna naslova
+ * se sestavita iz `NEXT_PUBLIC_SITE_URL` ali, če ni nastavljen, iz naslova
+ * zahteve. Ob vsaki oddaji se uskladijo še kartična naročila, ki predolgo
+ * čakajo na plačilo (varovalka, če dogodek webhooka ni prispel, P10).
  */
+
+/** Izvor strani iz glav zahteve (za razvoj brez `NEXT_PUBLIC_SITE_URL`). */
+function izvorIzGlav(glave: Headers): string | undefined {
+  const gostitelj = glave.get("x-forwarded-host") ?? glave.get("host");
+  if (!gostitelj) return undefined;
+  const protokol = glave.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? "http";
+  return `${protokol}://${gostitelj.split(",")[0].trim()}`;
+}
 
 let omejitevProcesa: OmejitevNarocil | undefined;
 /** Ena omejitev na proces; ustvari se ob prvi oddaji (gradnja okolja ne bere). */
@@ -35,7 +49,8 @@ export async function oddajNarociloNaStrezniku(vnos: {
     return { ok: false, vrsta: "zavrnjeno", sporocilo: "Naročila ni bilo mogoče oddati. Pokličite nas po telefonu." };
   }
 
-  const ip = ipIzGlav(await headers());
+  const glave = await headers();
+  const ip = ipIzGlav(glave);
   if (!omejitev().dovoljeno(ip)) {
     payload.logger.warn("Blagajna: preveč naročil z enega IP, naročilo zavrnjeno.");
     return {
@@ -45,7 +60,20 @@ export async function oddajNarociloNaStrezniku(vnos: {
     };
   }
 
-  const rezultat = await oddajNarocilo(payload, { obrazec: vnos?.obrazec, kosarica: vnos?.kosarica }, { kartica: karticaNaVoljo() });
+  const placila = ponudnikPlacil();
+  if (placila) {
+    try {
+      await pocistiNeplacana(payload, placila);
+    } catch (napaka) {
+      payload.logger.error({ err: napaka }, "Varovalka za neplačana naročila ni uspela");
+    }
+  }
+
+  const rezultat = await oddajNarocilo(
+    payload,
+    { obrazec: vnos?.obrazec, kosarica: vnos?.kosarica },
+    { placila, izvor: okolje().NEXT_PUBLIC_SITE_URL ?? izvorIzGlav(glave) },
+  );
   if (rezultat.ok) omejitev().zabelezi(ip);
   return rezultat;
 }

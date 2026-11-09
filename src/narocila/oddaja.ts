@@ -13,6 +13,7 @@ import type { Narocila, NastavitveTrgovine } from "@/payload-types";
 import { razveljavi } from "@/payload/revalidacija";
 import { naslednjaZaporedna, sejaBaze, zakleniOddajo, zakleniVelikosti, zmanjsajZalogo } from "./baza";
 import { preveriBlagajno, type NapakeBlagajne } from "./obrazec";
+import type { PonudnikPlacil } from "./placila";
 import { narociloPogled, potNarocila } from "./pogled";
 import { zacetniStatus } from "./statusi";
 import { letoVLjubljani, oblikujStevilko, predponaLeta, ustvariZeton } from "./stevilka";
@@ -32,6 +33,13 @@ import { letoVLjubljani, oblikujStevilko, predponaLeta, ustvariZeton } from "./s
  * nič; kupec dobi seznam postavk s težavami. Po potrditvi se pri plačilu
  * ob prevzemu pošljeta obvestili E1 in E2 (Z43); napaka pri pošiljanju
  * naročila ne razveljavi (Z59).
+ *
+ * Pri plačilu s kartico (Z40) naročilo nastane s statusom „Čaka na
+ * plačilo“ in z rezervirano zalogo; po potrditvi transakcije se ustvari
+ * seja Stripe Checkout, kupec gre na njen naslov (`placilo`). E1 in E2 se
+ * pošljeta šele ob plačilu (`potek-placila.ts`). Če seje ni mogoče
+ * ustvariti, se naročilo takoj prekliče (zaloga se vrne) in kupec dobi
+ * napako; košarica mu ostane.
  */
 
 export interface TezavaOddaje {
@@ -40,16 +48,31 @@ export interface TezavaOddaje {
 }
 
 export type RezultatOddaje =
-  | { ok: true; id: number; stevilka: string; zeton: string; pot: string }
+  | {
+      ok: true;
+      id: number;
+      stevilka: string;
+      zeton: string;
+      /** Stran potrdila naročila. */
+      pot: string;
+      /** Pri kartici: naslov strani za plačilo (Stripe Checkout), kamor gre kupec. */
+      placilo?: string;
+    }
   | { ok: false; vrsta: "obrazec"; sporocilo: string; napake: NapakeBlagajne }
   | { ok: false; vrsta: "kosarica"; sporocilo: string; tezave: TezavaOddaje[] }
   | { ok: false; vrsta: "zavrnjeno"; sporocilo: string };
 
 export interface MoznostiOddaje {
-  /** Ali je plačilo s kartico na voljo (Stripe, K8). */
-  kartica: boolean;
+  /** Ponudnik plačil s kartico (Stripe) ali `null`, ko kartica ni na voljo. */
+  placila: PonudnikPlacil | null;
+  /** Izvor strani (npr. https://www.teslan.si) za povratna naslova s Stripa. */
+  izvor?: string;
   zdaj?: Date;
 }
+
+export const RAZLOG_NAPAKA_ZACETKA = "Neplačano: plačila s kartico ni bilo mogoče začeti.";
+export const SPOROCILO_NAPAKA_PLACILA =
+  "Plačila s kartico ta hip ni mogoče začeti. Naročilo ni bilo oddano, izdelki so ostali v košarici. Poskusite znova čez nekaj minut ali izberite prevzem na kmetiji in plačilo ob prevzemu.";
 
 export const SPOROCILO_ZAPRTA_TRGOVINA =
   "Spletna trgovina je trenutno zaprta, zato naročila ni mogoče oddati. Košarica ostane shranjena.";
@@ -63,7 +86,7 @@ class Razveljavi extends Error {
 export async function oddajNarocilo(
   payload: Payload,
   vnos: { obrazec: unknown; kosarica: unknown },
-  { kartica, zdaj = new Date() }: MoznostiOddaje,
+  { placila, izvor, zdaj = new Date() }: MoznostiOddaje,
 ): Promise<RezultatOddaje> {
   const obrazec = preveriBlagajno(vnos.obrazec);
   if (!obrazec.success) {
@@ -74,7 +97,7 @@ export async function oddajNarocilo(
   if (kosarica.length === 0) {
     return { ok: false, vrsta: "zavrnjeno", sporocilo: "Košarica je prazna." };
   }
-  if (podatki.nacinPlacila === "kartica" && !kartica) {
+  if (podatki.nacinPlacila === "kartica" && !placila) {
     return {
       ok: false,
       vrsta: "zavrnjeno",
@@ -224,17 +247,69 @@ export async function oddajNarocilo(
   // Zaloga se je spremenila: katalog na javnih straneh se osveži.
   razveljavi(OZNAKA_KATALOG, { context: {}, payload });
 
-  if (narocilo.status === "novo") {
-    await posljiObvestilaONovemNarocilu(payload, narocilo, nastavitve);
-  }
-
-  return {
-    ok: true,
+  const uspeh = {
+    ok: true as const,
     id: narocilo.id,
     stevilka: narocilo.stevilka,
     zeton: narocilo.zeton,
     pot: potNarocila(narocilo.stevilka, narocilo.zeton),
   };
+
+  if (narocilo.nacinPlacila === "kartica" && placila) {
+    const placilo = await zacniPlacilo(payload, placila, narocilo, { izvor, zdaj });
+    return placilo ? { ...uspeh, placilo } : { ok: false, vrsta: "zavrnjeno", sporocilo: SPOROCILO_NAPAKA_PLACILA };
+  }
+
+  if (narocilo.status === "novo") {
+    await posljiObvestilaONovemNarocilu(payload, narocilo, nastavitve);
+  }
+  return uspeh;
+}
+
+/**
+ * Ustvari sejo Stripe Checkout za naročilo in shrani njen id (Z40). Vrne
+ * naslov strani za plačilo ali `null`, ko ne uspe; tedaj je naročilo že
+ * preklicano in zaloga vrnjena.
+ */
+async function zacniPlacilo(
+  payload: Payload,
+  placila: PonudnikPlacil,
+  narocilo: Narocila,
+  { izvor, zdaj }: { izvor?: string; zdaj: Date },
+): Promise<string | null> {
+  let sejaId: string | undefined;
+  try {
+    const osnova = izvor ?? okolje().NEXT_PUBLIC_SITE_URL;
+    if (!osnova) throw new Error("Ni izvora strani (NEXT_PUBLIC_SITE_URL) za povratna naslova s Stripa.");
+    const seja = await placila.ustvariSejo(narocilo, { izvor: osnova, zdaj });
+    sejaId = seja.id;
+    await payload.update({
+      collection: "narocila",
+      id: narocilo.id,
+      data: { stripeSessionId: seja.id },
+      overrideAccess: true,
+      context: { sistem: true },
+    });
+    return seja.url;
+  } catch (napaka) {
+    payload.logger.error({ err: napaka, narocilo: narocilo.stevilka }, "Seje za plačilo s kartico ni bilo mogoče ustvariti");
+    try {
+      if (sejaId) await placila.prekiniSejo(sejaId);
+      await payload.update({
+        collection: "narocila",
+        id: narocilo.id,
+        data: { status: "preklicano", razlogPreklica: RAZLOG_NAPAKA_ZACETKA },
+        overrideAccess: true,
+        context: { brezStripa: true },
+      });
+    } catch (napakaPreklica) {
+      payload.logger.error(
+        { err: napakaPreklica, narocilo: narocilo.stevilka },
+        "Naročila brez plačila ni bilo mogoče preklicati; preklic ga ob izteku (varovalka) ali ročno v adminu",
+      );
+    }
+    return null;
+  }
 }
 
 /**
