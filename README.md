@@ -31,9 +31,16 @@ npm run dev                  # http://localhost:3000
 | `npm run typecheck` | `next typegen` + `tsc --noEmit` |
 | `npm run lint` | ESLint (`eslint .`) |
 | `npm test` | Vitest (enkratni zagon); `npm run test:watch` za sprotni način |
-| `npm run test:e2e` | Playwright na produkcijski gradnji (sam zgradi in zažene strežnik na portu 3100) |
+| `npm run test:e2e` | Playwright na produkcijski gradnji (sam zgradi in zažene strežnika na portih 3100 in 3101) |
 
-Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo.
+Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo. Ista gradnja teče dvakrat: na portu 3100 kot produkcija in na 3101 z `NOINDEX=1` kot staging; testi v `e2e/noindex/` tečejo samo proti drugemu.
+
+## Identiteta in komponente
+
+- Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/globals.css`](src/app/globals.css) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.
+- Knjižnica komponent je v [`src/components/ui/`](src/components/ui/) (gumb, polja, izbirniki, dialog, predal, zavihki, oznake, kartica, cena, obvestila, okostje, prazno stanje). Interaktivni deli so na Radix primitivih, gibanje (vzmeti) je v [`src/lib/motion.ts`](src/lib/motion.ts). Ikone: Lucide prek `react-icons/lu`.
+- Slogovni vodnik `/styleguide` pokaže vse to v vseh stanjih, a samo pri `NOINDEX=1` (staging, lokalno z `NOINDEX=1 npm run dev`); v produkciji vrne 404.
+- `src/components/ui/tokeni.test.ts` preverja kontraste parov besedilo/ozadje (WCAG 2.2 AA) in da nove komponente ne vsebujejo surovih barv.
 
 ## Okolja in spremenljivke
 
