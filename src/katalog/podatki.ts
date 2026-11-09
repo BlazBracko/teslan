@@ -1,10 +1,12 @@
 import config from "@payload-config";
 import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
+import { okolje } from "@/env";
 import { kontaktIzNastavitev, type Kontakt } from "@/lib/kontakt";
 import type { NastavitveTrgovine } from "@/payload-types";
 import { OSVEZI_PO_SEKUNDAH, OZNAKA_KATALOG, OZNAKA_NASTAVITVE } from "./oznake";
 import { izdelekPogled, kategorijaPogled, skupinaPogled, type IzdelekPogled, type Katalog } from "./pogled";
+import { katalogSTestnimiSlikami, testneSlikeVklopljene } from "./testne-slike";
 
 export type {
   IzdelekPogled,
@@ -35,11 +37,13 @@ async function preberiKatalog(): Promise<Katalog> {
     payload.find({ collection: "izdelki", sort: ["vrstniRed", "ime"], ...kot }),
     payload.find({ collection: "skupine-ponudbe", sort: ["vrstniRed", "ime"], ...kot }),
   ]);
-  return {
+  const katalog: Katalog = {
     kategorije: kategorije.docs.map(kategorijaPogled),
     izdelki: izdelki.docs.map(izdelekPogled).filter((i): i is IzdelekPogled => i !== null),
     skupine: skupine.docs.map(skupinaPogled),
   };
+  // Staging brez R2: prazni okvirji dobijo testne slike (gl. testne-slike.ts).
+  return testneSlikeVklopljene(okolje()) ? katalogSTestnimiSlikami(katalog) : katalog;
 }
 
 /** Kategorije, objavljeni izdelki in skupine ponudbe. */

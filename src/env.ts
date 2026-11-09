@@ -39,6 +39,10 @@ export const envShema = z
     NOINDEX: neobvezno(
       z.literal("1", { message: "je lahko samo 1 ali nenastavljeno" }),
     ),
+    // Testne slike namesto manjkajočih (staging brez R2, gl. src/katalog/testne-slike.ts).
+    TESTNE_SLIKE: neobvezno(
+      z.enum(["0", "1"], { message: "je lahko 0, 1 ali nenastavljeno" }),
+    ),
     BASIC_AUTH_USER: neobvezno(z.string()),
     BASIC_AUTH_PASSWORD: neobvezno(z.string()),
 
