@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# testi
+/playwright-report/
+/test-results/
+/blob-report/
+
+# .env.example je predloga brez vrednosti in sodi v repo
+!.env.example

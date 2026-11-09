@@ -187,10 +187,16 @@ export default function Header() {
    *
    * Next ob navigaciji skoči na vrh, česar pa ni nujno videti kot dogodek
    * scrolla — brez tega bi nova stran lahko odprla z umaknjeno navigacijo.
+   * Stanje se prilagodi že med renderjem (vzorec React „adjusting state when
+   * a prop changes“), da ni dodatnega kaskadnega renderja iz efekta.
    */
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMenuOpen(false);
     setHidden(false);
+  }
+  useEffect(() => {
     prevY.current = 0;
   }, [pathname]);
 
