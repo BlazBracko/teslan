@@ -58,6 +58,13 @@ export const envShema = z
     ),
     EMAIL_FROM: neobvezno(z.string()),
     EMAIL_REDIRECT_TO: neobvezno(eposta),
+    // Samo za teste: brez Resenda se vsaka e-pošta doda še v to datoteko (JSONL).
+    EPOSTA_DNEVNIK: neobvezno(z.string()),
+
+    // Blagajna (K7): največ toliko naročil na IP v 10 minutah (privzeto 5, Z26).
+    OMEJITEV_NAROCIL_NA_IP: neobvezno(
+      z.coerce.number().int().positive({ message: "mora biti pozitivno celo število" }),
+    ),
 
     // Cloudflare R2 prek S3 API (K3)
     S3_BUCKET: neobvezno(z.string()),

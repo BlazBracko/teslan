@@ -20,6 +20,14 @@ export const GLAVNA_NAVIGACIJA: Povezava[] = [
 /** Stran košarice (ikona v glavi, Z7). */
 export const POT_KOSARICE = "/kosarica";
 
+/** Blagajna (K7). */
+export const POT_BLAGAJNE = "/blagajna";
+
+/** Splošni pogoji (povezava ob potrditvi na blagajni; celotno besedilo doda K11). */
+export const POT_POGOJEV = "/pogoji";
+
+export const POT_ZASEBNOSTI = "/privacyPolicy";
+
 export const PRAVNE_POVEZAVE: Povezava[] = [{ href: "/privacyPolicy", oznaka: "Politika zasebnosti" }];
 
 /** Ali je povezava aktivna na dani poti (podstrani izdelkov štejejo k „Izdelki“). */

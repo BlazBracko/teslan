@@ -131,7 +131,7 @@ test.describe("košarica (Z20, Z21, T2)", () => {
     await page.getByRole("button", { name: "Odstrani iz košarice: Jagode, sveže" }).click();
     await page.getByRole("button", { name: "Odstrani iz košarice: Izdelek, ki ga ni več v ponudbi" }).click();
     await expect(page.getByText("Nekaterih izdelkov ni mogoče naročiti")).toHaveCount(0);
-    await expect(povzetek(page).getByText("Spletna blagajna bo na voljo v kratkem.")).toBeVisible();
+    await expect(povzetek(page).getByRole("link", { name: "Na blagajno" })).toHaveAttribute("href", "/blagajna");
   });
 
   test("ikona košarice je vidna tudi na mobilnem", async ({ page }) => {

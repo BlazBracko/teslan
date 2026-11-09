@@ -44,3 +44,11 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Podatki prodajalca v *Nastavitve trgovine* so prazni razen naslova, telefona in e-pošte kmetije (§7); naziv, davčno, matično številko in KMG-MID vnese lastnik.
 - `src/data/contact.ts` ostane, ker ga še uporabljajo noga, sekcije domače strani in podstrani; K5 ga zamenja z nastavitvami trgovine.
 - Ni preskočenih preizkusov.
+
+### K7 Blagajna in naročila
+- Ni novih zunanjih ključev. Novi neobvezni spremenljivki: `OMEJITEV_NAROCIL_NA_IP` (privzeto 5 naročil na IP v 10 minutah; na stagingu in v produkciji je ne nastavljajte) in `EPOSTA_DNEVNIK` (samo za teste).
+- **Plačilo s kartico še ni na voljo** (Stripe pride s K8): na blagajni je možnost vidna, a onemogočena. Ker pošta zahteva kartico (Z22), do K8 in brez Stripe ključev na stagingu ni mogoče oddati naročila po pošti; prevzem s plačilom ob prevzemu deluje v celoti.
+- E-pošta E1 (kupcu) in E2 (na `emailObvestil` iz nastavitev) se do K9 izpiše v log strežnika kot besedilo; povezava v E1 in admin povezava v E2 sta sestavljeni iz `NEXT_PUBLIC_SITE_URL`, zato mora biti na stagingu nastavljen.
+- Omejitev naročil na IP vzame zadnji vnos glave `X-Forwarded-For` (naslov, ki ga vidi Railwayev posrednik). Če se izkaže, da Railway glave ne doda tako, je treba to preveriti na stagingu (K13).
+- `/pogoji` je začasna stran z osnovnimi podatki (blagajna jo potrebuje za potrditev pogojev); celotno besedilo in povezave v nogi doda K11.
+- Ni preskočenih preizkusov.

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
 import { Price } from "@/components/ui/Price";
 import { QuantityInput } from "@/components/ui/QuantityInput";
+import { POT_BLAGAJNE } from "@/components/postavitev/navigacija";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { preveriKosaricoNaStrezniku } from "@/kosarica/akcije";
 import { oznakaStopnje } from "@/kosarica/cene";
@@ -306,18 +307,21 @@ function Povzetek({
           Naročila ta čas sprejemamo le po telefonu{klic && <> na {klic}</>}. Košarica ostane shranjena.
         </Obvestilo>
       ) : (
-        // Blagajno doda K7; do takrat gumb ostane onemogočen z razlago.
         <div className="flex flex-col gap-3 border-t border-line pt-5">
-          <Button size="lg" block disabled aria-describedby="blagajna-opis">
-            Na blagajno
-          </Button>
-          <p id="blagajna-opis" className="type-small text-ink-muted">
-            {pregled.lahkoNaBlagajno ? (
-              <>Spletna blagajna bo na voljo v kratkem. Do takrat naročite po telefonu{klic && <> {klic}</>}.</>
-            ) : (
-              "Pred nadaljevanjem uredite označene postavke."
-            )}
-          </p>
+          {pregled.lahkoNaBlagajno ? (
+            <Button asChild size="lg" block>
+              <Link href={POT_BLAGAJNE}>Na blagajno</Link>
+            </Button>
+          ) : (
+            <>
+              <Button size="lg" block disabled aria-describedby="blagajna-opis">
+                Na blagajno
+              </Button>
+              <p id="blagajna-opis" className="type-small text-ink-muted">
+                Pred nadaljevanjem uredite označene postavke.
+              </p>
+            </>
+          )}
         </div>
       )}
     </section>

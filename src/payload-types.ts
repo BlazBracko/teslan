@@ -67,6 +67,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    narocila: Narocila;
     izdelki: Izdelki;
     kategorije: Kategorije;
     'skupine-ponudbe': SkupinePonudbe;
@@ -79,6 +80,7 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    narocila: NarocilaSelect<false> | NarocilaSelect<true>;
     izdelki: IzdelkiSelect<false> | IzdelkiSelect<true>;
     kategorije: KategorijeSelect<false> | KategorijeSelect<true>;
     'skupine-ponudbe': SkupinePonudbeSelect<false> | SkupinePonudbeSelect<true>;
@@ -126,6 +128,146 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * Naročila s spletne strani, najnovejša zgoraj. Filtrirate jih lahko po statusu. Spremenite lahko status, plačilo, številko pošiljke in interno opombo; ob preklicu se zaloga vrne sama.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "narocila".
+ */
+export interface Narocila {
+  id: number;
+  /**
+   * Številka naročila, npr. T-2026-0001.
+   */
+  stevilka: string;
+  /**
+   * Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči.
+   */
+  status: 'caka-placilo' | 'novo' | 'pripravljeno' | 'poslano' | 'zakljuceno' | 'preklicano';
+  zeton: string;
+  /**
+   * Kako kupec dobi naročilo.
+   */
+  nacinDostave: 'prevzem' | 'posta';
+  /**
+   * Kako kupec plača.
+   */
+  nacinPlacila: 'kartica' | 'ob-prevzemu';
+  /**
+   * Pri kartici se označi samo. Pri plačilu ob prevzemu ga označite, ko kupec plača.
+   */
+  placano?: boolean | null;
+  kupecPrikaz?: string | null;
+  skupaj?: string | null;
+  /**
+   * Podatki, ki jih je kupec vpisal na blagajni.
+   */
+  kupec: {
+    ime: string;
+    priimek: string;
+    email: string;
+    telefon: string;
+  };
+  /**
+   * Samo pri pošti.
+   */
+  naslov?: {
+    ulica?: string | null;
+    postnaStevilka?: string | null;
+    kraj?: string | null;
+  };
+  /**
+   * Paket gre na naslov prejemnika: potrdila in cen ne prilagajte paketu.
+   */
+  darilo?: boolean | null;
+  prejemnik?: {
+    ime?: string | null;
+    ulica?: string | null;
+    postnaStevilka?: string | null;
+    kraj?: string | null;
+  };
+  /**
+   * Npr. želeni termin prevzema.
+   */
+  opomba?: string | null;
+  /**
+   * Posnetek imen, velikosti, cen in DDV ob oddaji; poznejše spremembe izdelkov ga ne spremenijo.
+   */
+  postavke: {
+    tip: 'izdelek' | 'skatla';
+    ime: string;
+    velikost?: string | null;
+    kolicina: number;
+    /**
+     * Z DDV.
+     */
+    cenaCenti: number;
+    stopnjaDDV: number;
+    izdelek?: (number | null) | Izdelki;
+    /**
+     * Za vračanje zaloge ob preklicu.
+     */
+    velikostId?: string | null;
+    id?: string | null;
+  }[];
+  /**
+   * Vsota postavk z DDV.
+   */
+  vmesniSestevekCenti: number;
+  /**
+   * 0 pri prevzemu in nad pragom brezplačne poštnine.
+   */
+  postninaCenti: number;
+  /**
+   * Znesek, ki ga plača kupec.
+   */
+  skupajCenti: number;
+  /**
+   * DDV, vključen v znesek, po stopnjah (poštnina 22 %).
+   */
+  ddv?:
+    | {
+        stopnja: number;
+        osnovaCenti: number;
+        ddvCenti: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Kdaj je kupec potrdil splošne pogoje.
+   */
+  soglasjePogoji: string;
+  /**
+   * Neobvezno. Kupec jo dobi v obvestilu, ko naročilo označite kot poslano.
+   */
+  stevilkaPosiljke?: string | null;
+  /**
+   * Neobvezno. Zapišite ga, ko naročilo prekličete.
+   */
+  razlogPreklica?: string | null;
+  /**
+   * Samo za vas; kupec je ne vidi.
+   */
+  internaOpomba?: string | null;
+  /**
+   * Označi se samo ob preklicu, ko se zaloga vrne.
+   */
+  zalogaVrnjena?: boolean | null;
+  /**
+   * Če obvestilo kupcu ali vam ni bilo poslano, je razlog tukaj.
+   */
+  napakaEposte?: string | null;
+  /**
+   * Samo pri plačilu s kartico.
+   */
+  stripeSessionId?: string | null;
+  /**
+   * Za iskanje plačila v Stripu (npr. za vračilo).
+   */
+  stripePaymentIntentId?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Vsi izdelki kmetije. Na strani so vidni le objavljeni; spremembe se pokažejo v največ minuti.
@@ -387,6 +529,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'narocila';
+        value: number | Narocila;
+      } | null)
+    | ({
         relationTo: 'izdelki';
         value: number | Izdelki;
       } | null)
@@ -447,6 +593,79 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "narocila_select".
+ */
+export interface NarocilaSelect<T extends boolean = true> {
+  stevilka?: T;
+  status?: T;
+  zeton?: T;
+  nacinDostave?: T;
+  nacinPlacila?: T;
+  placano?: T;
+  kupecPrikaz?: T;
+  skupaj?: T;
+  kupec?:
+    | T
+    | {
+        ime?: T;
+        priimek?: T;
+        email?: T;
+        telefon?: T;
+      };
+  naslov?:
+    | T
+    | {
+        ulica?: T;
+        postnaStevilka?: T;
+        kraj?: T;
+      };
+  darilo?: T;
+  prejemnik?:
+    | T
+    | {
+        ime?: T;
+        ulica?: T;
+        postnaStevilka?: T;
+        kraj?: T;
+      };
+  opomba?: T;
+  postavke?:
+    | T
+    | {
+        tip?: T;
+        ime?: T;
+        velikost?: T;
+        kolicina?: T;
+        cenaCenti?: T;
+        stopnjaDDV?: T;
+        izdelek?: T;
+        velikostId?: T;
+        id?: T;
+      };
+  vmesniSestevekCenti?: T;
+  postninaCenti?: T;
+  skupajCenti?: T;
+  ddv?:
+    | T
+    | {
+        stopnja?: T;
+        osnovaCenti?: T;
+        ddvCenti?: T;
+        id?: T;
+      };
+  soglasjePogoji?: T;
+  stevilkaPosiljke?: T;
+  razlogPreklica?: T;
+  internaOpomba?: T;
+  zalogaVrnjena?: T;
+  napakaEposte?: T;
+  stripeSessionId?: T;
+  stripePaymentIntentId?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
