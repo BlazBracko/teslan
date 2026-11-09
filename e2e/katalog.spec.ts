@@ -22,7 +22,7 @@ test.describe("glava in noga (Z7, Z8)", () => {
     await expect(page.getByRole("link", { name: /Domačija Tešlan, na domačo stran/ })).toBeVisible();
   });
 
-  test("noga ima kontakt iz nastavitev in povezavo na zasebnost", async ({ page }) => {
+  test("noga ima kontakt iz nastavitev in povezave na pravne strani", async ({ page }) => {
     await page.goto("/");
     const noga = page.locator("footer");
     await expect(noga.getByRole("link", { name: "040 578 512" })).toHaveAttribute("href", "tel:+38640578512");
@@ -30,6 +30,8 @@ test.describe("glava in noga (Z7, Z8)", () => {
       "href",
       /google\.com\/maps\/search\/\?api=1&query=Podgora%2015/,
     );
+    await expect(noga.getByRole("link", { name: "Splošni pogoji" })).toHaveAttribute("href", "/pogoji");
+    await expect(noga.getByRole("link", { name: "Odstop od pogodbe" })).toHaveAttribute("href", "/odstop");
     await expect(noga.getByRole("link", { name: "Politika zasebnosti" })).toHaveAttribute("href", "/privacyPolicy");
   });
 
@@ -165,6 +167,7 @@ test.describe("dostopnost javnih strani (Z6)", () => {
     "/kosarica",
     "/blagajna",
     "/pogoji",
+    "/odstop",
     "/about",
     "/privacyPolicy",
   ]) {

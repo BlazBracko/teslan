@@ -8,6 +8,8 @@ const strani = [
   { pot: "/products", naslov: /Naši izdelki/ },
   { pot: "/about", naslov: /Tešlan/ },
   { pot: "/privacyPolicy", naslov: /Tešlan/ },
+  { pot: "/pogoji", naslov: /Splošni pogoji/ },
+  { pot: "/odstop", naslov: /Odstop od pogodbe/ },
 ];
 
 for (const { pot, naslov } of strani) {
