@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  */
 
 const koren = join(__dirname, "..", "..", "..");
-const css = readFileSync(join(koren, "src/app/globals.css"), "utf8");
+const css = readFileSync(join(koren, "src/app/(frontend)/globals.css"), "utf8");
 
 function tokeni(): Record<string, string> {
   const theme = css.slice(css.search(/@theme( static)? \{/));
@@ -107,7 +107,7 @@ function datoteke(mapa: string): string[] {
   });
 }
 
-const pregledane = ["src/components/ui", "src/app/styleguide"]
+const pregledane = ["src/components/ui", "src/app/(frontend)/styleguide"]
   .flatMap((m) => datoteke(join(koren, m)))
   .map((p) => relative(koren, p))
   .filter((p) => !PREHODNE.has(p));

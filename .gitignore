@@ -47,3 +47,9 @@ next-env.d.ts
 
 # .env.example je predloga brez vrednosti in sodi v repo
 !.env.example
+
+# Payload: slike na lokalnem disku (brez R2)
+/media/
+
+# Next dev ob zagonu sam zapiše navodila za agente
+/AGENTS.md

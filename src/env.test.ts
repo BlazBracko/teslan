@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NapakaOkolja, preberiOkolje } from "./env";
+import { NapakaOkolja, OBVEZNE_V_PRODUKCIJI, preberiOkolje } from "./env";
 
 describe("preberiOkolje", () => {
   it("sprejme prazno razvojno okolje", () => {
@@ -18,6 +18,7 @@ describe("preberiOkolje", () => {
     const env = preberiOkolje({
       NODE_ENV: "production",
       DATABASE_URL: "postgres://u:p@localhost:5432/teslan",
+      PAYLOAD_SECRET: "x".repeat(32),
       NEXT_PUBLIC_SITE_URL: "https://www.teslan.si",
       NOINDEX: "1",
       EMAIL_REDIRECT_TO: "test@example.com",
@@ -67,6 +68,20 @@ describe("preberiOkolje", () => {
     // v razvoju iste spremenljivke niso obvezne
     expect(() =>
       preberiOkolje({ NODE_ENV: "development" }, ["DATABASE_URL"]),
+    ).not.toThrow();
+  });
+
+  it("v produkciji privzeto zahteva bazo in skrivnost Payloada", () => {
+    expect(OBVEZNE_V_PRODUKCIJI).toEqual(["DATABASE_URL", "PAYLOAD_SECRET"]);
+    expect(() => preberiOkolje({ NODE_ENV: "production" })).toThrowError(
+      /DATABASE_URL: obvezna v produkciji[\s\S]*PAYLOAD_SECRET: obvezna v produkciji/,
+    );
+    expect(() =>
+      preberiOkolje({
+        NODE_ENV: "production",
+        DATABASE_URL: "postgres://u:p@localhost:5432/teslan",
+        PAYLOAD_SECRET: "x".repeat(32),
+      }),
     ).not.toThrow();
   });
 });

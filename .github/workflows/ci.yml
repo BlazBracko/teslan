@@ -34,7 +34,8 @@ jobs:
     env:
       CI: "1"
       NEXT_TELEMETRY_DISABLED: "1"
-      DATABASE_URL: postgres://teslan:teslan@localhost:5432/teslan_test
+      # Testi (Vitest, Playwright) uporabljajo to bazo; gl. src/test/testna-baza.ts.
+      TEST_DATABASE_URL: postgres://teslan:teslan@localhost:5432/teslan_test
       NEXT_PUBLIC_SITE_URL: http://localhost:3100
 
     steps:
@@ -50,6 +51,19 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Payload — tipi, import map in migracije so ažurni
+        env:
+          DATABASE_URL: postgres://teslan:teslan@localhost:5432/teslan_test
+          PAYLOAD_SECRET: ci-samo-za-preverjanje-0123456789abcdef
+        run: |
+          npm run preveri:payload
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --porcelain
+            git diff
+            echo "::error::Generirane datoteke Payload niso ažurne ali manjka migracija. Lokalno poženite npm run preveri:payload, preglejte nove datoteke in jih commitajte."
+            exit 1
+          fi
 
       - name: Lint
         run: npm run lint

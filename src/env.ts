@@ -105,10 +105,13 @@ export const envShema = z
 export type Env = z.infer<typeof envShema>;
 
 /**
- * Spremenljivke, brez katerih produkcijski strežnik ne sme začeti.
- * K1 jih še ne potrebuje (stran nima zaledja). K3 doda DATABASE_URL in PAYLOAD_SECRET.
+ * Spremenljivke, brez katerih produkcijski strežnik ne sme začeti: Payload
+ * (admin, katalog, naročila) brez baze in skrivnosti ne deluje.
  */
-export const OBVEZNE_V_PRODUKCIJI: ReadonlyArray<keyof Env> = [];
+export const OBVEZNE_V_PRODUKCIJI: ReadonlyArray<keyof Env> = [
+  "DATABASE_URL",
+  "PAYLOAD_SECRET",
+];
 
 export class NapakaOkolja extends Error {
   constructor(public readonly tezave: string[]) {

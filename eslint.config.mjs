@@ -13,6 +13,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "playwright-report/**",
     "test-results/**",
+    // Datoteke, ki jih ustvari Payload (generate:types, generate:importmap, migrate:create).
+    "src/payload-types.ts",
+    "src/app/(payload)/admin/importMap.js",
+    "src/migrations/**",
+    "media/**",
   ]),
 ]);
 
