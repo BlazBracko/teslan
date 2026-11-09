@@ -19,6 +19,9 @@
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
     "migrate:status": "payload migrate:status",
+    "seed": "payload run src/seed/zazeni.ts",
+    "seed:if-empty": "payload run src/seed/zazeni.ts ce-prazno",
+    "pripravi-bazo": "npm run migrate && npm run seed:if-empty",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "preveri:payload": "payload generate:types && payload generate:importmap && payload migrate:create preverjanje --skip-empty"

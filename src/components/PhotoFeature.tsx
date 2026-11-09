@@ -31,7 +31,7 @@ interface PhotoFeatureProps {
  * mrežo enako velikih kartic, in prav to ponavljanje utruja. Tu je
  * kompozicija razpolovljena in nesimetrična.
  *
- * Besedila so dobesedno iz `data/products.ts` — trditev o pridelavi si ne
+ * Besedila so kratki opisi izdelkov iz CMS — trditev o pridelavi si ne
  * izmišljamo.
  */
 export default function PhotoFeature({

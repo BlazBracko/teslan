@@ -6,7 +6,11 @@ import { sl } from "@payloadcms/translations/languages/sl";
 import { buildConfig } from "payload";
 import sharp from "sharp";
 import { preberiOkolje } from "./env";
+import { NastavitveTrgovine } from "./payload/globali/NastavitveTrgovine";
+import { Izdelki } from "./payload/kolekcije/Izdelki";
+import { Kategorije } from "./payload/kolekcije/Kategorije";
 import { Mediji } from "./payload/kolekcije/Mediji";
+import { SkupinePonudbe } from "./payload/kolekcije/SkupinePonudbe";
 import { Uporabniki } from "./payload/kolekcije/Uporabniki";
 import { shrambaSlik } from "./payload/shramba";
 
@@ -34,7 +38,8 @@ export default buildConfig({
     supportedLanguages: { sl },
     fallbackLanguage: "sl",
   },
-  collections: [Uporabniki, Mediji],
+  collections: [Izdelki, Kategorije, SkupinePonudbe, Mediji, Uporabniki],
+  globals: [NastavitveTrgovine],
   editor: lexicalEditor(),
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL ?? "" },

@@ -6,7 +6,12 @@ import OfferingSection from '@/components/OfferingSection';
 import VisitSection from '@/components/VisitSection';
 import CTASection from '@/components/CTASection';
 import { sectionStack } from '@/components/ui/sectionShell';
-import { getProduct } from '@/data/products';
+import { naloziKatalog } from '@/katalog/podatki';
+import { najnizjaNarocljivaCena } from '@/katalog/razpolozljivost';
+import { oznakaSezone, trenutniMesec } from '@/katalog/sezona';
+
+/** Ponudba in sezone so iz CMS (gl. `app/(frontend)/products/page.tsx`). */
+export const dynamic = 'force-dynamic';
 
 /**
  * Sekcije so vstavljeni zaobljeni bloki, ki plavajo na temni podlagi
@@ -30,11 +35,24 @@ import { getProduct } from '@/data/products';
  * Hero in footer sta namerno brez okvirja: cel zaslon na vrhu in zaključek
  * na dnu držita stran, da ne izgleda kot kup lebdečih kartic.
  */
-export default function HomePage() {
-  // Besedila in sezone so iz `data/products.ts` — en vir resnice, da se
-  // opis pridelka ne razhaja med to sekcijo in ostalo stranjo.
-  const sparglji = getProduct('sparglji');
-  const jagode = getProduct('jagode');
+export default async function HomePage() {
+  const katalog = await naloziKatalog();
+  const mesec = trenutniMesec();
+
+  // Besedila in sezone so iz CMS — en vir resnice, da se opis pridelka ne
+  // razhaja med to sekcijo in ostalo stranjo. Če lastnik izdelek skrije ali
+  // izbriše, sekcija pač ostane brez sezone in opisa.
+  const izdelek = (slug: string) => katalog.izdelki.find((i) => i.slug === slug);
+  const sparglji = izdelek('sparglji');
+  const jagode = izdelek('jagode');
+
+  const skupine = katalog.skupine.map((skupina) => {
+    const cene = katalog.izdelki
+      .filter((i) => skupina.kategorije.includes(i.kategorija.id))
+      .map((i) => najnizjaNarocljivaCena(i, mesec))
+      .filter((c): c is number => c !== null);
+    return { ...skupina, odCenti: cene.length > 0 ? Math.min(...cene) : null };
+  });
 
   return (
     <>
@@ -47,8 +65,8 @@ export default function HomePage() {
         <PhotoFeature
           side="left"
           label="Sezona špargljev"
-          title={sparglji.season}
-          description={sparglji.description}
+          title={sparglji?.sezona ? oznakaSezone(sparglji.sezona) : 'Šparglji'}
+          description={sparglji?.kratekOpis ?? ''}
           src="/slika1.jpeg"
           alt="Šparglji z Domačije Tešlan na žaru, v ozadju vas Podgora"
           cta={{ href: '/products', label: 'Poglej cenik' }}
@@ -57,8 +75,8 @@ export default function HomePage() {
         <PhotoFeature
           side="right"
           label="Sezona jagod"
-          title={jagode.season}
-          description={jagode.description}
+          title={jagode?.sezona ? oznakaSezone(jagode.sezona) : 'Jagode'}
+          description={jagode?.kratekOpis ?? ''}
           src="/jagodeFB.jpg"
           alt="Jagode na rastlini na njivi Domačije Tešlan"
           /* Zrele rdeče jagode so v spodnji tretjini kadra, ne na sredini. */
@@ -66,7 +84,7 @@ export default function HomePage() {
           cta={{ href: '/products', label: 'Poglej cenik' }}
         />
 
-        <OfferingSection />
+        <OfferingSection groups={skupine} productCount={katalog.izdelki.length} />
         <VisitSection />
         <CTASection />
       </div>

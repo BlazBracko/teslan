@@ -1,4 +1,10 @@
-import type { Stock } from '@/data/availability';
+
+export type StockKind = 'na-zalogi' | 'kmalu' | 'ni-na-voljo';
+
+export interface Stock {
+  kind: StockKind;
+  label: string;
+}
 import { cn } from '@/lib/utils';
 
 /**

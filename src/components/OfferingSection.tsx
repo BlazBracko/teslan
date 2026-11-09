@@ -2,11 +2,14 @@ import Image from 'next/image';
 import SectionHeading from '@/components/ui/SectionHeading';
 import Reveal, { RevealGroup, RevealItem } from '@/components/ui/Reveal';
 import Pressable from '@/components/ui/Pressable';
-import { offering, type OfferingGroupView } from '@/data/offering';
-import { priceListTotal } from '@/data/priceList';
 import { sectionShell } from '@/components/ui/sectionShell';
+import type { SkupinaPogled } from '@/katalog/podatki';
+import { formatirajCeno } from '@/lib/denar';
 
-const formatPrice = (price: number) => price.toFixed(2).replace('.', ',');
+/** Skupina ponudbe iz CMS z izračunano najnižjo ceno naročljivih izdelkov. */
+export interface OfferingGroupView extends SkupinaPogled {
+  odCenti: number | null;
+}
 
 /**
  * Pregled ponudbe: štiri ploščice, besedilo levo, fotografija desno.
@@ -34,7 +37,13 @@ const formatPrice = (price: number) => price.toFixed(2).replace('.', ',');
  * strani in pri tej širini bi fotografijo obrezala v ozek trikotnik, v
  * katerem se motiv izgubi.
  */
-export default function OfferingSection() {
+export default function OfferingSection({
+  groups,
+  productCount,
+}: {
+  groups: OfferingGroupView[];
+  productCount: number;
+}) {
   return (
     <section className={`${sectionShell} bg-green-mid px-6 py-24 md:px-10`}>
       <div className="mx-auto max-w-6xl">
@@ -42,13 +51,13 @@ export default function OfferingSection() {
           onDark
           label="Naša ponudba"
           title="Več kot le sveža zelenjava"
-          description={`Na ceniku je ${priceListTotal} izdelkov — od svežih špargljev z njive do domačih testenin, začimb in marmelad.`}
+          description={`Na ceniku je ${productCount} izdelkov — od svežih špargljev z njive do domačih testenin, začimb in marmelad.`}
           className="mx-auto mb-12"
         />
 
         <RevealGroup className="grid gap-4 md:grid-cols-2" stagger={0.07}>
-          {offering.map((group) => (
-            <GroupTile key={group.name} group={group} />
+          {groups.map((group) => (
+            <GroupTile key={group.id} group={group} />
           ))}
         </RevealGroup>
 
@@ -75,11 +84,13 @@ function GroupTile({ group }: { group: OfferingGroupView }) {
       className="flex min-h-44 overflow-hidden rounded-2xl border border-cream/12 bg-cream/[0.06] sm:min-h-48"
     >
       <div className="flex flex-1 flex-col gap-2 p-5 sm:p-6">
-        <h3 className="type-h3 text-cream">{group.name}</h3>
-        <p className="type-small text-cream/70">{group.blurb}</p>
-        <p className="type-label mt-auto pt-3 text-green-bright">
-          od {formatPrice(group.fromPrice)} €
-        </p>
+        <h3 className="type-h3 text-cream">{group.ime}</h3>
+        {group.opis && <p className="type-small text-cream/70">{group.opis}</p>}
+        {group.odCenti !== null && (
+          <p className="type-label mt-auto pt-3 text-green-bright">
+            od {formatirajCeno(group.odCenti)}
+          </p>
+        )}
       </div>
 
       {/* Ploskev pod izrezki ni okras. `jagode.png` je prosojen PNG, `cesen.jpg`
@@ -90,16 +101,16 @@ function GroupTile({ group }: { group: OfferingGroupView }) {
           kot bele kartice na `/products`. Prave fotografije jo prekrijejo od
           roba do roba. */}
       <div className="relative w-28 shrink-0 self-stretch bg-white sm:w-36 md:w-40">
-        {group.image ? (
+        {group.slika ? (
           <Image
-            src={group.image}
-            alt={group.imageAlt ?? group.name}
+            src={group.slika.url}
+            alt={group.slika.alt}
             fill
             sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 160px"
-            className={group.imageFit === 'cover' ? 'object-cover' : 'object-contain p-3'}
+            className="object-contain p-3"
           />
         ) : (
-          <GroupImagePlaceholder label={group.name} />
+          <GroupImagePlaceholder label={group.ime} />
         )}
       </div>
     </RevealItem>

@@ -5,9 +5,24 @@ import type { NextConfig } from "next";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Slike iz Cloudflare R2 (Z83) so na drugem izvoru; slike z lokalnega diska
+// so relativne (`/api/media/file/…`, gl. src/katalog/slike.ts).
+const r2 = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : undefined;
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(dirname),
+  },
+  images: {
+    remotePatterns: r2
+      ? [
+          {
+            protocol: r2.protocol.replace(":", "") as "http" | "https",
+            hostname: r2.hostname,
+            pathname: `${r2.pathname.replace(/\/+$/, "")}/**`,
+          },
+        ]
+      : [],
   },
   // Na Vercelu preusmeritev apex → www izvaja platforma, na Railwayu pa aplikacija.
   async redirects() {

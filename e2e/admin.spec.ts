@@ -19,8 +19,17 @@ const urednik = {
   geslo: "geslo-urednika-123",
 };
 
+/**
+ * Obrazci admina delujejo šele po hidraciji; klik prej se izgubi (v CI, ko
+ * vzporedni testi obremenijo strežnik, se je to dogajalo).
+ */
+async function pocakajNaObrazec(page: Page) {
+  await page.waitForLoadState("networkidle");
+}
+
 async function prijava(page: Page, uporabnik: { email: string; geslo: string }) {
   await page.goto("/admin/login");
+  await pocakajNaObrazec(page);
   await page.locator("#field-email").fill(uporabnik.email);
   await page.locator("#field-password").fill(uporabnik.geslo);
   await page.getByRole("button", { name: "Prijava" }).click();
@@ -44,6 +53,7 @@ test("prvi zagon ustvari administratorja v slovenskem vmesniku", async ({ page }
   // Prvi uporabnik je vedno admin, zato vloge ni mogoče izbrati.
   await expect(page.locator("#field-vloga")).toHaveCount(0);
   await expect(page.getByText("Prikazano v adminu")).toBeVisible();
+  await pocakajNaObrazec(page);
 
   await page.locator("#field-email").fill(admin.email);
   await page.locator("#field-password").fill(admin.geslo);
@@ -54,6 +64,17 @@ test("prvi zagon ustvari administratorja v slovenskem vmesniku", async ({ page }
 
   await expect(navigacija(page).getByRole("link", { name: "Uporabniki" })).toBeVisible();
   await expect(navigacija(page).getByRole("link", { name: "Mediji" })).toBeVisible();
+  await expect(navigacija(page).getByRole("link", { name: "Izdelki" })).toBeVisible();
+  await expect(
+    navigacija(page).getByRole("link", { name: "Nastavitve trgovine" }),
+  ).toBeVisible();
+
+  // Nastavitve trgovine (seed, §6) bere admin.
+  const nastavitve = await page.request.get("/api/globals/nastavitve-trgovine", {
+    headers: izvor(page),
+  });
+  expect(nastavitve.status()).toBe(200);
+  expect(await nastavitve.json()).toMatchObject({ postninaCenti: 500, trgovinaOdprta: true });
 
   const jaz = await (await page.request.get("/api/users/me", { headers: izvor(page) })).json();
   expect(jaz.user).toMatchObject({ email: admin.email, vloga: "admin" });
@@ -90,6 +111,66 @@ test("urednik ne vidi drugih uporabnikov in si ne more spremeniti vloge", async 
     data: { ime: "Vsiljivec", email: "x@teslan.test", password: "geslo-vsiljivca-1" },
   });
   expect(ustvari.status()).toBe(403);
+});
+
+test("urednik uredi izdelek, sprememba je na /products v največ 60 s (Z17); nastavitev ne vidi", async ({
+  page,
+}) => {
+  await prijava(page, urednik);
+
+  // Z80: urednik ureja ponudbo, nastavitev trgovine pa ne vidi.
+  await expect(navigacija(page).getByRole("link", { name: "Izdelki" })).toBeVisible();
+  await expect(navigacija(page).getByRole("link", { name: "Kategorije" })).toBeVisible();
+  await expect(navigacija(page).getByRole("link", { name: "Nastavitve trgovine" })).toHaveCount(0);
+  const nastavitve = await page.request.get("/api/globals/nastavitve-trgovine", {
+    headers: izvor(page),
+  });
+  expect(nastavitve.status()).toBe(403);
+
+  const iskanje = await page.request.get("/api/izdelki?where[slug][equals]=vlozeni-jurcki", {
+    headers: izvor(page),
+  });
+  const izdelek = (await iskanje.json()).docs[0];
+  expect(izdelek.ime).toBe("Vloženi jurčki");
+
+  // Z82: seznam izdelkov s skupno zalogo; Z81: obrazec v slovenščini z opisi polj.
+  await page.goto("/admin/collections/izdelki");
+  await expect(page.getByRole("columnheader", { name: "Skupna zaloga" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Način prodaje" })).toBeVisible();
+  await page.goto(`/admin/collections/izdelki/${izdelek.id}`);
+  await expect(page.locator("#field-ime")).toHaveValue("Vloženi jurčki");
+  await expect(page.getByText("Cena z DDV v centih: 550 pomeni 5,50 €.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Dolg opis", { exact: true })).toBeVisible();
+
+  // Stran se najprej izriše s starimi podatki (in jih predpomni).
+  await page.goto("/products");
+  await expect(page.getByRole("heading", { name: "Vloženi jurčki", exact: true })).toBeVisible();
+
+  const odziv = await page.request.patch(`/api/izdelki/${izdelek.id}`, {
+    headers: izvor(page),
+    data: {
+      ime: "Vloženi jurčki (e2e)",
+      velikosti: [{ ...izdelek.velikosti[0], zaloga: 2 }],
+    },
+  });
+  expect(odziv.ok()).toBe(true);
+  expect((await odziv.json()).doc.skupnaZaloga).toBe(2);
+
+  // Revalidacija ob shranjevanju: sprememba je vidna takoj, najkasneje v 60 s.
+  await expect(async () => {
+    await page.goto("/products");
+    const kartica = page.locator("article", {
+      has: page.getByRole("heading", { name: "Vloženi jurčki (e2e)" }),
+    });
+    await expect(kartica.getByText("Še 2 kosa")).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 60_000 });
+
+  // Z52: izdelek samo za prevzem ne more biti primeren za darilo.
+  const darilo = await page.request.patch(`/api/izdelki/${izdelek.id}`, {
+    headers: izvor(page),
+    data: { nacinProdaje: "samo-prevzem", primernoZaDarilo: true },
+  });
+  expect(darilo.status()).toBe(400);
 });
 
 test("slika brez opisa (alt) se zavrne, z opisom se shrani na lokalni disk", async ({ page }) => {

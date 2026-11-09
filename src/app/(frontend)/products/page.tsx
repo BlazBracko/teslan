@@ -4,7 +4,9 @@ import Reveal from '@/components/ui/Reveal';
 import ProductBrowser from '@/components/products/ProductBrowser';
 import Pressable from '@/components/ui/Pressable';
 import { contact } from '@/data/contact';
-import { priceList, priceListCategories } from '@/data/priceList';
+import { vrsticeCenika } from '@/components/products/vrsticeCenika';
+import { naloziKatalog } from '@/katalog/podatki';
+import { trenutniMesec } from '@/katalog/sezona';
 import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
 
 export const metadata = {
@@ -14,13 +16,15 @@ export const metadata = {
 };
 
 /**
- * Stran je statična, razpoložljivost sezonskih pridelkov pa je odvisna od
- * meseca. Brez tega bi se mesec zamrznil ob buildu in „na zalogi“ bi ostalo
- * napačno do naslednjega deploya. Dan je dovolj: sezone se merijo v mesecih.
+ * Izdelki in zaloga so iz CMS (K4). Stran se izriše ob zahtevi, podatki pa so
+ * predpomnjeni in se ob spremembi v adminu takoj razveljavijo (Z17); tako
+ * gradnja ne potrebuje baze, mesec za sezone pa je vedno trenuten.
  */
-export const revalidate = 86400;
+export const dynamic = 'force-dynamic';
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const { vrstice, kategorije } = vrsticeCenika(await naloziKatalog(), trenutniMesec());
+
   return (
     <>
       <PageBackdrop src="/asparagusField.jpeg" />
@@ -35,13 +39,7 @@ export default function ProductsPage() {
       <div className="mx-auto max-w-6xl">
         {/* Vodoravna vrstica kategorij nad mrežo kartic. Prej je bilo tu
             devet sekcij druga pod drugo in ves cenik naenkrat. */}
-        <ProductBrowser
-          items={priceList}
-          categories={priceListCategories}
-          /* Mesec določi strežnik, da ga komponente ne berejo same — glej
-             opombo o `revalidate` zgoraj. */
-          month={new Date().getMonth() + 1}
-        />
+        <ProductBrowser items={vrstice} categories={kategorije} />
       </div>
 
       </section>

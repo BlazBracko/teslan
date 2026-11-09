@@ -67,8 +67,11 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
+    izdelki: Izdelki;
+    kategorije: Kategorije;
+    'skupine-ponudbe': SkupinePonudbe;
     media: Media;
+    users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,8 +79,11 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
+    izdelki: IzdelkiSelect<false> | IzdelkiSelect<true>;
+    kategorije: KategorijeSelect<false> | KategorijeSelect<true>;
+    'skupine-ponudbe': SkupinePonudbeSelect<false> | SkupinePonudbeSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -87,8 +93,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'nastavitve-trgovine': NastavitveTrgovine;
+  };
+  globalsSelect: {
+    'nastavitve-trgovine': NastavitveTrgovineSelect<false> | NastavitveTrgovineSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -116,6 +126,202 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * Vsi izdelki kmetije. Na strani so vidni le objavljeni; spremembe se pokažejo v največ minuti.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "izdelki".
+ */
+export interface Izdelki {
+  id: number;
+  /**
+   * Ime izdelka, kot ga vidi kupec, npr. „Česen v prahu“.
+   */
+  ime: string;
+  /**
+   * Naslov podstrani izdelka: /products/<slug>. Male črke brez šumnikov, besede ločene z vezajem. Če polje pustite prazno, se ustvari samo iz imena.
+   */
+  slug?: string | null;
+  /**
+   * Samo objavljeni izdelki so vidni na strani. Neobjavljen izdelek ni viden nikjer, njegova podstran vrne napako 404.
+   */
+  objavljen?: boolean | null;
+  /**
+   * Izpostavljeni izdelki so posebej prikazani na domači strani.
+   */
+  izpostavljen?: boolean | null;
+  /**
+   * Po tej številki so izdelki razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
+   */
+  vrstniRed: number;
+  /**
+   * Kategorija, v kateri je izdelek na strani Izdelki.
+   */
+  kategorija: number | Kategorije;
+  /**
+   * Ena ali dve povedi na kartici izdelka in v iskalnikih (največ 160 znakov).
+   */
+  kratekOpis?: string | null;
+  /**
+   * Neobvezen daljši opis na podstrani izdelka.
+   */
+  opis?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Neobvezno. Če je vpisano, je prikazano na podstrani izdelka.
+   */
+  sestavine?: string | null;
+  /**
+   * Neobvezno, npr. „Vsebuje gluten.“ Prikazano na podstrani izdelka.
+   */
+  alergeni?: string | null;
+  /**
+   * Prva slika je glavna (kartica, deljenje na omrežjih). Brez slik se pokaže nadomestna ploskev.
+   */
+  slike?: (number | Media)[] | null;
+  /**
+   * Pošta in prevzem: kupec izbere pošiljanje ali prevzem. Samo prevzem: npr. jajca in sveža zelenjava. Samo prikaz: izdelek je viden, a ga ni mogoče naročiti (cena in zaloga nista potrebni).
+   */
+  nacinProdaje: 'posta-in-prevzem' | 'samo-prevzem' | 'samo-prikaz';
+  /**
+   * Neobvezno. Izdelek s sezono je naročljiv le v teh mesecih, mesec pred začetkom ima oznako „Kmalu“. Sezona lahko prelije čez novo leto (npr. november–februar). Prazno pomeni vse leto.
+   */
+  sezona?: {
+    /**
+     * Prvi mesec sezone.
+     */
+    od?: ('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12') | null;
+    /**
+     * Zadnji mesec sezone (vključno).
+     */
+    do?: ('1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12') | null;
+  };
+  /**
+   * Cene so z DDV. Živila: 9,5 %. Na potrdilu se DDV izkaže po stopnjah.
+   */
+  stopnjaDDV: '9.5' | '22';
+  /**
+   * Izdelek se lahko izbere v darilni škatli. Dovoljeno samo pri načinu „Pošta in prevzem na kmetiji“.
+   */
+  primernoZaDarilo?: boolean | null;
+  /**
+   * Vsaj ena velikost oz. pakiranje. Vsaka ima svojo ceno in zalogo; kupec izbere eno od njih.
+   */
+  velikosti: {
+    /**
+     * Pakiranje, kot ga vidi kupec, npr. „106 ml (40 g)“ ali „šopek 0,5 kg“.
+     */
+    oznaka: string;
+    /**
+     * Cena z DDV v centih: 550 pomeni 5,50 €. Pri „Samo prikaz“ neobvezno.
+     */
+    cenaCenti?: number | null;
+    /**
+     * Koliko kosov lahko kupci še naročijo. Ob naročilu se zmanjša sama. Pri „Samo prikaz“ neobvezno.
+     */
+    zaloga?: number | null;
+    id?: string | null;
+  }[];
+  /**
+   * Vsota zalog vseh velikosti (izračunano, ni za urejanje).
+   */
+  skupnaZaloga?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Kategorije izdelkov, po katerih kupci filtrirajo stran Izdelki (npr. Začimbe, Olja).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kategorije".
+ */
+export interface Kategorije {
+  id: number;
+  /**
+   * Ime kategorije, kot ga vidi kupec, npr. „Začimbe“.
+   */
+  ime: string;
+  /**
+   * Uporablja se v filtru na strani Izdelki (?kategorija=…). Male črke brez šumnikov, besede ločene z vezajem. Če polje pustite prazno, se ustvari samo iz imena.
+   */
+  slug?: string | null;
+  /**
+   * Po tej številki so kategorije razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
+   */
+  vrstniRed: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Slike izdelkov, skupin ponudbe in darilnih škatel.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Kratek opis, kaj je na sliki, npr. „Šopek zelenih špargljev na leseni mizi“. Bralniki zaslona ga preberejo slepim in slabovidnim; obvezen.
+   */
+  alt: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Ploščice v razdelku „Naša ponudba“ na domači strani. Cena „od X €“ se izračuna sama iz izdelkov v izbranih kategorijah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skupine-ponudbe".
+ */
+export interface SkupinePonudbe {
+  id: number;
+  /**
+   * Naslov ploščice, npr. „Začimbe in posušeno“.
+   */
+  ime: string;
+  /**
+   * Ena ali dve povedi o tem, kaj je v skupini, z imeni izdelkov (največ 300 znakov).
+   */
+  opis?: string | null;
+  /**
+   * Fotografija na ploščici. Brez slike se pokaže mirna nadomestna ploskev.
+   */
+  slika?: (number | null) | Media;
+  /**
+   * Kategorije izdelkov, ki spadajo v to skupino. Iz njihovih naročljivih izdelkov se izračuna najnižja cena.
+   */
+  kategorije?: (number | Kategorije)[] | null;
+  /**
+   * Po tej številki so skupine razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
+   */
+  vrstniRed: number;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Osebe, ki se lahko prijavijo v admin.
@@ -157,32 +363,6 @@ export interface User {
   collection: 'users';
 }
 /**
- * Slike izdelkov, skupin ponudbe in darilnih škatel.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  /**
-   * Kratek opis, kaj je na sliki, npr. „Šopek zelenih špargljev na leseni mizi“. Bralniki zaslona ga preberejo slepim in slabovidnim; obvezen.
-   */
-  alt: string;
-  prefix?: string | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -207,12 +387,24 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'izdelki';
+        value: number | Izdelki;
+      } | null)
+    | ({
+        relationTo: 'kategorije';
+        value: number | Kategorije;
+      } | null)
+    | ({
+        relationTo: 'skupine-ponudbe';
+        value: number | SkupinePonudbe;
       } | null)
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -258,6 +450,87 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "izdelki_select".
+ */
+export interface IzdelkiSelect<T extends boolean = true> {
+  ime?: T;
+  slug?: T;
+  objavljen?: T;
+  izpostavljen?: T;
+  vrstniRed?: T;
+  kategorija?: T;
+  kratekOpis?: T;
+  opis?: T;
+  sestavine?: T;
+  alergeni?: T;
+  slike?: T;
+  nacinProdaje?: T;
+  sezona?:
+    | T
+    | {
+        od?: T;
+        do?: T;
+      };
+  stopnjaDDV?: T;
+  primernoZaDarilo?: T;
+  velikosti?:
+    | T
+    | {
+        oznaka?: T;
+        cenaCenti?: T;
+        zaloga?: T;
+        id?: T;
+      };
+  skupnaZaloga?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kategorije_select".
+ */
+export interface KategorijeSelect<T extends boolean = true> {
+  ime?: T;
+  slug?: T;
+  vrstniRed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skupine-ponudbe_select".
+ */
+export interface SkupinePonudbeSelect<T extends boolean = true> {
+  ime?: T;
+  opis?: T;
+  slika?: T;
+  kategorije?: T;
+  vrstniRed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -280,26 +553,6 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  prefix?: T;
-  _objectKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -340,6 +593,95 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Poštnina, stikalo trgovine, e-pošta za obvestila in podatki prodajalca.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nastavitve-trgovine".
+ */
+export interface NastavitveTrgovine {
+  id: number;
+  /**
+   * Ko je izklopljeno, je katalog še viden, gumbi za nakup pa so skriti in blagajna ne sprejema naročil (npr. med dopustom).
+   */
+  trgovinaOdprta?: boolean | null;
+  /**
+   * Cena pošiljanja z DDV v centih: 500 pomeni 5,00 €. Pri prevzemu je poštnina 0.
+   */
+  postninaCenti: number;
+  /**
+   * Če je vrednost izdelkov v košarici vsaj toliko, je poštnina 0. 5000 pomeni 50,00 €.
+   */
+  pragBrezplacnePostnineCenti: number;
+  /**
+   * Na ta naslov pride obvestilo o vsakem novem naročilu. Kupci, ki odgovorijo na potrdilo, pišejo sem.
+   */
+  emailObvestil: string;
+  /**
+   * Besedilo za kupce, ki izberejo prevzem na kmetiji (kje, kdaj, kako se dogovorijo). Prikazano na potrdilu in v e-pošti.
+   */
+  navodilaZaPrevzem?: string | null;
+  /**
+   * Prikazani v splošnih pogojih, politiki zasebnosti in na potrdilu. Prazna polja so na pravnih straneh označena z [manjka: …].
+   */
+  prodajalec?: {
+    /**
+     * Uradni naziv nosilca kmetije, npr. „Sandi Derčar, nosilec kmetije“.
+     */
+    naziv?: string | null;
+    /**
+     * Naslov kmetije, ki je tudi prevzemno mesto.
+     */
+    naslov?: string | null;
+    /**
+     * Npr. SI12345678.
+     */
+    davcnaStevilka?: string | null;
+    /**
+     * Če obstaja.
+     */
+    maticnaStevilka?: string | null;
+    /**
+     * Identifikacijska številka kmetijskega gospodarstva.
+     */
+    kmgMid?: string | null;
+    /**
+     * Telefon za kupce, npr. 040 578 512.
+     */
+    telefon?: string | null;
+    /**
+     * Javni e-naslov za kupce.
+     */
+    email?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "nastavitve-trgovine_select".
+ */
+export interface NastavitveTrgovineSelect<T extends boolean = true> {
+  trgovinaOdprta?: T;
+  postninaCenti?: T;
+  pragBrezplacnePostnineCenti?: T;
+  emailObvestil?: T;
+  navodilaZaPrevzem?: T;
+  prodajalec?:
+    | T
+    | {
+        naziv?: T;
+        naslov?: T;
+        davcnaStevilka?: T;
+        maticnaStevilka?: T;
+        kmgMid?: T;
+        telefon?: T;
+        email?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
