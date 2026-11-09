@@ -159,6 +159,16 @@ export default async function NarociloPage({ params, searchParams }: Parametri) 
                 <span className="block type-small text-ink-muted">
                   {p.kolicina} × {formatirajCeno(p.cenaCenti)}
                 </span>
+                {p.vsebina.length > 0 && (
+                  <span className="mt-1 block type-small text-ink-muted">
+                    V škatli: {p.vsebina.map((v) => `${v.kolicina} × ${v.ime}${v.velikost ? `, ${v.velikost}` : ""}`).join("; ")}
+                  </span>
+                )}
+                {p.sporociloNaKartici && (
+                  <span className="mt-1 block type-small text-ink-muted">
+                    <span className="font-medium text-ink">Sporočilo na kartici:</span> „{p.sporociloNaKartici}“
+                  </span>
+                )}
               </span>
               <span className="shrink-0 type-body type-numeric text-ink">{formatirajCeno(p.skupajCenti)}</span>
             </li>
@@ -180,7 +190,10 @@ export default async function NarociloPage({ params, searchParams }: Parametri) 
         </h2>
         {n.naslov ? (
           <p className="type-body text-ink">
-            {n.kupec.ime} {n.kupec.priimek}
+            {n.darilo && (
+              <span className="mb-1 block type-small font-semibold text-ink-muted">Darilo na naslov prejemnika:</span>
+            )}
+            {n.darilo && n.prejemnik ? n.prejemnik.ime : `${n.kupec.ime} ${n.kupec.priimek}`}
             <br />
             {n.naslov.ulica}
             <br />

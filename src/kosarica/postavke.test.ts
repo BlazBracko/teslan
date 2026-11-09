@@ -7,9 +7,11 @@ import {
   normalizirajKosarico,
   odstraniPostavko,
   preberiIzShrambe,
+  shraniSkatlo,
   steviloKosovVKosarici,
   zapisiZaShrambo,
   type PostavkaKosarice,
+  type PostavkaSkatle,
 } from "./postavke";
 
 const cesen: PostavkaKosarice = { izdelekId: 6, velikostId: "a1", kolicina: 2 };
@@ -65,8 +67,10 @@ describe("košarica v brskalniku (Z20)", () => {
 
   it("shramba hrani samo id-je, velikosti in količine", () => {
     const niz = zapisiZaShrambo([cesen, olje]);
-    expect(JSON.parse(niz)).toEqual({ verzija: 1, postavke: [cesen, olje] });
+    expect(JSON.parse(niz)).toEqual({ verzija: 2, postavke: [cesen, olje] });
     expect(preberiIzShrambe(niz)).toEqual([cesen, olje]);
+    // Košarica iz K6 (verzija 1) se prebere enako.
+    expect(preberiIzShrambe(JSON.stringify({ verzija: 1, postavke: [cesen, olje] }))).toEqual([cesen, olje]);
   });
 
   it("pokvarjena shramba ne zruši strani", () => {
@@ -96,5 +100,67 @@ describe("košarica v brskalniku (Z20)", () => {
     const vnos = Array.from({ length: NAJVEC_POSTAVK + 10 }, (_, i) => ({ izdelekId: i + 1, velikostId: "x", kolicina: 1 }));
     expect(normalizirajKosarico(vnos)).toHaveLength(NAJVEC_POSTAVK);
     expect(normalizirajKosarico("niz")).toEqual([]);
+  });
+});
+
+describe("darilna škatla v košarici (K10, T5)", () => {
+  const skatla: PostavkaSkatle = {
+    vrsta: "skatla",
+    id: "s1",
+    tipSkatleId: 3,
+    program: "okusi-dolenjske",
+    vsebina: [
+      { izdelekId: 6, velikostId: "a1", kolicina: 1 },
+      { izdelekId: 22, velikostId: "b2", kolicina: 2 },
+    ],
+    sporocilo: "Vse najboljše!",
+    kolicina: 1,
+  };
+
+  it("doda škatlo kot eno postavko in jo ob urejanju zamenja (isti id)", () => {
+    const k = shraniSkatlo([cesen], skatla)!;
+    expect(k).toEqual([cesen, skatla]);
+    expect(kljucPostavke(skatla)).toBe("skatla:s1");
+    expect(steviloKosovVKosarici(k)).toBe(3);
+
+    const urejena = shraniSkatlo(k, { ...skatla, vsebina: [{ izdelekId: 6, velikostId: "a1", kolicina: 3 }], sporocilo: "  " })!;
+    expect(urejena).toHaveLength(2);
+    expect(urejena[1]).toEqual({
+      vrsta: "skatla",
+      id: "s1",
+      tipSkatleId: 3,
+      program: "okusi-dolenjske",
+      vsebina: [{ izdelekId: 6, velikostId: "a1", kolicina: 3 }],
+      kolicina: 1,
+    });
+    // Samostojna velikost in ista velikost v škatli sta ločeni postavki.
+    expect(dodajPostavko(k, { izdelekId: 6, velikostId: "a1", kolicina: 1 }).kosarica).toHaveLength(2);
+  });
+
+  it("prazne škatle ne shrani; enake velikosti v vsebini združi", () => {
+    expect(shraniSkatlo([], { ...skatla, vsebina: [] })).toBeNull();
+    const k = shraniSkatlo([], {
+      ...skatla,
+      vsebina: [
+        { izdelekId: 6, velikostId: "a1", kolicina: 1 },
+        { izdelekId: 6, velikostId: "a1", kolicina: 2 },
+      ],
+    })!;
+    expect((k[0] as PostavkaSkatle).vsebina).toEqual([{ izdelekId: 6, velikostId: "a1", kolicina: 3 }]);
+  });
+
+  it("shramba ohrani škatle, neveljavne izpusti", () => {
+    const niz = zapisiZaShrambo([cesen, skatla]);
+    expect(preberiIzShrambe(niz)).toEqual([cesen, skatla]);
+    expect(
+      normalizirajKosarico([
+        skatla,
+        { ...skatla, kolicina: 5 }, // podvojen id
+        { ...skatla, id: "s2", sporocilo: "x".repeat(301) },
+        { ...skatla, id: "s3", vsebina: [] },
+        { ...skatla, id: "s4", tipSkatleId: "3" },
+        { ...skatla, id: "../s5" },
+      ]),
+    ).toEqual([skatla]);
   });
 });

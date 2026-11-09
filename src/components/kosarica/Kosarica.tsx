@@ -2,20 +2,25 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LuCircleAlert, LuInfo, LuRefreshCw, LuShoppingBag, LuTrash2, LuTruck } from "react-icons/lu";
+import { LuCircleAlert, LuGift, LuInfo, LuPencil, LuRefreshCw, LuShoppingBag, LuTrash2, LuTruck } from "react-icons/lu";
 import { SlikaIzdelka } from "@/components/katalog/SlikaIzdelka";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
 import { Price } from "@/components/ui/Price";
 import { QuantityInput } from "@/components/ui/QuantityInput";
-import { POT_BLAGAJNE } from "@/components/postavitev/navigacija";
+import { POT_BLAGAJNE, potUrejanjaSkatle } from "@/components/postavitev/navigacija";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { preveriKosaricoNaStrezniku } from "@/kosarica/akcije";
 import { oznakaStopnje } from "@/kosarica/cene";
 import { nastevanje } from "@/kosarica/dostava";
 import { kljucPostavke, type PostavkaKosarice } from "@/kosarica/postavke";
-import type { PostavkaPregled, PregledKosarice } from "@/kosarica/preverjanje";
+import {
+  imePostavke,
+  type PostavkaIzdelkaPregled,
+  type PostavkaSkatlePregled,
+  type PregledKosarice,
+} from "@/kosarica/preverjanje";
 import { nastaviKolicinoVKosarici, odstraniIzKosarice, useKosarica } from "@/kosarica/shramba";
 import { formatirajCeno } from "@/lib/denar";
 import { KOS, stevilo } from "@/lib/sklanjanje";
@@ -113,9 +118,13 @@ export function Kosarica({ telefon, telefonPovezava }: { telefon: string | null;
           </p>
         )}
         <ul className="flex flex-col divide-y divide-line border-y border-line">
-          {vrstice.map((p) => (
-            <Vrstica key={p.kljuc} postavka={p} kolicina={lokalno.get(p.kljuc)?.kolicina ?? p.kolicina} />
-          ))}
+          {vrstice.map((p) =>
+            p.vrsta === "skatla" ? (
+              <VrsticaSkatle key={p.kljuc} postavka={p} kolicina={lokalno.get(p.kljuc)?.kolicina ?? p.kolicina} />
+            ) : (
+              <Vrstica key={p.kljuc} postavka={p} kolicina={lokalno.get(p.kljuc)?.kolicina ?? p.kolicina} />
+            ),
+          )}
         </ul>
       </section>
 
@@ -148,7 +157,7 @@ function Nalaganje() {
   );
 }
 
-function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaPregled; kolicina: number }) {
+function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaIzdelkaPregled; kolicina: number }) {
   const ime = p.izdelek?.ime ?? "Izdelek, ki ga ni več v ponudbi";
   const opis = p.velikost ? `${ime}, ${p.velikost}` : ime;
   const povezava = p.izdelek ? `/products/${p.izdelek.slug}` : null;
@@ -219,6 +228,101 @@ function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaPregled; kolicin
               size="sm"
               onClick={() => odstraniIzKosarice(p.kljuc)}
               aria-label={`Odstrani iz košarice: ${opis}`}
+            >
+              <LuTrash2 aria-hidden="true" />
+              Odstrani
+            </Button>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * Darilna škatla v košarici (T5 korak 4): ena postavka z vsebino in
+ * sporočilom; „Uredi“ odpre konfigurator z njeno vsebino.
+ */
+function VrsticaSkatle({ postavka: p, kolicina }: { postavka: PostavkaSkatlePregled; kolicina: number }) {
+  const ime = imePostavke(p);
+  const nedosegljivo = p.tezava?.vrsta === "nedosegljivo";
+  const popravek = p.tezava?.vrsta === "kolicina" ? (p.tezava.najvecKosov ?? 0) : 0;
+
+  return (
+    <li className="flex gap-4 py-5" data-kljuc={p.kljuc}>
+      <div className={cn("w-20 shrink-0 sm:w-24", nedosegljivo && "opacity-60")}>
+        {p.tipSkatle?.slika ? (
+          <SlikaIzdelka slika={p.tipSkatle.slika} sizes="96px" className="aspect-square rounded-lg" />
+        ) : (
+          <div className="flex aspect-square items-center justify-center rounded-lg bg-brand-soft text-brand">
+            <LuGift aria-hidden="true" className="size-8" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h3 className="type-title text-ink">{ime}</h3>
+            {p.cenaSkatleCenti != null && (
+              <p className="type-small text-ink-muted">Darilna škatla · {formatirajCeno(p.cenaSkatleCenti)} / kos</p>
+            )}
+          </div>
+          {p.skupajCenti != null && !p.tezava && <Price cents={p.skupajCenti} />}
+        </div>
+
+        <ul className="flex flex-col gap-1 type-small text-ink-muted" aria-label={`Vsebina: ${ime}`}>
+          {p.vsebina.map((v) => (
+            <li key={`${v.izdelekId}:${v.velikostId}`} className={cn(v.tezava && "text-danger")}>
+              {v.kolicina} × {v.ime ?? "Izdelek, ki ga ni več v ponudbi"}
+              {v.velikost && <>, {v.velikost}</>}
+              {v.tezava && <> — {v.tezava}</>}
+            </li>
+          ))}
+        </ul>
+        {p.sporocilo && (
+          <p className="type-small text-ink-muted">
+            <span className="font-medium text-ink">Sporočilo na kartici:</span> „{p.sporocilo}“
+          </p>
+        )}
+
+        {p.tezava && (
+          <p className="flex items-start gap-2 type-small font-medium text-danger">
+            <LuCircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <span>{p.tezava.razlog}</span>
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {nedosegljivo ? (
+            <p className="type-small text-ink-muted">{stevilo(kolicina, KOS)}</p>
+          ) : (
+            <Field label={`Količina: ${ime}`} hideLabel>
+              <QuantityInput
+                value={kolicina}
+                onChange={(v) => nastaviKolicinoVKosarici(p.kljuc, v)}
+                min={1}
+                max={Math.max(1, p.najvecKosov, kolicina)}
+              />
+            </Field>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {popravek > 0 && (
+              <Button variant="secondary" size="sm" onClick={() => nastaviKolicinoVKosarici(p.kljuc, popravek)}>
+                Zmanjšaj na {popravek}
+              </Button>
+            )}
+            <Button asChild variant={nedosegljivo ? "primary" : "ghost"} size="sm">
+              <Link href={potUrejanjaSkatle(p.id)} aria-label={`Uredi škatlo: ${ime}`}>
+                <LuPencil aria-hidden="true" />
+                Uredi
+              </Link>
+            </Button>
+            <Button
+              variant={nedosegljivo ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => odstraniIzKosarice(p.kljuc)}
+              aria-label={`Odstrani iz košarice: ${ime}`}
             >
               <LuTrash2 aria-hidden="true" />
               Odstrani

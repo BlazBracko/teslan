@@ -1,5 +1,6 @@
 "use server";
 
+import { naloziDarila } from "@/darila/podatki";
 import { naloziKatalog, naloziNastavitve } from "@/katalog/podatki";
 import { trenutniMesec } from "@/katalog/sezona";
 import { normalizirajKosarico } from "./postavke";
@@ -12,7 +13,7 @@ import { preveriKosarico, type PregledKosarice } from "./preverjanje";
  */
 export async function preveriKosaricoNaStrezniku(vnos: unknown): Promise<PregledKosarice> {
   const kosarica = normalizirajKosarico(vnos);
-  const [katalog, nastavitve] = await Promise.all([naloziKatalog(), naloziNastavitve()]);
+  const [katalog, nastavitve, darila] = await Promise.all([naloziKatalog(), naloziNastavitve(), naloziDarila()]);
   return preveriKosarico(
     kosarica,
     katalog.izdelki,
@@ -22,5 +23,6 @@ export async function preveriKosaricoNaStrezniku(vnos: unknown): Promise<Pregled
       pragBrezplacnePostnineCenti: nastavitve.pragBrezplacnePostnineCenti,
     },
     trenutniMesec(),
+    darila,
   );
 }

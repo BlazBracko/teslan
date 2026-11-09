@@ -5,8 +5,10 @@ import {
   KATEGORIJE,
   NAVODILA_ZA_PREVZEM,
   PRODAJALEC,
+  PROGRAMI,
   SKUPINE,
   SLIKE,
+  TIPI_SKATEL,
   ZACETNA_ZALOGA,
   type KljucSlike,
   type SlikaSeed,
@@ -32,7 +34,15 @@ export interface MoznostiSeeda {
 export interface PorociloSeeda {
   admin: "ustvarjen" | "obstaja" | "preskocen";
   katalog: "dopolnjen" | "preskocen";
-  ustvarjeno: { kategorije: number; skupine: number; izdelki: number; slike: number };
+  darila: "dopolnjena" | "preskocena";
+  ustvarjeno: {
+    kategorije: number;
+    skupine: number;
+    izdelki: number;
+    slike: number;
+    tipiSkatel: number;
+    programi: number;
+  };
   nastavitve: "ustvarjene" | "obstajajo";
 }
 
@@ -48,7 +58,11 @@ const context: RequestContext = { brezRevalidacije: true };
  *     jih še ni (primerjava po slugu oz. imenu). V načinu `ce-prazno` samo,
  *     če v bazi ni nobenega izdelka, da se izdelki, ki jih je lastnik
  *     izbrisal, ob naslednjem deployu ne vrnejo.
- *  3. Nastavitve trgovine s privzetimi vrednostmi, če še niso bile shranjene.
+ *  3. Demo darila (K10): tipi škatel in programi, ki jih še ni. V načinu
+ *     `ce-prazno` samo, če ni nobenega tipa škatle in nobenega programa:
+ *     staging, ki je bil seedan pred K10, ob prvem deployu dobi demo
+ *     darila, kasneje pa izbrisana darila ne vrnejo.
+ *  4. Nastavitve trgovine s privzetimi vrednostmi, če še niso bile shranjene.
  */
 export async function seed(payload: Payload, moznosti: MoznostiSeeda): Promise<PorociloSeeda> {
   const log = moznosti.log ?? ((s: string) => payload.logger.info(s));
@@ -56,7 +70,8 @@ export async function seed(payload: Payload, moznosti: MoznostiSeeda): Promise<P
   const porocilo: PorociloSeeda = {
     admin: "preskocen",
     katalog: "preskocen",
-    ustvarjeno: { kategorije: 0, skupine: 0, izdelki: 0, slike: 0 },
+    darila: "preskocena",
+    ustvarjeno: { kategorije: 0, skupine: 0, izdelki: 0, slike: 0, tipiSkatel: 0, programi: 0 },
     nastavitve: "obstajajo",
   };
 
@@ -99,7 +114,21 @@ export async function seed(payload: Payload, moznosti: MoznostiSeeda): Promise<P
     );
   }
 
-  // 3. Nastavitve trgovine
+  // 3. Demo darila
+  const [{ totalDocs: tipov }, { totalDocs: programov }] = await Promise.all([
+    payload.count({ collection: "tipi-skatel" }),
+    payload.count({ collection: "darilni-programi" }),
+  ]);
+  if (moznosti.nacin === "ce-prazno" && tipov + programov > 0) {
+    log(`Seed: v bazi je že ${tipov} tipov škatel in ${programov} programov, darila preskočena.`);
+  } else {
+    porocilo.darila = "dopolnjena";
+    await seedDarila(payload, iskalnikSlik(payload, mapaSlik, porocilo), porocilo, log);
+    const u = porocilo.ustvarjeno;
+    log(`Seed: darila dopolnjena (novih: ${u.tipiSkatel} tipov škatel, ${u.programi} programov).`);
+  }
+
+  // 4. Nastavitve trgovine
   const nastavitve = await payload.findGlobal({ slug: "nastavitve-trgovine" });
   if (!nastavitve.updatedAt) {
     await payload.updateGlobal({
@@ -249,6 +278,75 @@ async function seedIzdelki(
       context,
     });
     porocilo.ustvarjeno.izdelki++;
+  }
+}
+
+async function seedDarila(
+  payload: Payload,
+  slike: IskalnikSlik,
+  porocilo: PorociloSeeda,
+  log: (s: string) => void,
+) {
+  const tipi = new Map<string, number>();
+  for (const [i, tip] of TIPI_SKATEL.entries()) {
+    const { docs } = await payload.find({
+      collection: "tipi-skatel",
+      where: { ime: { equals: tip.ime } },
+      limit: 1,
+      depth: 0,
+    });
+    if (docs[0]) {
+      tipi.set(tip.ime, docs[0].id);
+      continue;
+    }
+    const nov = await payload.create({
+      collection: "tipi-skatel",
+      data: { ...tip, zaloga: ZACETNA_ZALOGA, aktiven: true, vrstniRed: (i + 1) * 10 },
+      context,
+    });
+    tipi.set(tip.ime, nov.id);
+    porocilo.ustvarjeno.tipiSkatel++;
+  }
+
+  for (const [i, program] of PROGRAMI.entries()) {
+    const { totalDocs } = await payload.count({
+      collection: "darilni-programi",
+      where: { slug: { equals: program.slug } },
+    });
+    if (totalDocs > 0) continue;
+    const vsebina = [];
+    for (const [slug, velikost, kolicina] of program.vsebina) {
+      const { docs } = await payload.find({
+        collection: "izdelki",
+        where: { slug: { equals: slug } },
+        limit: 1,
+        depth: 0,
+      });
+      const izdelek = docs[0];
+      const v = izdelek?.velikosti.find((x) => x.oznaka.startsWith(velikost));
+      if (!izdelek?.primernoZaDarilo || !v?.id) {
+        // Lastnik je izdelek izbrisal ali spremenil: program brez njega.
+        log(`Seed: program ${program.ime} je brez izdelka ${slug} ${velikost} (ga ni ali ni primeren za darilo).`);
+        continue;
+      }
+      vsebina.push({ izdelek: izdelek.id, velikostId: v.id, kolicina });
+    }
+    if (vsebina.length === 0) continue;
+    await payload.create({
+      collection: "darilni-programi",
+      data: {
+        ime: program.ime,
+        slug: program.slug,
+        opis: program.opis,
+        objavljen: true,
+        vrstniRed: (i + 1) * 10,
+        slika: program.slika ? await slike(program.slika) : undefined,
+        tipSkatle: obvezno(tipi.get(program.tipSkatle), program.tipSkatle),
+        vsebina,
+      },
+      context,
+    });
+    porocilo.ustvarjeno.programi++;
   }
 }
 

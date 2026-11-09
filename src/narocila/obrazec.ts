@@ -38,6 +38,9 @@ const osnovnaShema = z
       }),
     nacinDostave: z.enum(["prevzem", "posta"], { error: "Izberite način dostave." }),
     nacinPlacila: z.enum(["kartica", "ob-prevzemu"], { error: "Izberite način plačila." }),
+    /** Z55: paket z darilno škatlo gre na naslov prejemnika (samo pri pošti). */
+    darilo: z.boolean().optional(),
+    prejemnikIme: z.string().trim().max(100, { error: "Največ 100 znakov." }).optional(),
     ulica: z.string().trim().max(200, { error: "Največ 200 znakov." }).optional(),
     postnaStevilka: z.string().trim().optional(),
     kraj: z.string().trim().max(100, { error: "Največ 100 znakov." }).optional(),
@@ -50,14 +53,24 @@ const osnovnaShema = z
   });
 
 /**
- * Naslov pri pošti. Preveri se tudi, ko so druga polja napačna (zod
+ * Naslov pri pošti (pri darilu naslov prejemnika). Preveri se tudi, ko so druga polja napačna (zod
  * objektovih pravil ne izvede, dokler polja niso veljavna), da kupec vidi
  * vse napake hkrati.
  */
-function preveriNaslov(v: { nacinDostave?: unknown; ulica?: unknown; postnaStevilka?: unknown; kraj?: unknown }) {
-  const tezave: Array<{ polje: "ulica" | "postnaStevilka" | "kraj"; sporocilo: string }> = [];
+function preveriNaslov(v: {
+  nacinDostave?: unknown;
+  darilo?: unknown;
+  prejemnikIme?: unknown;
+  ulica?: unknown;
+  postnaStevilka?: unknown;
+  kraj?: unknown;
+}) {
+  const tezave: Array<{ polje: "prejemnikIme" | "ulica" | "postnaStevilka" | "kraj"; sporocilo: string }> = [];
   if (v.nacinDostave !== "posta") return tezave;
   const niz = (x: unknown) => (typeof x === "string" ? x.trim() : "");
+  if (v.darilo === true && !niz(v.prejemnikIme)) {
+    tezave.push({ polje: "prejemnikIme", sporocilo: "Vpišite ime in priimek prejemnika." });
+  }
   const ulica = niz(v.ulica);
   if (!ulica) tezave.push({ polje: "ulica", sporocilo: "Vpišite ulico in hišno številko." });
   else if (!/\d/.test(ulica)) tezave.push({ polje: "ulica", sporocilo: "Dodajte še hišno številko." });

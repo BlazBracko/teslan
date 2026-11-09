@@ -14,11 +14,13 @@ export interface Sporocilo {
   besedilo: string;
 }
 
-function postavke(n: NarociloPogled): string[] {
-  const vrstice = n.postavke.map(
-    (p) =>
-      `- ${p.ime}${p.velikost ? `, ${p.velikost}` : ""} × ${p.kolicina} … ${formatirajCeno(p.skupajCenti)}`,
-  );
+/** Postavke z vsebino darilnih škatel; `sporocila` doda sporočilo na kartici (samo E2, Z54). */
+function postavke(n: NarociloPogled, { sporocila = false } = {}): string[] {
+  const vrstice = n.postavke.flatMap((p) => [
+    `- ${p.ime}${p.velikost ? `, ${p.velikost}` : ""} × ${p.kolicina} … ${formatirajCeno(p.skupajCenti)}`,
+    ...p.vsebina.map((v) => `    ${v.kolicina} × ${v.ime}${v.velikost ? `, ${v.velikost}` : ""}`),
+    ...(sporocila && p.sporociloNaKartici ? [`    Sporočilo na kartici: „${p.sporociloNaKartici}“`] : []),
+  ]);
   vrstice.push(
     "",
     `Vmesni seštevek: ${formatirajCeno(n.vmesniSestevekCenti)}`,
@@ -30,9 +32,11 @@ function postavke(n: NarociloPogled): string[] {
 }
 
 function dostava(n: NarociloPogled): string[] {
-  return n.naslov
-    ? [`Dostava: ${OZNAKE_DOSTAVE.posta}`, `${n.naslov.ulica}, ${n.naslov.postnaStevilka} ${n.naslov.kraj}`]
-    : [`Dostava: ${OZNAKE_DOSTAVE.prevzem}`];
+  if (!n.naslov) return [`Dostava: ${OZNAKE_DOSTAVE.prevzem}`];
+  const naslov = `${n.naslov.ulica}, ${n.naslov.postnaStevilka} ${n.naslov.kraj}`;
+  return n.darilo
+    ? [`Dostava: ${OZNAKE_DOSTAVE.posta}, darilo na naslov prejemnika`, `${n.prejemnik?.ime ?? ""}, ${naslov}`]
+    : [`Dostava: ${OZNAKE_DOSTAVE.posta}`, naslov];
 }
 
 export function potrdiloKupcu(
@@ -75,6 +79,7 @@ export function obvestiloProdajalcu(n: NarociloPogled, { povezavaAdmin }: { pove
   const besedilo = [
     `Novo naročilo ${n.stevilka} na spletni strani.`,
     "",
+    ...(n.darilo ? ["DARILO – potrdila in cen ne prilagajte paketu.", ""] : []),
     `Kupec: ${n.kupec.ime} ${n.kupec.priimek}`,
     `E-pošta: ${n.kupec.email}`,
     `Telefon: ${n.kupec.telefon}`,
@@ -84,7 +89,7 @@ export function obvestiloProdajalcu(n: NarociloPogled, { povezavaAdmin }: { pove
     ...(n.opomba ? [`Opomba kupca: ${n.opomba}`] : []),
     "",
     "Postavke:",
-    ...postavke(n),
+    ...postavke(n, { sporocila: true }),
     "",
     `Odpri v adminu: ${povezavaAdmin}`,
   ].join("\n");

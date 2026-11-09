@@ -74,6 +74,66 @@ export async function povecajZalogo(seja: Seja, spremembe: readonly SpremembaZal
   return vrnjene;
 }
 
+export interface SpremembaZalogeSkatel {
+  tipSkatleId: number;
+  kolicina: number;
+}
+
+/** Zaklene vrstice tipov škatel (`FOR UPDATE`), urejene po id, kot `zakleniVelikosti`. */
+export async function zakleniTipeSkatel(seja: Seja, ids: readonly number[]): Promise<void> {
+  const urejeni = [...new Set(ids)].sort((a, b) => a - b);
+  if (urejeni.length === 0) return;
+  await seja.execute(
+    sql`SELECT id FROM tipi_skatel WHERE id IN (${sql.join(
+      urejeni.map((id) => sql`${id}`),
+      sql`, `,
+    )}) ORDER BY id FOR UPDATE`,
+  );
+}
+
+/** Zmanjša zalogo škatel, a le, če je je dovolj (P8). Vrne spremembe, ki niso uspele. */
+export async function zmanjsajZalogoSkatel(
+  seja: Seja,
+  spremembe: readonly SpremembaZalogeSkatel[],
+): Promise<SpremembaZalogeSkatel[]> {
+  const neuspele: SpremembaZalogeSkatel[] = [];
+  for (const s of spremembe) {
+    const { rows } = await seja.execute(
+      sql`UPDATE tipi_skatel SET zaloga = zaloga - ${s.kolicina}
+          WHERE id = ${s.tipSkatleId} AND zaloga >= ${s.kolicina}
+          RETURNING id`,
+    );
+    if (rows.length === 0) neuspele.push(s);
+  }
+  return neuspele;
+}
+
+/** Vrne zalogo škatel; tip, ki ga medtem ni več, preskoči. */
+export async function povecajZalogoSkatel(seja: Seja, spremembe: readonly SpremembaZalogeSkatel[]): Promise<number> {
+  let vrnjene = 0;
+  for (const s of spremembe) {
+    const { rows } = await seja.execute(
+      sql`UPDATE tipi_skatel SET zaloga = COALESCE(zaloga, 0) + ${s.kolicina}
+          WHERE id = ${s.tipSkatleId}
+          RETURNING id`,
+    );
+    vrnjene += rows.length;
+  }
+  return vrnjene;
+}
+
+/** Seštevek sprememb zaloge po velikosti (ista velikost je lahko samostojno in v škatlah). */
+export function zdruziSpremembe(spremembe: readonly SpremembaZaloge[]): SpremembaZaloge[] {
+  const poKljucu = new Map<string, SpremembaZaloge>();
+  for (const s of spremembe) {
+    const kljuc = `${s.izdelekId}:${s.velikostId}`;
+    const obstojeca = poKljucu.get(kljuc);
+    if (obstojeca) obstojeca.kolicina += s.kolicina;
+    else poKljucu.set(kljuc, { ...s });
+  }
+  return [...poKljucu.values()];
+}
+
 /**
  * Atomarno označi, da je bila zaloga naročila vrnjena. Vrne `true` samo
  * prvemu klicatelju; vsi nadaljnji (ponovno shranjevanje, sočasen preklic)

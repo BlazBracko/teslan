@@ -65,3 +65,10 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Vračila ostajajo ročna v Stripu (izven obsega). Če kupec plača naročilo, ki ga je Sandi medtem preklical, se naročilo označi kot plačano z interno opombo „Znesek vrnite kupcu v Stripu.“
 - `STRIPE_API_URL` je samo za e2e teste (nadomestni Stripe); na stagingu in v produkciji ga ne nastavljajte.
 - Preskočen preizkus: S11 s pravim Stripom (gl. tabelo preskočenih preizkusov).
+
+### K10 Darila
+- Ni novih zunanjih ključev in ni preskočenih preizkusov. E2E test darila po pošti na naslov prejemnika (`e2e/darila.spec.ts`, Z55) plača z nadomestnim Stripom; s pravimi ključi se preskoči kot ostali testi z nadomestkom.
+- K9 (e-pošta) je bil po odločitvi lastnika preskočen do naslednjega dne, zato K10 uporablja obstoječi dnevniški adapter (`src/eposta/dnevnik.ts`): vsebina škatle, sporočilo na kartici (E2) in oznaka darila ter naslov prejemnika (E2) so dodani v besedilni različici obvestil E1/E2. K9 jih mora prenesti v HTML predloge.
+- Ob prvem deployu po K10 seed (`seed:if-empty`) na stagingu doda demo darila (malo in veliko škatlo, programa „Okusi Dolenjske“ in „Za kuharje“, opisi z „[DEMO]“), ker v bazi še ni nobene škatle in nobenega programa. Kasneje izbrisanih daril ne vrne; če jih ne želite, škatlo označite kot neaktivno ali program kot neobjavljen.
+- Lastnik v adminu (*Darila*) vnese prave tipe škatel (slike, cene, zalogo) in programe. Velikost izdelka v programu se vpiše z oznako (npr. „41 ml (15 g)“) ali pusti prazna za prvo velikost.
+- Slike škatel v demo podatkih niso nastavljene (ni fotografij); stran pokaže nadomestno ploskev z ikono darila.

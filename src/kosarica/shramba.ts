@@ -3,13 +3,17 @@
 import { useSyncExternalStore } from "react";
 import {
   dodajPostavko,
+  jeSkatla,
   KLJUC_SHRAMBE,
   nastaviKolicino,
   odstraniPostavko,
   preberiIzShrambe,
+  shraniSkatlo,
   steviloKosovVKosarici,
   zapisiZaShrambo,
+  type PostavkaIzdelka,
   type PostavkaKosarice,
+  type PostavkaSkatle,
 } from "./postavke";
 
 /**
@@ -82,7 +86,7 @@ export function useSteviloKosov(): number | null {
 }
 
 /** Doda velikost v košarico; vrne, koliko kosov je bilo dejansko dodanih. */
-export function dodajVKosarico(postavka: PostavkaKosarice, najvec?: number): number {
+export function dodajVKosarico(postavka: PostavkaIzdelka, najvec?: number): number {
   const { kosarica, dodano } = dodajPostavko(posnetek(), postavka, najvec);
   if (dodano > 0) {
     pisi(zapisiZaShrambo(kosarica));
@@ -93,7 +97,26 @@ export function dodajVKosarico(postavka: PostavkaKosarice, najvec?: number): num
 
 /** Količina te velikosti, ki je že v košarici. */
 export function kolicinaVKosarici(izdelekId: number, velikostId: string): number {
-  return posnetek().find((p) => p.izdelekId === izdelekId && p.velikostId === velikostId)?.kolicina ?? 0;
+  return (
+    posnetek().find((p) => !jeSkatla(p) && p.izdelekId === izdelekId && p.velikostId === velikostId)?.kolicina ?? 0
+  );
+}
+
+/**
+ * Doda darilno škatlo ali zamenja obstoječo z istim id-jem (urejanje v
+ * konfiguratorju, T5). Vrne `false`, če je košarica polna.
+ */
+export function shraniSkatloVKosarico(skatla: PostavkaSkatle): boolean {
+  const nova = shraniSkatlo(posnetek(), skatla);
+  if (!nova) return false;
+  pisi(zapisiZaShrambo(nova));
+  obvesti();
+  return true;
+}
+
+/** Škatla v košarici po id-ju (za urejanje) ali `null`. */
+export function skatlaVKosarici(id: string): PostavkaSkatle | null {
+  return posnetek().find((p): p is PostavkaSkatle => jeSkatla(p) && p.id === id) ?? null;
 }
 
 export function nastaviKolicinoVKosarici(kljuc: string, kolicina: number) {
