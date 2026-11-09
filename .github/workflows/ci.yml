@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preverjanja:
+    name: Typecheck, lint, vitest, playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: teslan
+          POSTGRES_PASSWORD: teslan
+          POSTGRES_DB: teslan_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U teslan"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      CI: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgres://teslan:teslan@localhost:5432/teslan_test
+      NEXT_PUBLIC_SITE_URL: http://localhost:3100
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: npm
+
+      - name: Namestitev odvisnosti
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Vitest
+        run: npm test
+
+      - name: Namestitev brskalnika za Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Gradnja
+        run: npm run build
+
+      - name: Playwright
+        run: npm run test:e2e
+        env:
+          E2E_SKIP_BUILD: "1"
+
+      - name: Poročilo Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
