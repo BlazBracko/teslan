@@ -9,12 +9,15 @@ export function EmptyState({
   title,
   description,
   action,
+  titleAs: Naslov = "h2",
   className,
 }: {
   icon?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
+  /** `h1`, kadar je prazno stanje edina vsebina strani (npr. 404). */
+  titleAs?: "h1" | "h2";
   className?: string;
 }) {
   return (
@@ -30,7 +33,7 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <h2 className="type-h3 text-ink">{title}</h2>
+      <Naslov className="type-h3 text-ink">{title}</Naslov>
       {description && <p className="max-w-prose type-body text-ink-muted">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>

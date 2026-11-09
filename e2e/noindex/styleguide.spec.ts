@@ -22,9 +22,6 @@ test("nima resnih ali kritičnih kršitev dostopnosti (axe, WCAG 2.2 AA)", async
   await odpri(page);
   const rezultat = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    // Samo vsebina strani: stara glava in noga (K5 ju zgradi na novo)
-    // nista del knjižnice in nad svetlo podlago nista načrtovani.
-    .include("#main")
     .analyze();
   const resne = rezultat.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(

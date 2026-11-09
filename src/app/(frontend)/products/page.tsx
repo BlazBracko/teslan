@@ -1,76 +1,84 @@
-import PageHeader from '@/components/ui/PageHeader';
-import PageBackdrop from '@/components/ui/PageBackdrop';
-import Reveal from '@/components/ui/Reveal';
-import ProductBrowser from '@/components/products/ProductBrowser';
-import Pressable from '@/components/ui/Pressable';
-import { contact } from '@/data/contact';
-import { vrsticeCenika } from '@/components/products/vrsticeCenika';
-import { naloziKatalog } from '@/katalog/podatki';
-import { trenutniMesec } from '@/katalog/sezona';
-import { sectionShell, sectionStack } from '@/components/ui/sectionShell';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { LuSprout } from "react-icons/lu";
+import { FilterKategorij } from "@/components/katalog/FilterKategorij";
+import { KarticaIzdelka } from "@/components/katalog/KarticaIzdelka";
+import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Container";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { naloziKatalog } from "@/katalog/podatki";
+import { trenutniMesec } from "@/katalog/sezona";
+import { IZDELEK, stevilo } from "@/lib/sklanjanje";
 
-export const metadata = {
-  title: 'Naši izdelki — Domačija Tešlan',
+export const metadata: Metadata = {
+  title: "Naši izdelki — Domačija Tešlan",
   description:
-    'Cenik izdelkov Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.',
+    "Izdelki Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.",
 };
 
 /**
- * Izdelki in zaloga so iz CMS (K4). Stran se izriše ob zahtevi, podatki pa so
- * predpomnjeni in se ob spremembi v adminu takoj razveljavijo (Z17); tako
- * gradnja ne potrebuje baze, mesec za sezone pa je vedno trenuten.
+ * Seznam vseh objavljenih izdelkov (Z14) s filtrom po kategoriji v URL.
+ * Podatki so iz CMS (predpomnjeni, Z17), mesec za sezone je vedno trenuten.
  */
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const { vrstice, kategorije } = vrsticeCenika(await naloziKatalog(), trenutniMesec());
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategorija?: string | string[] }>;
+}) {
+  const [katalog, { kategorija }] = await Promise.all([naloziKatalog(), searchParams]);
+  const mesec = trenutniMesec();
+
+  // Kategorije v vrstnem redu iz CMS, samo tiste z vsaj enim izdelkom.
+  const kategorije = katalog.kategorije
+    .map((k) => ({ ...k, stevilo: katalog.izdelki.filter((i) => i.kategorija.id === k.id).length }))
+    .filter((k) => k.stevilo > 0);
+
+  // Neznana kategorija (stara povezava, tipkarska napaka) pokaže vse izdelke.
+  const iskana = Array.isArray(kategorija) ? kategorija[0] : kategorija;
+  const izbrana = kategorije.find((k) => k.slug === iskana) ?? null;
+  const izdelki = izbrana
+    ? katalog.izdelki.filter((i) => i.kategorija.id === izbrana.id)
+    : katalog.izdelki;
 
   return (
     <>
-      <PageBackdrop src="/asparagusField.jpeg" />
       <PageHeader
-        label="Domačija Tešlan"
+        label="Ponudba"
         title="Naši izdelki"
-        description="Lokalno pridelani izdelki z naše kmetije v Podgori"
+        description="Vse, kar pridelamo in predelamo na kmetiji v Podgori. Sveže iz sezone, začimbe, sadje, olja in domači izdelki."
       />
 
-      <div className={sectionStack}>
-      <section className={`${sectionShell} bg-cream px-4 py-16 md:py-20`}>
-      <div className="mx-auto max-w-6xl">
-        {/* Vodoravna vrstica kategorij nad mrežo kartic. Prej je bilo tu
-            devet sekcij druga pod drugo in ves cenik naenkrat. */}
-        <ProductBrowser items={vrstice} categories={kategorije} />
-      </div>
+      <Container className="flex flex-col gap-6 py-10 md:py-14">
+        <FilterKategorij kategorije={kategorije} izbrana={izbrana?.slug ?? null} steviloVseh={katalog.izdelki.length} />
 
-      </section>
+        <p aria-live="polite" className="type-small text-ink-muted">
+          {izbrana?.ime ?? "Vse kategorije"} · {stevilo(izdelki.length, IZDELEK)}
+        </p>
 
-      <section className={`${sectionShell} bg-green-mid py-12 md:py-16`}>
-        <div className="mx-auto max-w-4xl px-4 text-center">
-          <Reveal className="flex flex-col items-center gap-4">
-            <h2 className="type-h2 text-cream">Želite naročiti?</h2>
-            <p className="type-body on-material text-cream/85">
-              Pokličite nas ali pa nas obiščite na kmetiji v Podgori.
-            </p>
-            <Pressable
-              href={`tel:${contact.phone.replace(/\s/g, '')}`}
-              variant="primary"
-              className="mt-2"
-              ariaLabel={`Pokličite ${contact.phoneDisplay}`}
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                />
-              </svg>
-              {contact.phoneDisplay}
-            </Pressable>
-          </Reveal>
-        </div>
-      </section>
-      </div>
+        {izdelki.length > 0 ? (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {izdelki.map((izdelek, i) => (
+              <li key={izdelek.id}>
+                <KarticaIzdelka izdelek={izdelek} mesec={mesec} prednostnaSlika={i < 3} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState
+            icon={<LuSprout />}
+            title="V katalogu še ni izdelkov"
+            description="Izdelke trenutno pripravljamo. Pokličite nas ali pridite na kmetijo."
+            action={
+              <Button asChild variant="secondary">
+                <Link href="/about">Kontakt</Link>
+              </Button>
+            }
+          />
+        )}
+      </Container>
     </>
   );
 }

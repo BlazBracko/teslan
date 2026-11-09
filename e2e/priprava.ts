@@ -4,7 +4,8 @@ import { testnoOkolje } from "../src/test/testna-baza";
 
 /**
  * Pred e2e testi: testna baza se izprazni, na novo zgradi z migracijami iz
- * repa (`payload migrate:fresh`) in napolni s seedom (katalog, nastavitve).
+ * repa (`payload migrate:fresh`) in napolni s seedom (katalog, nastavitve) ter testnimi
+ * podatki iz `e2e/testni-podatki.ts` (npr. neobjavljen izdelek).
  * Administratorja seed ne ustvari (SEED_ADMIN_* sta prazni), ker
  * `admin.spec.ts` preverja obrazec za prvega uporabnika na prazni tabeli
  * uporabnikov.
@@ -28,5 +29,6 @@ export default function priprava() {
     env,
     stdio: "inherit",
   });
+  execFileSync("npx", ["payload", "run", "e2e/testni-podatki.ts"], { env, stdio: "inherit" });
   rmSync(".next/cache/fetch-cache", { recursive: true, force: true });
 }

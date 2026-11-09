@@ -1,63 +1,46 @@
-import Reveal from '@/components/ui/Reveal';
-import { cn } from '@/lib/utils';
-
-interface SectionHeadingProps {
-  label?: string;
-  title: React.ReactNode;
-  description?: React.ReactNode;
-  /** Nad temno podlago prosojnost besedila zniža berljivost (§12). */
-  onDark?: boolean;
-  align?: 'center' | 'start';
-  className?: string;
-}
+import { cn } from "@/lib/utils";
 
 /**
- * Naslov sekcije: oznaka + naslov + opis.
- *
- * Ta trojica se je ponavljala v petih datotekah, vsakič z drugačnim
- * ročno preračunanim `delay` in drugačnim odtenkom. Hierarhijo tu
- * gradimo iz velikosti, teže in leadinga kot iz enega seta (§15).
+ * Naslov sekcije (Z3): neobvezna oznaka, naslov in opis. Hierarhija nastane
+ * iz velikosti, teže in razmika (apple-design §15), ne iz barve.
  */
-export default function SectionHeading({
+export function SectionHeading({
   label,
   title,
   description,
-  onDark = false,
-  align = 'center',
+  align = "start",
+  as: Naslov = "h2",
+  id,
   className,
-}: SectionHeadingProps) {
+  action,
+}: {
+  label?: React.ReactNode;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  align?: "start" | "center";
+  as?: "h1" | "h2";
+  id?: string;
+  className?: string;
+  /** Povezava ali gumb ob naslovu (npr. „Vsi izdelki“). */
+  action?: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-3',
-        align === 'center' ? 'items-center text-center' : 'items-start text-left',
+        "flex flex-col gap-4",
+        action && "md:flex-row md:items-end md:justify-between",
+        align === "center" && "items-center text-center",
         className,
       )}
     >
-      {label && (
-        <Reveal delay={0}>
-          <span className={cn('type-label', onDark ? 'text-green-bright' : 'text-green-light')}>
-            {label}
-          </span>
-        </Reveal>
-      )}
-
-      <Reveal delay={0.05}>
-        <h2 className={cn('type-h2', onDark && 'text-cream')}>{title}</h2>
-      </Reveal>
-
-      {description && (
-        <Reveal delay={0.1}>
-          <p
-            className={cn(
-              'type-body max-w-2xl',
-              onDark ? 'on-material text-cream/85' : 'text-ink-mid',
-            )}
-          >
-            {description}
-          </p>
-        </Reveal>
-      )}
+      <div className={cn("flex max-w-2xl flex-col gap-3", align === "center" && "items-center")}>
+        {label && <p className="type-label text-accent">{label}</p>}
+        <Naslov id={id} className={cn(Naslov === "h1" ? "type-h1" : "type-h2", "text-ink")}>
+          {title}
+        </Naslov>
+        {description && <p className="type-body-lg text-ink-muted">{description}</p>}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

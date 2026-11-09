@@ -159,7 +159,7 @@ test("urednik uredi izdelek, sprememba je na /products v največ 60 s (Z17); nas
   // Revalidacija ob shranjevanju: sprememba je vidna takoj, najkasneje v 60 s.
   await expect(async () => {
     await page.goto("/products");
-    const kartica = page.locator("article", {
+    const kartica = page.locator("main li", {
       has: page.getByRole("heading", { name: "Vloženi jurčki (e2e)" }),
     });
     await expect(kartica.getByText("Še 2 kosa")).toBeVisible({ timeout: 1_000 });
