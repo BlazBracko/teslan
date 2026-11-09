@@ -347,3 +347,66 @@ export const PRODAJALEC = {
 
 export const NAVODILA_ZA_PREVZEM =
   "Naročilo prevzamete na kmetiji: Podgora 15, 8351 Straža pri Novem mestu. Ko je pripravljeno, vas obvestimo po e-pošti; termin prevzema se lahko dogovorimo tudi po telefonu 040 578 512.";
+
+/** Demo darilne škatle (§6, P12: zaloga 20). */
+export interface TipSkatleSeed {
+  ime: string;
+  opis: string;
+  steviloMest: number;
+  cenaCenti: number;
+}
+
+export const TIPI_SKATEL: TipSkatleSeed[] = [
+  {
+    ime: "Mala darilna škatla",
+    opis: "[DEMO] Kartonska škatla za tri izdelke, z lesno volno in kartico za vaše sporočilo.",
+    steviloMest: 3,
+    cenaCenti: 500,
+  },
+  {
+    ime: "Velika darilna škatla",
+    opis: "[DEMO] Večja škatla za šest izdelkov, z lesno volno in kartico za vaše sporočilo.",
+    steviloMest: 6,
+    cenaCenti: 800,
+  },
+];
+
+/** Demo programi (§6); vsebina: `[slug izdelka, začetek oznake velikosti, količina]`. */
+export interface ProgramSeed {
+  ime: string;
+  slug: string;
+  opis: string;
+  tipSkatle: string;
+  slika?: KljucSlike;
+  vsebina: Array<[string, string, number]>;
+}
+
+export const PROGRAMI: ProgramSeed[] = [
+  {
+    ime: "Okusi Dolenjske",
+    slug: "okusi-dolenjske",
+    opis: "[DEMO] Mala škatla z domačimi okusi: česen v prahu, šparglji v prahu in borovničeva marmelada.",
+    tipSkatle: "Mala darilna škatla",
+    slika: "testenine",
+    vsebina: [
+      ["cesen-v-prahu", "41 ml", 1],
+      ["sparglji-v-prahu", "", 1],
+      ["marmelada-borovnica", "", 1],
+    ],
+  },
+  {
+    ime: "Za kuharje",
+    slug: "za-kuharje",
+    opis: "[DEMO] Velika škatla za vse, ki radi kuhajo: začimbe v prahu, suhi peteršilj, testenine s šparglji in bučno olje.",
+    tipSkatle: "Velika darilna škatla",
+    slika: "cesen",
+    vsebina: [
+      ["cesen-v-prahu", "106 ml", 1],
+      ["cebula-v-prahu", "", 1],
+      ["paradiznik-v-prahu", "", 1],
+      ["suhi-petersilj", "", 1],
+      ["testenine-s-sparglji", "", 1],
+      ["bucno-olje", "0,5 L", 1],
+    ],
+  },
+];

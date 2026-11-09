@@ -7,13 +7,25 @@ import type { StatusNarocila } from "./statusi";
  * tipov in brez žetona).
  */
 
-export interface PostavkaNarocilaPogled {
+export interface KosVsebineNarocilaPogled {
   ime: string;
   velikost: string | null;
   kolicina: number;
   cenaCenti: number;
+}
+
+export interface PostavkaNarocilaPogled {
+  tip: "izdelek" | "skatla";
+  ime: string;
+  velikost: string | null;
+  kolicina: number;
+  /** Pri škatli cena ene škatle z vsebino. */
+  cenaCenti: number;
   stopnjaDDV: number;
   skupajCenti: number;
+  /** Vsebina ene darilne škatle (pri izdelku prazna). */
+  vsebina: KosVsebineNarocilaPogled[];
+  sporociloNaKartici: string | null;
 }
 
 export interface NarociloPogled {
@@ -27,6 +39,9 @@ export interface NarociloPogled {
   oddano: string;
   kupec: { ime: string; priimek: string; email: string; telefon: string };
   naslov: { ulica: string; postnaStevilka: string; kraj: string } | null;
+  /** Z55: paket gre na naslov prejemnika (`naslov` je tedaj njegov). */
+  darilo: boolean;
+  prejemnik: { ime: string } | null;
   opomba: string | null;
   postavke: PostavkaNarocilaPogled[];
   vmesniSestevekCenti: number;
@@ -60,15 +75,29 @@ export function narociloPogled(n: Narocila): NarociloPogled {
     oddano: n.createdAt,
     kupec: { ...n.kupec },
     naslov,
+    darilo: Boolean(n.darilo) && naslov !== null,
+    prejemnik: n.darilo && n.prejemnik?.ime ? { ime: n.prejemnik.ime } : null,
     opomba: n.opomba ?? null,
-    postavke: n.postavke.map((p) => ({
-      ime: p.ime,
-      velikost: p.velikost ?? null,
-      kolicina: p.kolicina,
-      cenaCenti: p.cenaCenti,
-      stopnjaDDV: p.stopnjaDDV,
-      skupajCenti: p.cenaCenti * p.kolicina,
-    })),
+    postavke: n.postavke.map((p) => {
+      const vsebina = p.tip === "skatla" ? (p.vsebina ?? []) : [];
+      const cenaCenti = p.cenaCenti + vsebina.reduce((s, v) => s + v.cenaCenti * v.kolicina, 0);
+      return {
+        tip: p.tip,
+        ime: p.ime,
+        velikost: p.velikost ?? null,
+        kolicina: p.kolicina,
+        cenaCenti,
+        stopnjaDDV: p.stopnjaDDV,
+        skupajCenti: cenaCenti * p.kolicina,
+        vsebina: vsebina.map((v) => ({
+          ime: v.ime,
+          velikost: v.velikost ?? null,
+          kolicina: v.kolicina,
+          cenaCenti: v.cenaCenti,
+        })),
+        sporociloNaKartici: p.sporociloNaKartici?.trim() || null,
+      };
+    }),
     vmesniSestevekCenti: n.vmesniSestevekCenti,
     postninaCenti: n.postninaCenti,
     skupajCenti: n.skupajCenti,

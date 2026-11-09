@@ -8,7 +8,7 @@ import {
 } from "payload";
 import { OZNAKA_KATALOG } from "../../katalog/oznake";
 import { formatirajCeno } from "../../lib/denar";
-import { oznaciZalogoVrnjeno, povecajZalogo, sejaBaze } from "../../narocila/baza";
+import { oznaciZalogoVrnjeno, povecajZalogo, povecajZalogoSkatel, sejaBaze } from "../../narocila/baza";
 import { ponudnikPlacil } from "../../narocila/placila";
 import { OZNAKE_STATUSOV, razlogNedovoljenegaPrehoda, STATUSI, type StatusNarocila } from "../../narocila/statusi";
 import { urednikAliAdmin } from "../dostop";
@@ -35,9 +35,40 @@ const centi = (name: string, label: string, opis: string): Field => ({
   admin: { readOnly: true, step: 1, description: opis },
 });
 
-type PostavkaZaZalogo = { tip?: string | null; izdelek?: number | { id: number } | null; velikostId?: string | null; kolicina?: number | null };
+type Relacija = number | { id: number } | null | undefined;
+type PostavkaZaZalogo = {
+  tip?: string | null;
+  izdelek?: Relacija;
+  velikostId?: string | null;
+  kolicina?: number | null;
+  tipSkatle?: Relacija;
+  vsebina?: Array<{ izdelek?: Relacija; velikostId?: string | null; kolicina?: number | null }> | null;
+};
 
-const idRelacije = (v: number | { id: number } | null | undefined) => (typeof v === "object" && v ? v.id : v);
+const idRelacije = (v: Relacija) => (typeof v === "object" && v ? v.id : v);
+
+/** Zaloga, ki jo naročilo vrne ob preklicu: velikosti izdelkov (tudi v škatlah) in škatle. */
+export function zalogaZaVrnitev(postavke: readonly PostavkaZaZalogo[]) {
+  const velikosti: Array<{ izdelekId: number; velikostId: string; kolicina: number }> = [];
+  const skatle: Array<{ tipSkatleId: number; kolicina: number }> = [];
+  for (const p of postavke) {
+    if (!p.kolicina) continue;
+    if (p.tip === "skatla") {
+      const tipSkatleId = idRelacije(p.tipSkatle);
+      if (tipSkatleId) skatle.push({ tipSkatleId, kolicina: p.kolicina });
+      for (const v of p.vsebina ?? []) {
+        const izdelekId = idRelacije(v.izdelek);
+        if (izdelekId && v.velikostId && v.kolicina) {
+          velikosti.push({ izdelekId, velikostId: v.velikostId, kolicina: v.kolicina * p.kolicina });
+        }
+      }
+      continue;
+    }
+    const izdelekId = idRelacije(p.izdelek);
+    if (izdelekId && p.velikostId) velikosti.push({ izdelekId, velikostId: p.velikostId, kolicina: p.kolicina });
+  }
+  return { velikosti, skatle };
+}
 
 /**
  * Prehodi statusov (Z33) in vračanje zaloge ob preklicu (Z34). Zaloga se
@@ -56,16 +87,9 @@ const prehodInPreklic: CollectionBeforeChangeHook = async ({ data, originalDoc, 
   if (na === "preklicano") {
     const seja = await sejaBaze(req.payload, req);
     if (await oznaciZalogoVrnjeno(seja, originalDoc.id)) {
-      const postavke = (originalDoc.postavke ?? []) as PostavkaZaZalogo[];
-      await povecajZalogo(
-        seja,
-        postavke.flatMap((p) => {
-          const izdelekId = idRelacije(p.izdelek);
-          return p.tip === "izdelek" && izdelekId && p.velikostId && p.kolicina
-            ? [{ izdelekId, velikostId: p.velikostId, kolicina: p.kolicina }]
-            : [];
-        }),
-      );
+      const { velikosti, skatle } = zalogaZaVrnitev((originalDoc.postavke ?? []) as PostavkaZaZalogo[]);
+      await povecajZalogo(seja, velikosti);
+      await povecajZalogoSkatel(seja, skatle);
       req.context.zalogaVrnjena = true;
     }
     // Sicer bi shranjevanje prepisalo oznako, ki jo je pravkar nastavil SQL.
@@ -285,7 +309,7 @@ export const Narocila: CollectionConfig = {
       access: samoBranje,
       admin: {
         readOnly: true,
-        description: "Paket gre na naslov prejemnika: potrdila in cen ne prilagajte paketu.",
+        description: "Darilo – potrdila in cen ne prilagajte paketu. Paket gre na naslov prejemnika (spodaj).",
         condition: (data) => Boolean(data?.darilo),
       },
     },
@@ -372,6 +396,61 @@ export const Narocila: CollectionConfig = {
               admin: { width: "50%", description: "Za vračanje zaloge ob preklicu." },
             },
           ],
+          admin: { condition: (_, siblingData) => siblingData?.tip !== "skatla" },
+        },
+        {
+          name: "tipSkatle",
+          type: "relationship",
+          relationTo: "tipi-skatel",
+          label: "Tip škatle",
+          admin: {
+            description: "Cena kosa zgoraj je cena prazne škatle (DDV 22 %); izdelki v njej so našteti spodaj.",
+            condition: (_, siblingData) => siblingData?.tip === "skatla",
+          },
+        },
+        {
+          name: "vsebina",
+          type: "array",
+          label: "Vsebina škatle",
+          labels: { singular: "Izdelek", plural: "Izdelki" },
+          admin: {
+            description: "Izdelki v eni škatli. Pri več enakih škatlah je vsak izdelek v vsaki od njih.",
+            condition: (_, siblingData) => siblingData?.tip === "skatla",
+          },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "ime", type: "text", label: "Ime", required: true, admin: { width: "40%" } },
+                { name: "velikost", type: "text", label: "Velikost", admin: { width: "30%" } },
+                { name: "kolicina", type: "number", label: "Količina", required: true, admin: { width: "30%" } },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "cenaCenti",
+                  type: "number",
+                  label: "Cena kosa (v centih)",
+                  required: true,
+                  admin: { width: "25%", description: "Z DDV." },
+                },
+                { name: "stopnjaDDV", type: "number", label: "DDV (%)", required: true, admin: { width: "25%" } },
+                { name: "izdelek", type: "relationship", relationTo: "izdelki", label: "Izdelek", admin: { width: "25%" } },
+                { name: "velikostId", type: "text", label: "Id velikosti", admin: { width: "25%" } },
+              ],
+            },
+          ],
+        },
+        {
+          name: "sporociloNaKartici",
+          type: "textarea",
+          label: "Sporočilo na kartici",
+          admin: {
+            description: "Napišite ga na kartico v škatli.",
+            condition: (_, siblingData) => siblingData?.tip === "skatla" && Boolean(siblingData?.sporociloNaKartici),
+          },
         },
       ],
     },

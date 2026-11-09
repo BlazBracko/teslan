@@ -71,6 +71,8 @@ export interface Config {
     izdelki: Izdelki;
     kategorije: Kategorije;
     'skupine-ponudbe': SkupinePonudbe;
+    'darilni-programi': DarilniProgrami;
+    'tipi-skatel': TipiSkatel;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -84,6 +86,8 @@ export interface Config {
     izdelki: IzdelkiSelect<false> | IzdelkiSelect<true>;
     kategorije: KategorijeSelect<false> | KategorijeSelect<true>;
     'skupine-ponudbe': SkupinePonudbeSelect<false> | SkupinePonudbeSelect<true>;
+    'darilni-programi': DarilniProgramiSelect<false> | DarilniProgramiSelect<true>;
+    'tipi-skatel': TipiSkatelSelect<false> | TipiSkatelSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -178,7 +182,7 @@ export interface Narocila {
     kraj?: string | null;
   };
   /**
-   * Paket gre na naslov prejemnika: potrdila in cen ne prilagajte paketu.
+   * Darilo – potrdila in cen ne prilagajte paketu. Paket gre na naslov prejemnika (spodaj).
    */
   darilo?: boolean | null;
   prejemnik?: {
@@ -209,6 +213,32 @@ export interface Narocila {
      * Za vračanje zaloge ob preklicu.
      */
     velikostId?: string | null;
+    /**
+     * Cena kosa zgoraj je cena prazne škatle (DDV 22 %); izdelki v njej so našteti spodaj.
+     */
+    tipSkatle?: (number | null) | TipiSkatel;
+    /**
+     * Izdelki v eni škatli. Pri več enakih škatlah je vsak izdelek v vsaki od njih.
+     */
+    vsebina?:
+      | {
+          ime: string;
+          velikost?: string | null;
+          kolicina: number;
+          /**
+           * Z DDV.
+           */
+          cenaCenti: number;
+          stopnjaDDV: number;
+          izdelek?: (number | null) | Izdelki;
+          velikostId?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Napišite ga na kartico v škatli.
+     */
+    sporociloNaKartici?: string | null;
     id?: string | null;
   }[];
   /**
@@ -435,6 +465,49 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Škatle, v katere kupci sestavijo darilo. Cena darila je cena škatle in vsota izbranih izdelkov. Ob naročilu se zaloga škatle zmanjša sama.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tipi-skatel".
+ */
+export interface TipiSkatel {
+  id: number;
+  /**
+   * Ime, kot ga vidi kupec, npr. „Mala darilna škatla“.
+   */
+  ime: string;
+  /**
+   * Neobvezno. Ena ali dve povedi o škatli (material, velikost).
+   */
+  opis?: string | null;
+  /**
+   * Fotografija škatle. Brez slike se pokaže nadomestna ploskev.
+   */
+  slika?: (number | null) | Media;
+  /**
+   * Koliko izdelkov gre v škatlo (1 kos = 1 mesto, največ 24). Kupec je ne rabi napolniti do konca.
+   */
+  steviloMest: number;
+  /**
+   * Cena prazne škatle z DDV (22 %) v centih: 500 pomeni 5,00 €. Izdelki se prištejejo.
+   */
+  cenaCenti: number;
+  /**
+   * Koliko škatel imate. Ob naročilu se zmanjša sama, ob preklicu se vrne.
+   */
+  zaloga: number;
+  /**
+   * Samo aktivne škatle lahko kupci izberejo. Neaktivne niso vidne na strani.
+   */
+  aktiven?: boolean | null;
+  /**
+   * Po tej številki so tipi škatel razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
+   */
+  vrstniRed: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Ploščice v razdelku „Naša ponudba“ na domači strani. Cena „od X €“ se izračuna sama iz izdelkov v izbranih kategorijah.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -462,6 +535,67 @@ export interface SkupinePonudbe {
    * Po tej številki so skupine razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
    */
   vrstniRed: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Pripravljena darila na strani Darila. Kupec program izbere in vsebino po želji spremeni. Izdelki morajo biti primerni za darilo, skupna količina pa največ toliko, kot ima škatla mest.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "darilni-programi".
+ */
+export interface DarilniProgrami {
+  id: number;
+  /**
+   * Ime darila, kot ga vidi kupec, npr. „Okusi Dolenjske“.
+   */
+  ime: string;
+  /**
+   * Naslov konfiguratorja s tem programom: /darila/sestavi?program=<slug>. Male črke brez šumnikov, besede ločene z vezajem. Če polje pustite prazno, se ustvari samo iz imena.
+   */
+  slug?: string | null;
+  /**
+   * Samo objavljeni programi so vidni na strani Darila.
+   */
+  objavljen?: boolean | null;
+  /**
+   * Po tej številki so programi razvrščeni na strani: manjša številka je prej. Enake številke se razvrstijo po imenu.
+   */
+  vrstniRed: number;
+  /**
+   * Nekaj povedi o darilu: komu je namenjeno, kaj je v njem.
+   */
+  opis?: string | null;
+  /**
+   * Fotografija darila. Brez slike se pokaže nadomestna ploskev.
+   */
+  slika?: (number | null) | Media;
+  /**
+   * Obvezno. V kateri škatli je darilo. Število mest omejuje skupno količino izdelkov.
+   */
+  tipSkatle?: (number | null) | TipiSkatel;
+  /**
+   * Izdelki v škatli. Na strani se pokažejo le tisti, ki so na zalogi in v sezoni; ostale kupec vidi kot odstranjene.
+   */
+  vsebina: {
+    /**
+     * Samo izdelki, primerni za darilno škatlo.
+     */
+    izdelek?: (number | null) | Izdelki;
+    /**
+     * Oznaka velikosti, npr. „41 ml (15 g)“; prazno pomeni prvo velikost. Ob shranjevanju se zamenja z notranjo oznako, izbrana velikost je izpisana spodaj.
+     */
+    velikostId?: string | null;
+    /**
+     * Kosov te velikosti.
+     */
+    kolicina: number;
+    /**
+     * Velikost, ki je shranjena v programu.
+     */
+    izbranaVelikost?: string | null;
+    id?: string | null;
+  }[];
   updatedAt: string;
   createdAt: string;
 }
@@ -543,6 +677,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'skupine-ponudbe';
         value: number | SkupinePonudbe;
+      } | null)
+    | ({
+        relationTo: 'darilni-programi';
+        value: number | DarilniProgrami;
+      } | null)
+    | ({
+        relationTo: 'tipi-skatel';
+        value: number | TipiSkatel;
       } | null)
     | ({
         relationTo: 'media';
@@ -643,6 +785,20 @@ export interface NarocilaSelect<T extends boolean = true> {
         stopnjaDDV?: T;
         izdelek?: T;
         velikostId?: T;
+        tipSkatle?: T;
+        vsebina?:
+          | T
+          | {
+              ime?: T;
+              velikost?: T;
+              kolicina?: T;
+              cenaCenti?: T;
+              stopnjaDDV?: T;
+              izdelek?: T;
+              velikostId?: T;
+              id?: T;
+            };
+        sporociloNaKartici?: T;
         id?: T;
       };
   vmesniSestevekCenti?: T;
@@ -724,6 +880,46 @@ export interface SkupinePonudbeSelect<T extends boolean = true> {
   opis?: T;
   slika?: T;
   kategorije?: T;
+  vrstniRed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "darilni-programi_select".
+ */
+export interface DarilniProgramiSelect<T extends boolean = true> {
+  ime?: T;
+  slug?: T;
+  objavljen?: T;
+  vrstniRed?: T;
+  opis?: T;
+  slika?: T;
+  tipSkatle?: T;
+  vsebina?:
+    | T
+    | {
+        izdelek?: T;
+        velikostId?: T;
+        kolicina?: T;
+        izbranaVelikost?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tipi-skatel_select".
+ */
+export interface TipiSkatelSelect<T extends boolean = true> {
+  ime?: T;
+  opis?: T;
+  slika?: T;
+  steviloMest?: T;
+  cenaCenti?: T;
+  zaloga?: T;
+  aktiven?: T;
   vrstniRed?: T;
   updatedAt?: T;
   createdAt?: T;

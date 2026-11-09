@@ -49,7 +49,14 @@ export function parametriSeje(
     price_data: { currency: "eur", unit_amount: cenaCenti, product_data: { name: ime } },
   });
   const postavke = [
-    ...n.postavke.map((p) => postavka([p.ime, p.velikost].filter(Boolean).join(", "), p.cenaCenti, p.kolicina)),
+    // Darilna škatla je ena vrstica: cena škatle in vsebine za eno škatlo.
+    ...n.postavke.map((p) =>
+      postavka(
+        [p.ime, p.velikost].filter(Boolean).join(", "),
+        p.cenaCenti + (p.tip === "skatla" ? (p.vsebina ?? []).reduce((s, v) => s + v.cenaCenti * v.kolicina, 0) : 0),
+        p.kolicina,
+      ),
+    ),
     ...(n.postninaCenti > 0 ? [postavka("Poštnina", n.postninaCenti, 1)] : []),
   ];
   const vsota = postavke.reduce((s, p) => s + (p.price_data?.unit_amount ?? 0) * (p.quantity ?? 0), 0);

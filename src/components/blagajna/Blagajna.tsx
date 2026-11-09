@@ -17,7 +17,7 @@ import { preveriKosaricoNaStrezniku } from "@/kosarica/akcije";
 import { izracunajZnesek, type NacinDostave, type NacinPlacila } from "@/kosarica/cene";
 import { dovoljenaPlacila, nastevanje } from "@/kosarica/dostava";
 import type { PostavkaKosarice } from "@/kosarica/postavke";
-import type { PregledKosarice } from "@/kosarica/preverjanje";
+import { imePostavke, postavkeZaZnesek, type PregledKosarice } from "@/kosarica/preverjanje";
 import { izprazniKosarico, useKosarica } from "@/kosarica/shramba";
 import { formatirajCeno } from "@/lib/denar";
 import { oddajNarociloNaStrezniku } from "@/narocila/akcije";
@@ -44,6 +44,7 @@ const VRSTNI_RED_POLJ: PoljeBlagajne[] = [
   "email",
   "telefon",
   "nacinDostave",
+  "prejemnikIme",
   "ulica",
   "postnaStevilka",
   "kraj",
@@ -261,12 +262,15 @@ function ObrazecBlagajne({
   // Pri prevzemu je privzeto plačilo ob prevzemu; kupec lahko izbere kartico.
   const [izbranoPlacilo, setIzbranoPlacilo] = useState<NacinPlacila>("ob-prevzemu");
   const [soglasje, setSoglasje] = useState(false);
+  const [zaPrejemnika, setZaPrejemnika] = useState(false);
   const [napake, setNapake] = useState<NapakeBlagajne>({});
   const [napaka, setNapaka] = useState<Napaka | null>(null);
   const [posiljam, setPosiljam] = useState(false);
 
   const { dostava } = pregled;
   const posta = nacinDostave === "posta";
+  // Z55: naslov prejemnika samo pri pošti in košarici z darilno škatlo.
+  const darilo = posta && pregled.imaSkatlo && zaPrejemnika;
   const placila = dovoljenaPlacila(nacinDostave);
   // Pri pošti je plačilo samo s kartico (Z22): izbira ob prevzemu tedaj ne
   // velja in je kartica, če je na voljo, izbrana sama.
@@ -278,9 +282,7 @@ function ObrazecBlagajne({
   const karticaEdina = posta && !kartica;
 
   const znesek = izracunajZnesek(
-    pregled.postavke
-      .filter((p) => p.tezava === null && p.cenaCenti != null && p.stopnjaDDV != null)
-      .map((p) => ({ cenaCenti: p.cenaCenti as number, stopnjaDDV: p.stopnjaDDV as number, kolicina: p.kolicina })),
+    postavkeZaZnesek(pregled.postavke),
     nacinDostave,
     { postninaCenti: dostava.postninaCenti, pragBrezplacnePostnineCenti: dostava.pragBrezplacnePostnineCenti },
   );
@@ -318,6 +320,7 @@ function ObrazecBlagajne({
       nacinDostave,
       nacinPlacila,
       ...(posta ? { ulica: besedilo("ulica"), postnaStevilka: besedilo("postnaStevilka"), kraj: besedilo("kraj") } : {}),
+      ...(darilo ? { darilo: true, prejemnikIme: besedilo("prejemnikIme") } : {}),
       opomba: besedilo("opomba"),
       soglasje: soglasje || undefined,
     };
@@ -455,8 +458,26 @@ function ObrazecBlagajne({
             </RadioGroup>
           </Field>
 
+          {posta && pregled.imaSkatlo && (
+            <Checkbox
+              id="blagajna-darilo"
+              checked={zaPrejemnika}
+              onCheckedChange={(v) => setZaPrejemnika(v === true)}
+              label="Pošlji na naslov prejemnika"
+              description="Darilo pošljemo neposredno obdarovancu. V paketu ni cen; potrdilo naročila dobite samo vi."
+            />
+          )}
+
           {posta ? (
             <div className="grid gap-5 sm:grid-cols-[8rem_minmax(0,1fr)]">
+              {darilo && (
+                <>
+                  <p className="type-small font-semibold text-ink sm:col-span-2">Naslov prejemnika</p>
+                  <Field label="Ime in priimek prejemnika" required className="sm:col-span-2" {...polje("prejemnikIme")}>
+                    <Input name="prejemnikIme" autoComplete="shipping name" maxLength={100} />
+                  </Field>
+                </>
+              )}
               <Field label="Ulica in hišna številka" required className="sm:col-span-2" {...polje("ulica")}>
                 <Input name="ulica" autoComplete="shipping street-address" maxLength={200} />
               </Field>
@@ -544,9 +565,14 @@ function ObrazecBlagajne({
           {pregled.postavke.map((p) => (
             <li key={p.kljuc} className="flex items-baseline justify-between gap-4">
               <span className="min-w-0 text-ink">
-                {p.izdelek?.ime}
-                {p.velikost && <span className="text-ink-muted">, {p.velikost}</span>}
+                {p.vrsta === "skatla" ? imePostavke(p) : p.izdelek?.ime}
+                {p.vrsta === "izdelek" && p.velikost && <span className="text-ink-muted">, {p.velikost}</span>}
                 <span className="text-ink-muted"> × {p.kolicina}</span>
+                {p.vrsta === "skatla" && (
+                  <span className="block type-caption text-ink-muted">
+                    {p.vsebina.map((v) => `${v.kolicina} × ${v.ime}`).join(", ")}
+                  </span>
+                )}
               </span>
               {p.skupajCenti != null && <span className="shrink-0 type-numeric text-ink">{formatirajCeno(p.skupajCenti)}</span>}
             </li>

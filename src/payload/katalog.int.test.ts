@@ -1,7 +1,7 @@
 import type { Payload } from "payload";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Izdelki, User } from "@/payload-types";
-import { IZDELKI, KATEGORIJE, SKUPINE, ZACETNA_ZALOGA } from "@/seed/podatki";
+import { IZDELKI, KATEGORIJE, PROGRAMI, SKUPINE, TIPI_SKATEL, ZACETNA_ZALOGA } from "@/seed/podatki";
 import { seed } from "@/seed/seed";
 import { payloadNaCistiBazi } from "@/test/payload";
 
@@ -47,8 +47,15 @@ describe("seed (§6)", () => {
     expect(porocilo).toMatchObject({
       admin: "ustvarjen",
       katalog: "dopolnjen",
+      darila: "dopolnjena",
       nastavitve: "ustvarjene",
-      ustvarjeno: { kategorije: KATEGORIJE.length, skupine: SKUPINE.length, izdelki: IZDELKI.length },
+      ustvarjeno: {
+        kategorije: KATEGORIJE.length,
+        skupine: SKUPINE.length,
+        izdelki: IZDELKI.length,
+        tipiSkatel: TIPI_SKATEL.length,
+        programi: PROGRAMI.length,
+      },
     });
     expect(IZDELKI).toHaveLength(25);
 
@@ -142,7 +149,7 @@ describe("seed (§6)", () => {
     expect(porocilo).toMatchObject({
       admin: "obstaja",
       nastavitve: "obstajajo",
-      ustvarjeno: { kategorije: 0, skupine: 0, izdelki: 0, slike: 0 },
+      ustvarjeno: { kategorije: 0, skupine: 0, izdelki: 0, slike: 0, tipiSkatel: 0, programi: 0 },
     });
     expect((await payload.count({ collection: "izdelki" })).totalDocs).toBe(IZDELKI.length);
     expect((await payload.count({ collection: "users" })).totalDocs).toBe(1);
@@ -159,6 +166,7 @@ describe("seed (§6)", () => {
 
     const obDeployu = await seed(payload, { nacin: "ce-prazno", log: tiho });
     expect(obDeployu.katalog).toBe("preskocen");
+    expect(obDeployu.darila).toBe("preskocena");
     expect((await payload.count({ collection: "izdelki" })).totalDocs).toBe(IZDELKI.length - 1);
 
     const rocno = await seed(payload, { nacin: "dopolni", log: tiho });

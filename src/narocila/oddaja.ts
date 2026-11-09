@@ -6,12 +6,24 @@ import { izdelekPogled, type IzdelekPogled } from "@/katalog/pogled";
 import { trenutniMesec } from "@/katalog/sezona";
 import { izracunajZnesek } from "@/kosarica/cene";
 import { dovoljenaPlacila, nastevanje } from "@/kosarica/dostava";
-import { normalizirajKosarico } from "@/kosarica/postavke";
-import { preveriKosarico } from "@/kosarica/preverjanje";
+import { jeSkatla, normalizirajKosarico } from "@/kosarica/postavke";
+import { imePostavke, postavkeZaZnesek, preveriKosarico, type PostavkaPregled } from "@/kosarica/preverjanje";
+import { programPogled, tipSkatlePogled } from "@/darila/pogled";
 import { kontaktIzNastavitev } from "@/lib/kontakt";
 import type { Narocila, NastavitveTrgovine } from "@/payload-types";
 import { razveljavi } from "@/payload/revalidacija";
-import { naslednjaZaporedna, sejaBaze, zakleniOddajo, zakleniVelikosti, zmanjsajZalogo } from "./baza";
+import {
+  naslednjaZaporedna,
+  sejaBaze,
+  zakleniOddajo,
+  zakleniTipeSkatel,
+  zakleniVelikosti,
+  zdruziSpremembe,
+  zmanjsajZalogo,
+  zmanjsajZalogoSkatel,
+  type SpremembaZaloge,
+  type SpremembaZalogeSkatel,
+} from "./baza";
 import { preveriBlagajno, type NapakeBlagajne } from "./obrazec";
 import type { PonudnikPlacil } from "./placila";
 import { narociloPogled, potNarocila } from "./pogled";
@@ -22,12 +34,13 @@ import { letoVLjubljani, oblikujStevilko, predponaLeta, ustvariZeton } from "./s
  * Oddaja naročila (Z30, Z31, Z32, Z43). Vse teče v eni transakciji:
  *
  *  1. zaklep oddaje (naročila se oddajajo po vrsti, številke so zaporedne),
- *  2. zaklep vrstic velikosti in sveže branje izdelkov ter nastavitev iz
- *     baze (ne iz predpomnjenega kataloga),
+ *  2. zaklep vrstic velikosti in tipov škatel ter sveže branje izdelkov,
+ *     škatel in nastavitev iz baze (ne iz predpomnjenega kataloga),
  *  3. preverjanje košarice (`preveriKosarico`, enako kot na strani
  *     košarice), pravil dostave in plačila ter stikala trgovine (Z27),
- *  4. zmanjšanje zaloge in zapis naročila s posnetkom imen, velikosti, cen
- *     in stopenj DDV.
+ *  4. zmanjšanje zaloge (velikosti, tudi v darilnih škatlah, in škatle,
+ *     P8) in zapis naročila s posnetkom imen, velikosti, cen in stopenj
+ *     DDV; pri škatli še vsebine in sporočila na kartici (Z54).
  *
  * Če karkoli ne uspe, se transakcija razveljavi in v bazi se ne spremeni
  * nič; kupec dobi seznam postavk s težavami. Po potrditvi se pri plačilu
@@ -119,19 +132,45 @@ export async function oddajNarocilo(
       throw new Razveljavi({ ok: false, vrsta: "zavrnjeno", sporocilo: SPOROCILO_ZAPRTA_TRGOVINA });
     }
 
+    const kosi = kosarica.flatMap((p) => (jeSkatla(p) ? p.vsebina : [p]));
+    const skatle = kosarica.filter(jeSkatla);
     await zakleniVelikosti(
       seja,
-      kosarica.map((p) => p.velikostId),
+      kosi.map((p) => p.velikostId),
     );
-    const { docs } = await payload.find({
-      collection: "izdelki",
-      where: {
-        and: [{ id: { in: [...new Set(kosarica.map((p) => p.izdelekId))] } }, { objavljen: { equals: true } }],
-      },
-      depth: 1,
-      pagination: false,
-      req,
-    });
+    await zakleniTipeSkatel(
+      seja,
+      skatle.map((p) => p.tipSkatleId),
+    );
+    const [{ docs }, tipi, programi] = await Promise.all([
+      payload.find({
+        collection: "izdelki",
+        where: {
+          and: [{ id: { in: [...new Set(kosi.map((p) => p.izdelekId))] } }, { objavljen: { equals: true } }],
+        },
+        depth: 1,
+        pagination: false,
+        req,
+      }),
+      skatle.length > 0
+        ? payload.find({
+            collection: "tipi-skatel",
+            where: { id: { in: [...new Set(skatle.map((p) => p.tipSkatleId))] } },
+            depth: 0,
+            pagination: false,
+            req,
+          })
+        : { docs: [] },
+      skatle.some((p) => p.program)
+        ? payload.find({
+            collection: "darilni-programi",
+            where: { slug: { in: [...new Set(skatle.flatMap((p) => (p.program ? [p.program] : [])))] } },
+            depth: 0,
+            pagination: false,
+            req,
+          })
+        : { docs: [] },
+    ]);
     const izdelki = docs.map(izdelekPogled).filter((i): i is IzdelekPogled => i !== null);
 
     const pregled = preveriKosarico(
@@ -143,6 +182,7 @@ export async function oddajNarocilo(
         pragBrezplacnePostnineCenti: nastavitve.pragBrezplacnePostnineCenti,
       },
       trenutniMesec(zdaj),
+      { tipi: tipi.docs.map(tipSkatlePogled), programi: programi.docs.map(programPogled) },
     );
     if (pregled.imaTezave) {
       throw new Razveljavi({
@@ -153,7 +193,7 @@ export async function oddajNarocilo(
           p.tezava
             ? [
                 {
-                  ime: [p.izdelek?.ime ?? "Izdelek, ki ga ni več v ponudbi", p.velikost].filter(Boolean).join(", "),
+                  ime: imePostavke(p),
                   razlog: p.tezava.razlog,
                 },
               ]
@@ -176,29 +216,36 @@ export async function oddajNarocilo(
       });
     }
 
-    const postavke = pregled.postavke.map((p) => ({
-      izdelekId: p.izdelekId,
-      velikostId: p.velikostId,
-      kolicina: p.kolicina,
-      ime: p.izdelek?.ime ?? "",
-      velikost: p.velikost,
-      cenaCenti: p.cenaCenti as number,
-      stopnjaDDV: p.stopnjaDDV as number,
-    }));
-    const znesek = izracunajZnesek(postavke, podatki.nacinDostave, nastavitve);
+    const darilo = podatki.nacinDostave === "posta" && podatki.darilo === true;
+    if (darilo && !pregled.imaSkatlo) {
+      throw new Razveljavi({
+        ok: false,
+        vrsta: "zavrnjeno",
+        sporocilo: "Pošiljanje na naslov prejemnika je mogoče samo, če je v košarici darilna škatla.",
+      });
+    }
 
-    const neuspele = await zmanjsajZalogo(seja, postavke);
-    if (neuspele.length > 0) {
+    const znesek = izracunajZnesek(postavkeZaZnesek(pregled.postavke), podatki.nacinDostave, nastavitve);
+    const { velikosti, skatle: spremembeSkatel } = spremembeZaloge(pregled.postavke);
+    const neuspele = await zmanjsajZalogo(seja, velikosti);
+    const neuspeleSkatle = await zmanjsajZalogoSkatel(seja, spremembeSkatel);
+    if (neuspele.length > 0 || neuspeleSkatle.length > 0) {
       // Ne bi se smelo zgoditi (vrstice so zaklenjene in preverjene), a
       // zaloga nikoli ne sme pasti pod 0.
       throw new Razveljavi({
         ok: false,
         vrsta: "kosarica",
         sporocilo: "Zaloga se je med oddajo spremenila. Naročilo ni bilo oddano.",
-        tezave: neuspele.map((n) => ({
-          ime: postavke.find((p) => p.velikostId === n.velikostId)?.ime ?? "Izdelek",
-          razlog: "Izdelka ni več dovolj na zalogi.",
-        })),
+        tezave: [
+          ...neuspele.map((n) => ({
+            ime: izdelki.find((i) => i.id === n.izdelekId)?.ime ?? "Izdelek",
+            razlog: "Izdelka ni več dovolj na zalogi.",
+          })),
+          ...neuspeleSkatle.map((n) => ({
+            ime: tipi.docs.find((t) => t.id === n.tipSkatleId)?.ime ?? "Darilna škatla",
+            razlog: "Škatle ni več dovolj na zalogi.",
+          })),
+        ],
       });
     }
 
@@ -216,20 +263,16 @@ export async function oddajNarocilo(
         nacinPlacila: podatki.nacinPlacila,
         placano: false,
         kupec: { ime: podatki.ime, priimek: podatki.priimek, email: podatki.email, telefon: podatki.telefon },
+        // Pri darilu je naslov dostave naslov prejemnika (Z55).
         naslov: posta
           ? { ulica: podatki.ulica, postnaStevilka: podatki.postnaStevilka, kraj: podatki.kraj }
           : undefined,
+        darilo,
+        prejemnik: darilo
+          ? { ime: podatki.prejemnikIme, ulica: podatki.ulica, postnaStevilka: podatki.postnaStevilka, kraj: podatki.kraj }
+          : undefined,
         opomba: podatki.opomba || undefined,
-        postavke: postavke.map((p) => ({
-          tip: "izdelek" as const,
-          izdelek: p.izdelekId,
-          velikostId: p.velikostId,
-          ime: p.ime,
-          velikost: p.velikost,
-          cenaCenti: p.cenaCenti,
-          stopnjaDDV: p.stopnjaDDV,
-          kolicina: p.kolicina,
-        })),
+        postavke: pregled.postavke.map(posnetekPostavke),
         vmesniSestevekCenti: znesek.vmesniSestevekCenti,
         postninaCenti: znesek.postninaCenti,
         skupajCenti: znesek.skupajCenti,
@@ -264,6 +307,66 @@ export async function oddajNarocilo(
     await posljiObvestilaONovemNarocilu(payload, narocilo, nastavitve);
   }
   return uspeh;
+}
+
+/** Zaloga, ki jo naročilo porabi: velikosti (združene, tudi iz škatel) in škatle. */
+function spremembeZaloge(postavke: readonly PostavkaPregled[]): {
+  velikosti: SpremembaZaloge[];
+  skatle: SpremembaZalogeSkatel[];
+} {
+  const velikosti: SpremembaZaloge[] = [];
+  const skatle: SpremembaZalogeSkatel[] = [];
+  for (const p of postavke) {
+    if (p.vrsta === "izdelek") {
+      velikosti.push({ izdelekId: p.izdelekId, velikostId: p.velikostId, kolicina: p.kolicina });
+      continue;
+    }
+    skatle.push({ tipSkatleId: p.tipSkatleId, kolicina: p.kolicina });
+    for (const v of p.vsebina) {
+      velikosti.push({ izdelekId: v.izdelekId, velikostId: v.velikostId, kolicina: v.kolicina * p.kolicina });
+    }
+  }
+  const poTipu = new Map<number, number>();
+  for (const s of skatle) poTipu.set(s.tipSkatleId, (poTipu.get(s.tipSkatleId) ?? 0) + s.kolicina);
+  return {
+    velikosti: zdruziSpremembe(velikosti),
+    skatle: [...poTipu].map(([tipSkatleId, kolicina]) => ({ tipSkatleId, kolicina })),
+  };
+}
+
+/** Posnetek postavke na naročilu (Z30, §6): imena, velikosti, cene in DDV ob oddaji. */
+function posnetekPostavke(p: PostavkaPregled): NonNullable<Narocila["postavke"]>[number] {
+  if (p.vrsta === "izdelek") {
+    return {
+      tip: "izdelek",
+      izdelek: p.izdelekId,
+      velikostId: p.velikostId,
+      ime: p.izdelek?.ime ?? "",
+      velikost: p.velikost,
+      cenaCenti: p.cenaCenti as number,
+      stopnjaDDV: p.stopnjaDDV as number,
+      kolicina: p.kolicina,
+    };
+  }
+  return {
+    tip: "skatla",
+    tipSkatle: p.tipSkatleId,
+    ime: imePostavke(p),
+    velikost: null,
+    cenaCenti: p.cenaCenti as number,
+    stopnjaDDV: p.stopnjaDDV,
+    kolicina: p.kolicina,
+    vsebina: p.vsebina.map((v) => ({
+      izdelek: v.izdelekId,
+      velikostId: v.velikostId,
+      ime: v.ime ?? "",
+      velikost: v.velikost,
+      cenaCenti: v.cenaCenti as number,
+      stopnjaDDV: v.stopnjaDDV as number,
+      kolicina: v.kolicina,
+    })),
+    sporociloNaKartici: p.sporocilo,
+  };
 }
 
 /**

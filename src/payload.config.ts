@@ -11,8 +11,10 @@ import { NastavitveTrgovine } from "./payload/globali/NastavitveTrgovine";
 import { Izdelki } from "./payload/kolekcije/Izdelki";
 import { Kategorije } from "./payload/kolekcije/Kategorije";
 import { Mediji } from "./payload/kolekcije/Mediji";
+import { DarilniProgrami } from "./payload/kolekcije/DarilniProgrami";
 import { Narocila } from "./payload/kolekcije/Narocila";
 import { SkupinePonudbe } from "./payload/kolekcije/SkupinePonudbe";
+import { TipiSkatel } from "./payload/kolekcije/TipiSkatel";
 import { Uporabniki } from "./payload/kolekcije/Uporabniki";
 import { shrambaSlik } from "./payload/shramba";
 
@@ -40,7 +42,7 @@ export default buildConfig({
     supportedLanguages: { sl },
     fallbackLanguage: "sl",
   },
-  collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, Mediji, Uporabniki],
+  collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, DarilniProgrami, TipiSkatel, Mediji, Uporabniki],
   globals: [NastavitveTrgovine],
   editor: lexicalEditor(),
   // Do K9 (Resend) se e-pošta izpiše v log strežnika (Z58).

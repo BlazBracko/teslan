@@ -1,9 +1,9 @@
 /**
  * Povezave glave (Z7) in noge (Z8) na enem mestu.
  *
- * Glava in noga kažeta samo na strani, ki že obstajajo: „Darila“ doda K10
- * (`/darila`), „Splošne pogoje“ in „Odstop od pogodbe“ pa K11 (`/pogoji`,
- * `/odstop`). Do takrat bi bile povezave na 404. Košarica ni v seznamu,
+ * Glava in noga kažeta samo na strani, ki že obstajajo: „Splošne pogoje“ in
+ * „Odstop od pogodbe“ doda K11 (`/pogoji`, `/odstop`). Do takrat bi bile
+ * povezave na 404. Košarica ni v seznamu,
  * ker ima v glavi svojo ikono s številom kosov.
  */
 export interface Povezava {
@@ -14,8 +14,19 @@ export interface Povezava {
 export const GLAVNA_NAVIGACIJA: Povezava[] = [
   { href: "/", oznaka: "Domov" },
   { href: "/products", oznaka: "Izdelki" },
+  { href: "/darila", oznaka: "Darila" },
   { href: "/about", oznaka: "O nas" },
 ];
+
+/** Darilne škatle (K10, T5). */
+export const POT_DARIL = "/darila";
+export const POT_KONFIGURATORJA = "/darila/sestavi";
+
+/** Konfigurator s pripravljenim programom (`/darila/sestavi?program=<slug>`). */
+export const potPrograma = (slug: string) => `${POT_KONFIGURATORJA}?program=${encodeURIComponent(slug)}`;
+
+/** Konfigurator z vsebino škatle iz košarice (T5 korak 4). */
+export const potUrejanjaSkatle = (id: string) => `${POT_KONFIGURATORJA}?uredi=${encodeURIComponent(id)}`;
 
 /** Stran košarice (ikona v glavi, Z7). */
 export const POT_KOSARICE = "/kosarica";

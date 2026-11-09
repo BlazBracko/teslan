@@ -1,12 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LuArrowRight, LuLeaf, LuMapPin, LuSprout } from "react-icons/lu";
+import { LuArrowRight, LuGift, LuLeaf, LuMapPin, LuSprout } from "react-icons/lu";
 import { Obisk } from "@/components/domov/Obisk";
 import { SkupinePonudbe, type SkupinaZaPrikaz } from "@/components/domov/SkupinePonudbe";
 import { KarticaIzdelka } from "@/components/katalog/KarticaIzdelka";
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { POT_DARIL } from "@/components/postavitev/navigacija";
+import { naloziDarila } from "@/darila/podatki";
 import { naloziKatalog, naloziKontakt } from "@/katalog/podatki";
 import { najnizjaNarocljivaCena } from "@/katalog/razpolozljivost";
 import { trenutniMesec } from "@/katalog/sezona";
@@ -34,10 +36,10 @@ const vrednote = [
 
 /**
  * Domača stran (Z16, T1): znamka, izpostavljeni izdelki, skupine ponudbe
- * iz CMS z najnižjo naročljivo ceno, vrednote in obisk kmetije.
+ * iz CMS z najnižjo naročljivo ceno, darila (K10), vrednote in obisk kmetije.
  */
 export default async function HomePage() {
-  const [katalog, kontakt] = await Promise.all([naloziKatalog(), naloziKontakt()]);
+  const [katalog, kontakt, darila] = await Promise.all([naloziKatalog(), naloziKontakt(), naloziDarila()]);
   const mesec = trenutniMesec();
 
   const izpostavljeni = katalog.izdelki.filter((i) => i.izpostavljen);
@@ -129,6 +131,34 @@ export default async function HomePage() {
           <SkupinePonudbe skupine={skupine} steviloIzdelkov={katalog.izdelki.length} />
         </Container>
       </Section>
+
+      {(darila.programi.length > 0 || darila.tipi.length > 0) && (
+        <Section>
+          <Container>
+            <div className="flex flex-col items-start gap-6 rounded-2xl bg-brand-soft p-8 md:flex-row md:items-center md:justify-between md:p-10">
+              <div className="flex max-w-2xl gap-5">
+                <span className="hidden size-14 shrink-0 place-items-center rounded-full bg-surface text-brand sm:grid">
+                  <LuGift aria-hidden="true" className="size-7" />
+                </span>
+                <div className="flex flex-col gap-2">
+                  <p className="type-label text-accent">Darila</p>
+                  <h2 className="type-h2 text-ink">Podarite domače</h2>
+                  <p className="type-body text-ink-muted">
+                    Darilne škatle z našimi izdelki in sporočilom na kartici. Izberite pripravljeno darilo ali sestavite
+                    svoje; pošljemo ga tudi neposredno obdarovancu.
+                  </p>
+                </div>
+              </div>
+              <Button asChild size="lg">
+                <Link href={POT_DARIL}>
+                  Na darila
+                  <LuArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </Container>
+        </Section>
+      )}
 
       <Section>
         <Container className="flex flex-col gap-10">
