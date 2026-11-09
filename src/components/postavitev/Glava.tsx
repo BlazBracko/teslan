@@ -8,7 +8,8 @@ import { LuMenu, LuPhone } from "react-icons/lu";
 import { Button } from "@/components/ui/Button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/Sheet";
 import { cn } from "@/lib/utils";
-import { GLAVNA_NAVIGACIJA, jeAktivna } from "./navigacija";
+import { IkonaKosarice } from "@/components/kosarica/IkonaKosarice";
+import { GLAVNA_NAVIGACIJA, jeAktivna, POT_KOSARICE } from "./navigacija";
 
 /** Nad to višino glava ostane vidna ne glede na smer scrolla. */
 const VEDNO_VIDNA_DO = 96;
@@ -22,8 +23,9 @@ const VEDNO_VIDNA_DO = 96;
 const MRTVI_PAS = 6;
 
 /**
- * Glava (Z7): logotip, glavna navigacija, na mobilnem meni v predalu
- * (Radix dialog prek `Sheet`: past fokusa, Esc, vrnitev fokusa).
+ * Glava (Z7): logotip, glavna navigacija, ikona košarice s številom kosov
+ * (vedno vidna, tudi na mobilnem), na mobilnem meni v predalu (Radix
+ * dialog prek `Sheet`: past fokusa, Esc, vrnitev fokusa).
  *
  * Ob scrollu navzdol se umakne, ob scrollu navzgor vrne (vedenje stare
  * strani, ki je lastniku ostalo všeč). Umik je `transform`, zato teče na
@@ -90,7 +92,7 @@ export function Glava({ telefon, telefonPovezava }: { telefon: string | null; te
           <span className="type-title font-display text-ink">Domačija Tešlan</span>
         </Link>
 
-        <nav aria-label="Glavna navigacija" className="hidden md:block">
+        <nav aria-label="Glavna navigacija" className="hidden md:ml-auto md:block">
           <ul className="flex items-center gap-1">
             {GLAVNA_NAVIGACIJA.map((p) => {
               const aktivna = jeAktivna(p.href, pot);
@@ -115,50 +117,53 @@ export function Glava({ telefon, telefonPovezava }: { telefon: string | null; te
           </ul>
         </nav>
 
-        <Sheet open={odprt} onOpenChange={setOdprt}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Odpri meni">
-              <LuMenu aria-hidden="true" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" aria-describedby={undefined}>
-            <SheetTitle>Meni</SheetTitle>
-            <nav aria-label="Glavna navigacija">
-              <ul className="flex flex-col gap-1">
-                {GLAVNA_NAVIGACIJA.map((p) => {
-                  const aktivna = jeAktivna(p.href, pot);
-                  return (
-                    <li key={p.href}>
-                      <Link
-                        href={p.href}
-                        onClick={() => setOdprt(false)}
-                        aria-current={aktivna ? "page" : undefined}
-                        className={cn(
-                          "flex min-h-12 items-center rounded-lg px-3 type-title",
-                          "transition-colors duration-(--duration-fast)",
-                          aktivna ? "bg-brand-soft text-brand" : "text-ink hover:bg-surface-muted",
-                        )}
-                      >
-                        {p.oznaka}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-            {telefon && telefonPovezava && (
-              <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
-                <p className="type-small text-ink-muted">Naročila in obiski po dogovoru</p>
-                <Button asChild variant="secondary" block>
-                  <a href={telefonPovezava}>
-                    <LuPhone aria-hidden="true" />
-                    {telefon}
-                  </a>
-                </Button>
-              </div>
-            )}
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-1">
+          <IkonaKosarice aktivna={jeAktivna(POT_KOSARICE, pot)} />
+          <Sheet open={odprt} onOpenChange={setOdprt}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Odpri meni">
+                <LuMenu aria-hidden="true" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" aria-describedby={undefined}>
+              <SheetTitle>Meni</SheetTitle>
+              <nav aria-label="Glavna navigacija">
+                <ul className="flex flex-col gap-1">
+                  {GLAVNA_NAVIGACIJA.map((p) => {
+                    const aktivna = jeAktivna(p.href, pot);
+                    return (
+                      <li key={p.href}>
+                        <Link
+                          href={p.href}
+                          onClick={() => setOdprt(false)}
+                          aria-current={aktivna ? "page" : undefined}
+                          className={cn(
+                            "flex min-h-12 items-center rounded-lg px-3 type-title",
+                            "transition-colors duration-(--duration-fast)",
+                            aktivna ? "bg-brand-soft text-brand" : "text-ink hover:bg-surface-muted",
+                          )}
+                        >
+                          {p.oznaka}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+              {telefon && telefonPovezava && (
+                <div className="mt-auto flex flex-col gap-2 border-t border-line pt-4">
+                  <p className="type-small text-ink-muted">Naročila in obiski po dogovoru</p>
+                  <Button asChild variant="secondary" block>
+                    <a href={telefonPovezava}>
+                      <LuPhone aria-hidden="true" />
+                      {telefon}
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

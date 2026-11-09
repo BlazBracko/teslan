@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
-  // Na Vercelu preusmeritev apex → www izvaja platforma, na Railwayu pa aplikacija.
+  // Preusmeritev apex → www (Railway tega ne naredi sam, zato jo izvede aplikacija).
   async redirects() {
     return [
       {

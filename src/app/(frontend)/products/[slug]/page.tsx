@@ -105,6 +105,7 @@ export default async function ProductPage({ params }: Parametri) {
           </div>
 
           <NakupIzdelka
+            izdelekId={izdelek.id}
             ime={izdelek.ime}
             samoPrikaz={izdelek.nacinProdaje === "samo-prikaz"}
             velikosti={velikosti}

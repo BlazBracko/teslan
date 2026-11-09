@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LuInfo, LuPhone, LuShoppingBag } from "react-icons/lu";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -9,11 +10,11 @@ import { QuantityInput } from "@/components/ui/QuantityInput";
 import { RadioCard, RadioGroup } from "@/components/ui/RadioGroup";
 import { useToast } from "@/components/ui/Toast";
 import type { Razpolozljivost } from "@/katalog/razpolozljivost";
+import { POT_KOSARICE } from "@/components/postavitev/navigacija";
+import { NAJVEC_KOSOV } from "@/kosarica/postavke";
+import { dodajVKosarico, kolicinaVKosarici } from "@/kosarica/shramba";
 import { formatirajCeno } from "@/lib/denar";
 import { KOS, stevilo } from "@/lib/sklanjanje";
-
-/** Največja količina ene velikosti v eni postavki (Z15). */
-export const NAJVEC_KOSOV = 20;
 
 export interface VelikostZaNakup {
   id: string;
@@ -38,9 +39,11 @@ function Obvestilo({ children }: { children: React.ReactNode }) {
  * mogoče izbrati. Izdelek `samo-prikaz` gumba nima (S14), zaprta trgovina
  * ga zamenja z obvestilom (Z27).
  *
- * Košarico doda K6; do takrat gumb pokaže obvestilo s telefonom.
+ * „V košarico“ shrani id-je in količino v `localStorage` (Z20). Količina
+ * iste velikosti v košarici ne preseže zaloge in 20 kosov.
  */
 export function NakupIzdelka({
+  izdelekId,
   ime,
   samoPrikaz,
   velikosti,
@@ -48,6 +51,7 @@ export function NakupIzdelka({
   telefon,
   telefonPovezava,
 }: {
+  izdelekId: number;
   ime: string;
   samoPrikaz: boolean;
   velikosti: VelikostZaNakup[];
@@ -56,6 +60,7 @@ export function NakupIzdelka({
   telefonPovezava: string | null;
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const narocljive = velikosti.filter((v) => v.razpolozljivost.narocljiva);
   const [izbranaId, setIzbranaId] = useState<string | undefined>(narocljive[0]?.id);
   const [kolicina, setKolicina] = useState(1);
@@ -82,13 +87,28 @@ export function NakupIzdelka({
 
   const dodaj = () => {
     if (!izbrana) return;
+    const najvecVKosarici = Math.min(izbrana.zaloga, NAJVEC_KOSOV);
+    const dodano = dodajVKosarico({ izdelekId, velikostId: izbrana.id, kolicina }, najvecVKosarici);
+    const odpri = { label: "Odpri košarico", onClick: () => router.push(POT_KOSARICE) };
+    if (dodano === 0) {
+      toast({
+        variant: "info",
+        title: "Več kosov ni mogoče dodati",
+        description: `V košarici je že ${stevilo(kolicinaVKosarici(izdelekId, izbrana.id), KOS)} te velikosti, kar je največ, kolikor jih lahko naročite.`,
+        action: odpri,
+      });
+      return;
+    }
     toast({
-      variant: "info",
-      title: "Spletna košarica bo kmalu na voljo",
-      description: telefon
-        ? `Do takrat ${ime.toLowerCase()} (${izbrana.oznaka}, ${kolicina}×) naročite po telefonu ${telefon}.`
-        : "Do takrat nas za naročilo pokličite.",
+      variant: "success",
+      title: "Dodano v košarico",
+      description:
+        dodano < kolicina
+          ? `${ime}, ${izbrana.oznaka}: dodali smo ${stevilo(dodano, KOS)}, več jih ni mogoče naročiti.`
+          : `${ime}, ${izbrana.oznaka}: ${stevilo(dodano, KOS)}.`,
+      action: odpri,
     });
+    setKolicina(1);
   };
 
   return (
