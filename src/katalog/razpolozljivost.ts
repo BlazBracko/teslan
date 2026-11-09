@@ -1,3 +1,4 @@
+import { KOS, stevilo } from "@/lib/sklanjanje";
 import { oznakaSezone, stanjeSezone, type Mesec, type Sezona } from "./sezona";
 
 /**
@@ -46,11 +47,7 @@ export interface VelikostZaRazpolozljivost {
 
 /** „1 kos“, „2 kosa“, „3 kosi“, „5 kosov“ (slovenska dvojina in množina). */
 export function steviloKosov(n: number): string {
-  const ostanek = n % 100;
-  if (ostanek === 1) return `${n} kos`;
-  if (ostanek === 2) return `${n} kosa`;
-  if (ostanek === 3 || ostanek === 4) return `${n} kosi`;
-  return `${n} kosov`;
+  return stevilo(n, KOS);
 }
 
 /**
@@ -103,4 +100,50 @@ export function najnizjaNarocljivaCena(
     .filter((v) => razpolozljivostVelikosti(izdelek, v, mesec).narocljiva)
     .map((v) => v.cenaCenti as number);
   return cene.length > 0 ? Math.min(...cene) : null;
+}
+
+/**
+ * Vrstni red, po katerem kartica izdelka izbere oznako, ko imajo velikosti
+ * različno razpoložljivost: najprej to, kar se da naročiti.
+ */
+const PREDNOST: Record<VrstaRazpolozljivosti, number> = {
+  "na-zalogi": 0,
+  malo: 1,
+  kmalu: 2,
+  "izven-sezone": 3,
+  "ni-na-zalogi": 4,
+  "na-kmetiji": 5,
+};
+
+/**
+ * Razpoložljivost izdelka kot celote, za kartico na seznamu (Z13, Z14).
+ * Šteje najugodnejša velikost; pri več naročljivih velikostih z malo zaloge
+ * šteje tista z največ kosi (oznaka „Še N kosov“ ne sme podcenjevati).
+ */
+export function razpolozljivostIzdelka(
+  izdelek: IzdelekZaRazpolozljivost & { velikosti: VelikostZaRazpolozljivost[] },
+  mesec: Mesec,
+): Razpolozljivost {
+  if (izdelek.nacinProdaje === "samo-prikaz" || izdelek.velikosti.length === 0) {
+    return razpolozljivostVelikosti(izdelek, { cenaCenti: null, zaloga: null }, mesec);
+  }
+  return izdelek.velikosti
+    .map((v) => ({ r: razpolozljivostVelikosti(izdelek, v, mesec), zaloga: v.zaloga ?? 0 }))
+    .sort((a, b) => PREDNOST[a.r.vrsta] - PREDNOST[b.r.vrsta] || b.zaloga - a.zaloga)[0].r;
+}
+
+/**
+ * Cena na kartici izdelka (Z14): najnižja cena med naročljivimi velikostmi;
+ * `od` je resničen, kadar ima izdelek več naročljivih velikosti z različno
+ * ceno. `null`, če ni naročljiva nobena.
+ */
+export function cenaNaKartici(
+  izdelek: IzdelekZaRazpolozljivost & { velikosti: VelikostZaRazpolozljivost[] },
+  mesec: Mesec,
+): { centi: number; od: boolean } | null {
+  const cene = izdelek.velikosti
+    .filter((v) => razpolozljivostVelikosti(izdelek, v, mesec).narocljiva)
+    .map((v) => v.cenaCenti as number);
+  if (cene.length === 0) return null;
+  return { centi: Math.min(...cene), od: new Set(cene).size > 1 };
 }

@@ -1,6 +1,7 @@
 import config from "@payload-config";
 import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
+import { kontaktIzNastavitev, type Kontakt } from "@/lib/kontakt";
 import type { Izdelki, Kategorije, Media, NastavitveTrgovine, SkupinePonudbe } from "@/payload-types";
 import { odstotekDDV } from "./ddv";
 import { OSVEZI_PO_SEKUNDAH, OZNAKA_KATALOG, OZNAKA_NASTAVITVE } from "./oznake";
@@ -170,3 +171,8 @@ export const naloziNastavitve = unstable_cache(
   ["nastavitve-trgovine-v1"],
   { tags: [OZNAKA_NASTAVITVE], revalidate: OSVEZI_PO_SEKUNDAH },
 );
+
+/** Kontaktni podatki za javne strani (iz `nastavitve-trgovine` → `prodajalec`). */
+export async function naloziKontakt(): Promise<Kontakt> {
+  return kontaktIzNastavitev((await naloziNastavitve()).prodajalec);
+}

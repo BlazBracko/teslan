@@ -84,19 +84,22 @@ describe("tokeni identitete", () => {
     expect(kontrast(t[a], t[b])).toBeGreaterThanOrEqual(min);
   });
 
+  it("prehodne palete stare strani ni več (K5)", () => {
+    expect(css).not.toMatch(/--color-(?:green|cream|brown|white)\b/);
+    expect(css).not.toMatch(/--material-island/);
+  });
+
   it("privzeta paleta Tailwind je izklopljena", () => {
     expect(css).toMatch(/--color-\*:\s*initial/);
   });
 });
 
-/** Datoteke iz stare strani, ki jih K5 zgradi na novo ali odstrani. */
-const PREHODNE = new Set([
-  "src/components/ui/PageBackdrop.tsx",
-  "src/components/ui/PageHeader.tsx",
-  "src/components/ui/Pressable.tsx",
-  "src/components/ui/Reveal.tsx",
-  "src/components/ui/SectionHeading.tsx",
-  "src/components/ui/sectionShell.ts",
+/**
+ * Izjeme s surovo barvo, vsaka z razlogom. Prehodne palete stare strani ni
+ * več (K5), zato jo test prepove povsod.
+ */
+const IZJEME_SUROVIH_BARV = new Map([
+  ["src/app/(frontend)/layout.tsx", "themeColor v meta oznaki ne more brati CSS spremenljivke"],
 ]);
 
 function datoteke(mapa: string): string[] {
@@ -107,24 +110,32 @@ function datoteke(mapa: string): string[] {
   });
 }
 
-const pregledane = ["src/components/ui", "src/app/(frontend)/styleguide"]
+// Vse komponente in javne strani (od K5), ne le knjižnica.
+const pregledane = ["src/components", "src/app/(frontend)"]
   .flatMap((m) => datoteke(join(koren, m)))
-  .map((p) => relative(koren, p))
-  .filter((p) => !PREHODNE.has(p));
+  .map((p) => relative(koren, p));
 
 const prehodnaPaleta =
   /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|shadow|decoration)-(?:green-(?:deep|mid|light|bright)|cream(?:-dark)?|brown(?:-light)?|ink-(?:mid|light)|white)\b/;
 
 describe("komponente uporabljajo samo tokene", () => {
-  it("pregleda vsaj komponente knjižnice", () => {
+  it("pregleda komponente in javne strani", () => {
     expect(pregledane).toContain("src/components/ui/Button.tsx");
+    expect(pregledane).toContain("src/app/(frontend)/page.tsx");
   });
 
   it.each(pregledane)("%s nima surovih barv", (pot) => {
     const vsebina = readFileSync(join(koren, pot), "utf8");
-    expect(vsebina).not.toMatch(/#[0-9a-f]{3,8}\b/i);
-    expect(vsebina).not.toMatch(/\b(?:rgba?|hsla?|oklch|oklab)\(/i);
+    if (!IZJEME_SUROVIH_BARV.has(pot)) {
+      expect(vsebina).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+      expect(vsebina).not.toMatch(/\b(?:rgba?|hsla?|oklch|oklab)\(/i);
+    }
     expect(vsebina).not.toMatch(/-\[#/);
     expect(vsebina).not.toMatch(prehodnaPaleta);
+  });
+
+  it.each(pregledane)("%s uporablja samo en set ikon (Lucide)", (pot) => {
+    const vsebina = readFileSync(join(koren, pot), "utf8");
+    expect(vsebina).not.toMatch(/from ["']react-icons\/(?!lu["'])/);
   });
 });

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  cenaNaKartici,
   najnizjaNarocljivaCena,
+  razpolozljivostIzdelka,
   oznakaNacinaProdaje,
   razpolozljivostVelikosti,
   steviloKosov,
@@ -96,5 +98,48 @@ describe("razpoložljivost velikosti (Z11–Z13)", () => {
       "102 kosa",
       "111 kosov",
     ]);
+  });
+});
+
+describe("razpoložljivost izdelka na kartici (Z13, Z14)", () => {
+  const velikosti = (...v: Array<[number | null, number | null]>) =>
+    v.map(([cenaCenti, zaloga]) => ({ cenaCenti, zaloga }));
+
+  it("šteje najugodnejša velikost", () => {
+    const izdelek = { ...posta, velikosti: velikosti([500, 0], [1200, 2]) };
+    expect(razpolozljivostIzdelka(izdelek, 1).oznaka).toBe("Še 2 kosa");
+    const vec = { ...posta, velikosti: velikosti([500, 2], [1200, 20]) };
+    expect(razpolozljivostIzdelka(vec, 1).oznaka).toBe("Na zalogi");
+  });
+
+  it("pri malo zalogi pove največje število kosov", () => {
+    const izdelek = { ...posta, velikosti: velikosti([500, 1], [1200, 3]) };
+    expect(razpolozljivostIzdelka(izdelek, 1).oznaka).toBe("Še 3 kosi");
+  });
+
+  it("izven sezone, kmalu in samo prikaz", () => {
+    const s = { ...sparglji, velikosti: velikosti([550, 20]) };
+    expect(razpolozljivostIzdelka(s, 11).oznaka).toBe("Sezona April — junij");
+    expect(razpolozljivostIzdelka(s, 3).oznaka).toBe("Kmalu");
+    const jagode = { nacinProdaje: "samo-prikaz" as const, sezona: null, velikosti: velikosti([null, null]) };
+    expect(razpolozljivostIzdelka(jagode, 6)).toMatchObject({ narocljiva: false, oznaka: "Na voljo na kmetiji" });
+  });
+
+  it("brez zaloge", () => {
+    const izdelek = { ...posta, velikosti: velikosti([500, 0], [1200, 0]) };
+    expect(razpolozljivostIzdelka(izdelek, 1)).toMatchObject({ narocljiva: false, oznaka: "Ni na zalogi" });
+  });
+
+  it("cena na kartici: najnižja naročljiva, „od“ le pri različnih cenah", () => {
+    expect(cenaNaKartici({ ...posta, velikosti: velikosti([500, 20], [1200, 20]) }, 1)).toEqual({
+      centi: 500,
+      od: true,
+    });
+    expect(cenaNaKartici({ ...posta, velikosti: velikosti([500, 0], [1200, 20]) }, 1)).toEqual({
+      centi: 1200,
+      od: false,
+    });
+    expect(cenaNaKartici({ ...posta, velikosti: velikosti([800, 20]) }, 1)).toEqual({ centi: 800, od: false });
+    expect(cenaNaKartici({ ...sparglji, velikosti: velikosti([550, 20]) }, 11)).toBeNull();
   });
 });
