@@ -126,7 +126,7 @@ export function Field({
         disabled={disabled}
         className={cn("flex min-w-0 flex-col gap-2", className)}
       >
-        <legend id={labelId} className={cn(razredOznake, "mb-2 float-left w-full")}>
+        <legend id={labelId} className={cn(razredOznake, !hideLabel && "mb-2 float-left w-full")}>
           {oznaka}
         </legend>
         {vsebina}

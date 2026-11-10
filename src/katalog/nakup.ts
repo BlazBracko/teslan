@@ -1,0 +1,46 @@
+import type { NacinProdaje } from "./razpolozljivost";
+
+/**
+ * Filter „Način nakupa“ na seznamu izdelkov. Kupec takoj vidi, kaj lahko
+ * naroči na spletu in kaj kupi samo na kmetiji, namesto da to išče po
+ * posameznih karticah.
+ *
+ *  - `vse`: celoten katalog (privzeto, tudi za stare povezave s kategorijo),
+ *  - `splet`: spletna trgovina, naročljivo na spletu (pošta ali prevzem),
+ *  - `kmetija`: samo v živo na kmetiji, ni naročljivo na spletu.
+ *
+ * Stanje je v URL (`?nakup=splet`), enako kot filter kategorij.
+ */
+export const NACINI_NAKUPA = ["vse", "splet", "kmetija"] as const;
+export type NacinNakupa = (typeof NACINI_NAKUPA)[number];
+
+export const PARAMETER_NAKUPA = "nakup";
+
+/** Vrednost iz URL; neznana ali manjkajoča pomeni `vse`. */
+export function nacinNakupaIzParametra(vrednost: string | string[] | undefined): NacinNakupa {
+  const v = Array.isArray(vrednost) ? vrednost[0] : vrednost;
+  return (NACINI_NAKUPA as readonly string[]).includes(v ?? "") ? (v as NacinNakupa) : "vse";
+}
+
+export function ustrezaNacinuNakupa(izdelek: { nacinProdaje: NacinProdaje }, nacin: NacinNakupa): boolean {
+  if (nacin === "vse") return true;
+  const naSpletu = izdelek.nacinProdaje !== "samo-prikaz";
+  return nacin === "splet" ? naSpletu : !naSpletu;
+}
+
+/** Povezava na seznam izdelkov z izbranim načinom nakupa in kategorijo. */
+export function potSeznama({ nakup, kategorija }: { nakup?: NacinNakupa; kategorija?: string | null }): string {
+  const iskanje = new URLSearchParams();
+  if (nakup && nakup !== "vse") iskanje.set(PARAMETER_NAKUPA, nakup);
+  if (kategorija) iskanje.set("kategorija", kategorija);
+  const niz = iskanje.toString();
+  return niz ? `/products?${niz}` : "/products";
+}
+
+/** Spletna trgovina: seznam izdelkov, ki jih je mogoče naročiti na spletu. */
+export const POT_TRGOVINE = potSeznama({ nakup: "splet" });
+
+/** Seznam, na katerega vodi „Nazaj“ s podstrani izdelka, ko zgodovine ni. */
+export function potSeznamaZaIzdelek(izdelek: { nacinProdaje: NacinProdaje }): string {
+  return potSeznama({ nakup: izdelek.nacinProdaje === "samo-prikaz" ? "kmetija" : "splet" });
+}

@@ -45,7 +45,7 @@ export function Noga({ kontakt }: { kontakt: Kontakt }) {
             <span className="type-h3 text-ink-inverse">{kontakt.ime}</span>
           </div>
           <p className="max-w-xs type-small text-ink-inverse-muted">
-            Ekološka kmetija v Podgori pri Novem mestu. Šparglji, jagode, začimbe in domači izdelki.
+            Družinska kmetija v Podgori pri Novem mestu. Šparglji, jagode, začimbe, darilne škatle in domači izdelki.
           </p>
         </div>
 
@@ -91,9 +91,18 @@ export function Noga({ kontakt }: { kontakt: Kontakt }) {
       </div>
 
       <div className="border-t border-ink-inverse/15">
-        <p className="mx-auto max-w-content px-gutter py-6 type-caption text-ink-inverse-muted lg:px-gutter-lg">
-          © {new Date().getFullYear()} {kontakt.ime}. Vse pravice pridržane.
-        </p>
+        <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-2 px-gutter py-6 lg:px-gutter-lg">
+          <p className="type-caption text-ink-inverse-muted">
+            © {new Date().getFullYear()} {kontakt.ime}. Vse pravice pridržane.
+          </p>
+          {/* Diskreten vstop v urejanje trgovine. Admin je zaščiten s prijavo,
+              pot /admin pa je pri Payloadu tako ali tako znana; iskalnikom
+              jo zapre robots.txt. Brez predhodnega nalaganja: admin je ločena
+              aplikacija z lastno postavitvijo. */}
+          <Link href="/admin" prefetch={false} rel="nofollow" className={cn(povezava, "min-h-8 type-caption")}>
+            Urejanje trgovine
+          </Link>
+        </div>
       </div>
     </footer>
   );

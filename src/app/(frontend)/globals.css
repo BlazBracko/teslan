@@ -149,8 +149,11 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
-    /* Sidra (#obisk) ne smejo pristati pod lepljivo glavo (h-16). */
-    scroll-padding-top: 5rem;
+    /* Sidra (#obisk) ne smejo pristati pod lepljivo glavo (h-16). Odmik ne
+       sme biti večji od višine glave: Next.js ob menjavi strani scrolla
+       samo, če vrh nove strani ni pod tem odmikom, in pri 5rem je vsako
+       stran zamaknil navzdol. */
+    scroll-padding-top: 4rem;
     overflow-x: clip;
     background-color: var(--color-canvas);
   }
@@ -384,5 +387,23 @@
     border-left: 2px solid var(--color-line-strong);
     padding-left: 1em;
     font-style: italic;
+  }
+}
+
+/* Zgodba izdelka: prvi odstavek večji, z inicialko v pisavi naslovov. */
+@utility besedilo-zgodba {
+  & > p:first-child {
+    color: var(--color-ink);
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+  }
+
+  & > p:first-child::first-letter {
+    float: left;
+    margin: 0.08em 0.14em 0 0;
+    color: var(--color-brand);
+    font-family: var(--font-display);
+    font-size: 3.6em;
+    font-weight: 500;
+    line-height: 0.82;
   }
 }

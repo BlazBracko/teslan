@@ -6,8 +6,9 @@ import type { Mesec } from "../katalog/sezona";
  * `src/data/priceList.ts`, `products.ts` in `offering.ts`; zdaj so le vir za
  * seed, na strani pa se berejo iz baze.
  *
- * Cene so v centih. Opisi so z nekdanjega cenika; daljše opise, sestavine in
- * alergene vnese lastnik v adminu (§7).
+ * Cene so v centih. Kratki opisi so z nekdanjega cenika; osnutki daljših
+ * opisov (zgodb) so v `zgodbe.ts`, sestavine in alergene vnese lastnik v
+ * adminu (§7).
  */
 
 export interface SlikaSeed {
@@ -135,7 +136,7 @@ export const IZDELKI: IzdelekSeed[] = [
     velikosti: [["sveže", null]],
     sezona: { od: 5, do: 7 },
     kratekOpis:
-      "Sladke, sočne jagode, pridelane brez pesticidov. Popolne za sveže uživanje ali predelavo.",
+      "Sladke, sočne jagode, nabrane zjutraj. Popolne za sveže uživanje ali predelavo.",
     slike: ["jagodeNjiva"],
     izpostavljen: true,
   },

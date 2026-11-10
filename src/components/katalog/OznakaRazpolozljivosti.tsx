@@ -1,4 +1,4 @@
-import { LuStore } from "react-icons/lu";
+import { LuStore, LuTruck } from "react-icons/lu";
 import { Badge, type BadgeProps } from "@/components/ui/Badge";
 import type { NacinProdaje, Razpolozljivost, VrstaRazpolozljivosti } from "@/katalog/razpolozljivost";
 import { oznakaNacinaProdaje } from "@/katalog/razpolozljivost";
@@ -25,13 +25,14 @@ export function OznakaRazpolozljivosti({ razpolozljivost }: { razpolozljivost: R
   );
 }
 
-/** „Samo prevzem na kmetiji“ (Z13) za izdelke, ki se ne pošiljajo. */
+/** „Pošljemo po pošti“ ali „Samo prevzem na kmetiji“ (Z13). */
 export function OznakaNacina({ nacin }: { nacin: NacinProdaje }) {
   const oznaka = oznakaNacinaProdaje(nacin);
   if (!oznaka) return null;
+  const Ikona = nacin === "posta-in-prevzem" ? LuTruck : LuStore;
   return (
     <Badge variant="outline">
-      <LuStore aria-hidden="true" />
+      <Ikona aria-hidden="true" />
       {oznaka}
     </Badge>
   );

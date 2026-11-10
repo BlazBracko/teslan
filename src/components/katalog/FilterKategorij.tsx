@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { potSeznama, type NacinNakupa } from "@/katalog/nakup";
 import type { KategorijaPogled } from "@/katalog/podatki";
 import { cn } from "@/lib/utils";
 
 /**
- * Filter po kategoriji (Z14). Stanje je v URL (`?kategorija=<slug>`), zato
+ * Filter po kategoriji (Z14). Stanje je v URL (`?kategorija=<slug>`, ob
+ * izbranem načinu nakupa še `nakup=`), zato
  * so izbire navadne povezave: delujejo brez JavaScripta, dajo se deliti in
  * gumb Nazaj vrne prejšnji filter. Na ozkem zaslonu se vrstica drsi
  * vodoravno; aktivna izbira ima `aria-current`.
@@ -12,10 +14,12 @@ export function FilterKategorij({
   kategorije,
   izbrana,
   steviloVseh,
+  nakup = "vse",
 }: {
   kategorije: Array<KategorijaPogled & { stevilo: number }>;
   izbrana: string | null;
   steviloVseh: number;
+  nakup?: NacinNakupa;
 }) {
   const moznosti = [
     { slug: null, ime: "Vse", stevilo: steviloVseh },
@@ -29,7 +33,7 @@ export function FilterKategorij({
           return (
             <li key={m.slug ?? "vse"} className="shrink-0 snap-start">
               <Link
-                href={m.slug ? `/products?kategorija=${encodeURIComponent(m.slug)}` : "/products"}
+                href={potSeznama({ nakup, kategorija: m.slug })}
                 scroll={false}
                 aria-current={aktivna ? "page" : undefined}
                 className={cn(

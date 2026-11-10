@@ -3,6 +3,7 @@ import * as migration_20261109_182506_katalog from './20261109_182506_katalog';
 import * as migration_20261109_194846_narocila from './20261109_194846_narocila';
 import * as migration_20261109_214134_darila from './20261109_214134_darila';
 import * as migration_20261110_110028_seo_lega from './20261110_110028_seo_lega';
+import * as migration_20261110_140000_zgodbe_izdelkov from './20261110_140000_zgodbe_izdelkov';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261110_110028_seo_lega.up,
     down: migration_20261110_110028_seo_lega.down,
-    name: '20261110_110028_seo_lega'
+    name: '20261110_110028_seo_lega',
+  },
+  {
+    up: migration_20261110_140000_zgodbe_izdelkov.up,
+    down: migration_20261110_140000_zgodbe_izdelkov.down,
+    name: '20261110_140000_zgodbe_izdelkov',
   },
 ];

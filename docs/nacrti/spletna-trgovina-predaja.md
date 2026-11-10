@@ -33,6 +33,7 @@ Ob pregledu v K13 (2026-11-10) so na stagingu nastavljene samo `DATABASE_URL` in
 - [ ] Ista stran: **zemljepisna širina in dolžina** kmetije (Google Maps → desni klik na kmetijo). Brez njiju Google ne dobi lege (JSON-LD `geo`).
 - [ ] Preverite *E-pošta za obvestila* (privzeto Sandijev naslov), poštnino, prag brezplačne poštnine in navodila za prevzem.
 - [ ] Fotografije izdelkov in škatel, opisi, sestavine, alergeni; pravi tipi darilnih škatel in programi (demo škatle in programa z „[DEMO]“ označite kot neaktivne oz. neobjavljene) (§7).
+- [ ] **Zgodbe izdelkov** (*Izdelki → izdelek → Dolg opis*): vsak izdelek iz seeda ima osnutek zgodbe, ki jo je napisal agent. Preberite jih in popravite, kar ne drži ali bi radi povedali drugače; izdelek brez dolgega opisa pokaže kratek opis in splošno besedilo o kmetiji.
 
 ### 4. Pregledi (računovodja, pravnik)
 
@@ -184,3 +185,8 @@ Ob pregledu v K13 (2026-11-10) so na stagingu nastavljene samo `DATABASE_URL` in
 - **Hitrost (S18)**: Lighthouse (mobilno) na stagingu pred K13: `/` Performance 76, `/products` 78 (Accessibility, Best practices in SEO 100). Zavirali so štiri datoteke pisav (425 KB) pred glavno sliko, polni Framer Motion in zod v začetnem JavaScriptu ter slike v WebP. Po popravkih lokalno na isti gradnji: `/` 88–89, `/products` 92, podstran izdelka 90, `/about` 92, `/darila` 86; ostale kategorije 100. Rezultat na stagingu po deployu K13 je zapisan v PR K13.
 - **Pisavi** sta od K13 v repu (`src/app/(frontend)/pisave/`, licenca OFL) namesto iz `next/font/google`: Google Fonts ne omogoča zamrznitve osi SOFT in podmnožice samo s šumniki, kar je skupaj prepolovilo velikost. Videz je enak (iste osi in rezi). Skripta `scripts/pripravi-pisave.sh` ju pripravi znova.
 - Lighthouse na stagingu z vklopljenim `NOINDEX=1` pri SEO namenoma izgubi točke (stran je označena za neindeksiranje); SEO preverjajte brez njega ali v produkciji.
+
+### UI popravki po pregledu lastnika (2026-11-10)
+- Ni novih zunanjih ključev in ni novih preskočenih preizkusov.
+- Podatkovna migracija `20261110_140000_zgodbe_izdelkov` vpiše osnutke zgodb izdelkom brez dolgega opisa in popravi kratek opis jagod (ne trdi več „brez pesticidov“). Na stagingu jo zažene `deploy-staging.sh`.
+- Admin je na `/admin`; v nogi je diskretna povezava „Urejanje trgovine“.

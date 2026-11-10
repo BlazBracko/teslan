@@ -83,9 +83,15 @@ export function razpolozljivostVelikosti(
   return { vrsta: "na-zalogi", narocljiva: true, oznaka: "Na zalogi" };
 }
 
-/** Dodatna oznaka načina prodaje na kartici in podstrani (Z13). */
+/**
+ * Dodatna oznaka načina prodaje na kartici in podstrani (Z13): kupec že na
+ * seznamu vidi, ali izdelek pošljemo ali ga samo prevzame. Pri
+ * `samo-prikaz` to pove že oznaka razpoložljivosti („Na voljo na kmetiji“).
+ */
 export function oznakaNacinaProdaje(nacin: NacinProdaje): string | null {
-  return nacin === "samo-prevzem" ? "Samo prevzem na kmetiji" : null;
+  if (nacin === "samo-prevzem") return "Samo prevzem na kmetiji";
+  if (nacin === "posta-in-prevzem") return "Pošljemo po pošti";
+  return null;
 }
 
 /**

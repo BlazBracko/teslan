@@ -1,3 +1,5 @@
+import { POT_TRGOVINE } from "@/katalog/nakup";
+
 /**
  * Povezave glave (Z7) in noge (Z8) na enem mestu.
  *
@@ -8,9 +10,13 @@ export interface Povezava {
   oznaka: string;
 }
 
+/**
+ * „Trgovina“ vodi na spletno trgovino (izdelki, naročljivi na spletu); na
+ * isti strani je izbira „Samo na kmetiji“ in „Vsi izdelki“.
+ */
 export const GLAVNA_NAVIGACIJA: Povezava[] = [
   { href: "/", oznaka: "Domov" },
-  { href: "/products", oznaka: "Izdelki" },
+  { href: POT_TRGOVINE, oznaka: "Trgovina" },
   { href: "/darila", oznaka: "Darila" },
   { href: "/about", oznaka: "O nas" },
 ];
@@ -42,8 +48,9 @@ export const PRAVNE_POVEZAVE: Povezava[] = [
   { href: POT_ZASEBNOSTI, oznaka: "Politika zasebnosti" },
 ];
 
-/** Ali je povezava aktivna na dani poti (podstrani izdelkov štejejo k „Izdelki“). */
-export function jeAktivna(href: string, pot: string): boolean {
+/** Ali je povezava aktivna na dani poti (podstrani izdelkov štejejo k „Trgovina“). */
+export function jeAktivna(povezava: string, pot: string): boolean {
+  const href = povezava.split("?")[0];
   if (href === "/") return pot === "/";
   return pot === href || pot.startsWith(`${href}/`);
 }

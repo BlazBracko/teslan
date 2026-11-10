@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RichText } from "@payloadcms/richtext-lexical/react";
 import { LuChevronRight } from "react-icons/lu";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { GalerijaIzdelka } from "@/components/katalog/GalerijaIzdelka";
+import { GumbNazaj } from "@/components/katalog/GumbNazaj";
+import { ZgodbaIzdelka } from "@/components/katalog/ZgodbaIzdelka";
 import { NakupIzdelka, type VelikostZaNakup } from "@/components/katalog/NakupIzdelka";
 import { OznakaNacina, OznakaRazpolozljivosti } from "@/components/katalog/OznakaRazpolozljivosti";
 import { Container } from "@/components/ui/Container";
 import { Price } from "@/components/ui/Price";
+import { potSeznama, potSeznamaZaIzdelek } from "@/katalog/nakup";
 import { naloziKatalog, naloziKontakt, naloziNastavitve, type IzdelekPogled } from "@/katalog/podatki";
 import { cenaNaKartici, razpolozljivostIzdelka, razpolozljivostVelikosti } from "@/katalog/razpolozljivost";
 import { oznakaSezone, trenutniMesec } from "@/katalog/sezona";
@@ -43,8 +45,9 @@ export async function generateMetadata({ params }: Parametri): Promise<Metadata>
 }
 
 /**
- * Podstran izdelka (Z15): galerija, opis, sestavine in alergeni, izbira
- * velikosti in količine. Neobstoječ ali neobjavljen slug vrne 404.
+ * Podstran izdelka (Z15): gumb „Nazaj“ in drobtinice, galerija, izbira
+ * velikosti in količine, sestavine in alergeni, pod tem zgodba izdelka.
+ * Neobstoječ ali neobjavljen slug vrne 404.
  */
 export default async function ProductPage({ params }: Parametri) {
   const { slug } = await params;
@@ -56,6 +59,7 @@ export default async function ProductPage({ params }: Parametri) {
   if (!izdelek) notFound();
 
   const mesec = trenutniMesec();
+  const seznam = potSeznamaZaIzdelek(izdelek);
   const cena = cenaNaKartici(izdelek, mesec);
   const jsonLd = izdelekJsonLd(izdelek, kontakt, izvorStrani(okolje()), mesec);
   const velikosti: VelikostZaNakup[] = izdelek.velikosti.map((v) => ({
@@ -74,32 +78,35 @@ export default async function ProductPage({ params }: Parametri) {
   return (
     <Container className="py-8 md:py-12">
       <JsonLd podatki={jsonLd} />
-      <nav aria-label="Drobtinice" className="mb-6">
-        <ol className="flex flex-wrap items-center gap-1 type-small text-ink-muted">
-          <li>
-            <Link href="/products" className="rounded-xs hover:text-ink hover:underline">
-              Izdelki
-            </Link>
-          </li>
-          <li aria-hidden="true">
-            <LuChevronRight className="size-4" />
-          </li>
-          <li>
-            <Link
-              href={`/products?kategorija=${encodeURIComponent(izdelek.kategorija.slug)}`}
-              className="rounded-xs hover:text-ink hover:underline"
-            >
-              {izdelek.kategorija.ime}
-            </Link>
-          </li>
-          <li aria-hidden="true">
-            <LuChevronRight className="size-4" />
-          </li>
-          <li aria-current="page" className="text-ink">
-            {izdelek.ime}
-          </li>
-        </ol>
-      </nav>
+      <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <GumbNazaj nadomestna={seznam} />
+        <nav aria-label="Drobtinice">
+          <ol className="flex flex-wrap items-center gap-1 type-small text-ink-muted">
+            <li>
+              <Link href={seznam} className="rounded-xs hover:text-ink hover:underline">
+                {izdelek.nacinProdaje === "samo-prikaz" ? "Na kmetiji" : "Trgovina"}
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <LuChevronRight className="size-4" />
+            </li>
+            <li>
+              <Link
+                href={potSeznama({ kategorija: izdelek.kategorija.slug })}
+                className="rounded-xs hover:text-ink hover:underline"
+              >
+                {izdelek.kategorija.ime}
+              </Link>
+            </li>
+            <li aria-hidden="true">
+              <LuChevronRight className="size-4" />
+            </li>
+            <li aria-current="page" className="text-ink">
+              {izdelek.ime}
+            </li>
+          </ol>
+        </nav>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-14">
         <GalerijaIzdelka slike={izdelek.slike} ime={izdelek.ime} />
@@ -139,17 +146,7 @@ export default async function ProductPage({ params }: Parametri) {
         </div>
       </div>
 
-      {izdelek.opis && (
-        <section aria-labelledby="opis-izdelka" className="mt-14 max-w-prose border-t border-line pt-10">
-          <h2 id="opis-izdelka" className="mb-4 type-h2 text-ink">
-            O izdelku
-          </h2>
-          <RichText
-            data={izdelek.opis as Parameters<typeof RichText>[0]["data"]}
-            className="besedilo-cms"
-          />
-        </section>
-      )}
+      <ZgodbaIzdelka izdelek={izdelek} />
     </Container>
   );
 }

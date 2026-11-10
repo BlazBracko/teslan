@@ -20,6 +20,7 @@ async function brezResnihKrsitev(page: Page) {
 const STRANI = [
   "/",
   "/products",
+  "/products?nakup=splet",
   "/products/cesen-v-prahu",
   "/products/jagode",
   "/darila",
@@ -79,7 +80,7 @@ test.describe("mobilni meni (Z7)", () => {
     await page.keyboard.press("Enter");
     const meni = page.getByRole("dialog");
     await expect(meni).toBeVisible();
-    await expect(meni.getByRole("link", { name: "Izdelki" })).toBeVisible();
+    await expect(meni.getByRole("link", { name: "Trgovina" })).toBeVisible();
     await brezResnihKrsitev(page);
     await page.keyboard.press("Escape");
     await expect(meni).toBeHidden();
