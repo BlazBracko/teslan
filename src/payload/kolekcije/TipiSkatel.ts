@@ -2,7 +2,7 @@ import type { Access, CollectionConfig } from "payload";
 import { NAJVEC_MEST } from "../../darila/pravila";
 import { OZNAKA_KATALOG } from "../../katalog/oznake";
 import { jeUrednikAliAdmin, urednikAliAdmin } from "../dostop";
-import { vrstniRedPolje } from "../polja";
+import { vrstniRedPolje, ZNESEK_V_EVRIH } from "../polja";
 import { hookiRevalidacije } from "../revalidacija";
 
 /** Javnost vidi le aktivne škatle; urednik in admin vse. */
@@ -82,6 +82,7 @@ export const TipiSkatel: CollectionConfig = {
           required: true,
           min: 0,
           admin: {
+            components: { afterInput: ZNESEK_V_EVRIH },
             width: "33%",
             step: 1,
             description: "Cena prazne škatle z DDV (22 %) v centih: 500 pomeni 5,00 €. Izdelki se prištejejo.",

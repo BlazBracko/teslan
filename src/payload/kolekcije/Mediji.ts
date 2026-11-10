@@ -10,7 +10,7 @@ import { hookiRevalidacije } from "../revalidacija";
  */
 export const Mediji: CollectionConfig = {
   slug: "media",
-  labels: { singular: "Medij", plural: "Mediji" },
+  labels: { singular: "Slika", plural: "Slike" },
   admin: {
     useAsTitle: "alt",
     group: "Vsebina",

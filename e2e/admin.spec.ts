@@ -63,7 +63,7 @@ test("prvi zagon ustvari administratorja v slovenskem vmesniku", async ({ page }
   await page.waitForURL(/\/admin$/);
 
   await expect(navigacija(page).getByRole("link", { name: "Uporabniki" })).toBeVisible();
-  await expect(navigacija(page).getByRole("link", { name: "Mediji" })).toBeVisible();
+  await expect(navigacija(page).getByRole("link", { name: "Slike" })).toBeVisible();
   await expect(navigacija(page).getByRole("link", { name: "Izdelki" })).toBeVisible();
   await expect(
     navigacija(page).getByRole("link", { name: "Nastavitve trgovine" }),
@@ -91,7 +91,7 @@ test("prvi zagon ustvari administratorja v slovenskem vmesniku", async ({ page }
 test("urednik ne vidi drugih uporabnikov in si ne more spremeniti vloge", async ({ page }) => {
   await prijava(page, urednik);
 
-  await expect(navigacija(page).getByRole("link", { name: "Mediji" })).toBeVisible();
+  await expect(navigacija(page).getByRole("link", { name: "Slike" })).toBeVisible();
   await expect(navigacija(page).getByRole("link", { name: "Uporabniki" })).toHaveCount(0);
 
   const seznam = await (await page.request.get("/api/users", { headers: izvor(page) })).json();
@@ -205,4 +205,39 @@ test("slika brez opisa (alt) se zavrne, z opisom se shrani na lokalni disk", asy
     headers: izvor(page),
   });
   expect(izbris.ok()).toBe(true);
+});
+
+test("prijazen admin: nadzorna plošča, pomoč, znesek v evrih, brez zavihka API", async ({ page }) => {
+  await prijava(page, urednik);
+
+  // Lastna nadzorna plošča namesto Payloadove (pozdrav s krstnim imenom).
+  await expect(page.getByRole("heading", { level: 1, name: /, Sandi$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Naročila", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Zaloga, ki pohaja" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Dodaj nov izdelek" })).toBeVisible();
+  // Urednik vidi stanje trgovine, gumba za nastavitve pa ne.
+  await expect(page.getByText(/^Trgovina je (odprta|zaprta)$/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Poštnina in podatki trgovine" })).toHaveCount(0);
+
+  // Pomoč je v meniju (ta je na ozkem zaslonu zaprt) in zahteva prijavo.
+  await expect(navigacija(page).getByRole("link", { name: "Pomoč" })).toHaveAttribute("href", "/admin/pomoc");
+  await page.goto("/admin/pomoc");
+  await expect(page.getByRole("heading", { level: 1, name: "Pomoč" })).toBeVisible();
+  await page.getByText("Kako spremenim zalogo ali ceno?").click();
+  await expect(page.getByText("Cena je v centih: 550 pomeni 5,50 €.", { exact: false })).toBeVisible();
+
+  // Pod ceno v centih je znesek v evrih; tehničnega zavihka API ni.
+  const iskanje = await page.request.get("/api/izdelki?where[slug][equals]=cesen-v-prahu&depth=0", {
+    headers: izvor(page),
+  });
+  const izdelek = (await iskanje.json()).docs[0];
+  await page.goto(`/admin/collections/izdelki/${izdelek.id}`);
+  await expect(page.locator(".teslan-evri").first()).toHaveText(
+    `= ${new Intl.NumberFormat("sl-SI", { style: "currency", currency: "EUR" }).format(izdelek.velikosti[0].cenaCenti / 100)}`,
+  );
+  await expect(page.getByRole("link", { name: "API", exact: true })).toHaveCount(0);
+
+  await page.context().clearCookies();
+  await page.goto("/admin/pomoc");
+  await expect(page).toHaveURL(/\/admin\/login/);
 });

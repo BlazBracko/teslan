@@ -51,3 +51,9 @@ export function vrstniRedPolje(kaj: string): Field {
       value == null || Number.isInteger(value) ? true : "Vpišite celo število.",
   };
 }
+
+/**
+ * Pod poljem s ceno v centih izpiše znesek v evrih („= 5,50 €“), da se pri
+ * vpisu ni treba preštevati ničel. Uporaba: `admin.components.afterInput`.
+ */
+export const ZNESEK_V_EVRIH = ["/payload/admin/ZnesekVEvrih#ZnesekVEvrih"];

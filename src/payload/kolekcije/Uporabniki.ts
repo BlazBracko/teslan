@@ -70,7 +70,7 @@ export const Uporabniki: CollectionConfig = {
         // prvi uporabnik je vedno administrator (gl. hook spodaj).
         condition: (_data, _siblingData, { user }) => Boolean(user),
         description:
-          "Administrator ureja vse, tudi nastavitve trgovine in uporabnike. Urednik ureja izdelke, darila, medije in naročila ter svoj račun.",
+          "Administrator ureja vse, tudi nastavitve trgovine in uporabnike. Urednik ureja izdelke, darila, slike in naročila ter svoj račun.",
       },
     },
   ],

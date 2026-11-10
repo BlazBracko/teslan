@@ -193,6 +193,7 @@ export const Narocila: CollectionConfig = {
           index: true,
           options: STATUSI.map((value) => ({ value, label: OZNAKE_STATUSOV[value] })),
           admin: {
+            components: { Cell: "/payload/admin/ZnackaStatusa#ZnackaStatusa" },
             width: "50%",
             description:
               "Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči. Ob „Pripravljeno za prevzem“, „Poslano“ in „Preklicano“ kupec dobi e-pošto.",
@@ -208,6 +209,13 @@ export const Narocila: CollectionConfig = {
       // Žeton odpre stran naročila brez prijave; v adminu in API ni viden.
       access: { read: zaklenjeno, update: zaklenjeno },
       admin: { hidden: true },
+    },
+    {
+      // Pregleden povzetek v evrih (samo prikaz, ne shrani se).
+      name: "povzetek",
+      type: "ui",
+      label: "Povzetek",
+      admin: { components: { Field: "/payload/admin/PovzetekNarocila#PovzetekNarocila" } },
     },
     {
       type: "row",
@@ -351,101 +359,49 @@ export const Narocila: CollectionConfig = {
       admin: { readOnly: true, description: "Npr. želeni termin prevzema." },
     },
     {
-      name: "postavke",
-      type: "array",
-      label: "Postavke",
-      labels: { singular: "Postavka", plural: "Postavke" },
-      required: true,
-      minRows: 1,
-      access: samoBranje,
+      type: "collapsible",
+      label: "Podrobnosti postavk, zneskov in DDV",
       admin: {
-        readOnly: true,
-        description: "Posnetek imen, velikosti, cen in DDV ob oddaji; poznejše spremembe izdelkov ga ne spremenijo.",
+        initCollapsed: true,
+        description: "Posnetek ob oddaji, zneski v centih. Za pripravo naročila zadošča povzetek zgoraj.",
       },
       fields: [
         {
-          type: "row",
-          fields: [
-            {
-              name: "tip",
-              type: "select",
-              label: "Vrsta",
-              required: true,
-              defaultValue: "izdelek",
-              options: [
-                { value: "izdelek", label: "Izdelek" },
-                { value: "skatla", label: "Darilna škatla" },
-              ],
-              admin: { width: "20%" },
-            },
-            { name: "ime", type: "text", label: "Ime", required: true, admin: { width: "40%" } },
-            { name: "velikost", type: "text", label: "Velikost", admin: { width: "40%" } },
-          ],
-        },
-        {
-          type: "row",
-          fields: [
-            { name: "kolicina", type: "number", label: "Količina", required: true, admin: { width: "25%" } },
-            {
-              name: "cenaCenti",
-              type: "number",
-              label: "Cena kosa (v centih)",
-              required: true,
-              admin: { width: "25%", description: "Z DDV." },
-            },
-            { name: "stopnjaDDV", type: "number", label: "DDV (%)", required: true, admin: { width: "25%" } },
-          ],
-        },
-        {
-          type: "row",
-          fields: [
-            {
-              name: "izdelek",
-              type: "relationship",
-              relationTo: "izdelki",
-              label: "Izdelek",
-              admin: { width: "50%" },
-            },
-            {
-              name: "velikostId",
-              type: "text",
-              label: "Id velikosti",
-              admin: { width: "50%", description: "Za vračanje zaloge ob preklicu." },
-            },
-          ],
-          admin: { condition: (_, siblingData) => siblingData?.tip !== "skatla" },
-        },
-        {
-          name: "tipSkatle",
-          type: "relationship",
-          relationTo: "tipi-skatel",
-          label: "Tip škatle",
-          admin: {
-            description: "Cena kosa zgoraj je cena prazne škatle (DDV 22 %); izdelki v njej so našteti spodaj.",
-            condition: (_, siblingData) => siblingData?.tip === "skatla",
-          },
-        },
-        {
-          name: "vsebina",
+          name: "postavke",
           type: "array",
-          label: "Vsebina škatle",
-          labels: { singular: "Izdelek", plural: "Izdelki" },
+          label: "Postavke",
+          labels: { singular: "Postavka", plural: "Postavke" },
+          required: true,
+          minRows: 1,
+          access: samoBranje,
           admin: {
-            description: "Izdelki v eni škatli. Pri več enakih škatlah je vsak izdelek v vsaki od njih.",
-            condition: (_, siblingData) => siblingData?.tip === "skatla",
+            readOnly: true,
+            description: "Posnetek imen, velikosti, cen in DDV ob oddaji; poznejše spremembe izdelkov ga ne spremenijo.",
           },
           fields: [
             {
               type: "row",
               fields: [
+                {
+                  name: "tip",
+                  type: "select",
+                  label: "Vrsta",
+                  required: true,
+                  defaultValue: "izdelek",
+                  options: [
+                    { value: "izdelek", label: "Izdelek" },
+                    { value: "skatla", label: "Darilna škatla" },
+                  ],
+                  admin: { width: "20%" },
+                },
                 { name: "ime", type: "text", label: "Ime", required: true, admin: { width: "40%" } },
-                { name: "velikost", type: "text", label: "Velikost", admin: { width: "30%" } },
-                { name: "kolicina", type: "number", label: "Količina", required: true, admin: { width: "30%" } },
+                { name: "velikost", type: "text", label: "Velikost", admin: { width: "40%" } },
               ],
             },
             {
               type: "row",
               fields: [
+                { name: "kolicina", type: "number", label: "Količina", required: true, admin: { width: "25%" } },
                 {
                   name: "cenaCenti",
                   type: "number",
@@ -454,45 +410,108 @@ export const Narocila: CollectionConfig = {
                   admin: { width: "25%", description: "Z DDV." },
                 },
                 { name: "stopnjaDDV", type: "number", label: "DDV (%)", required: true, admin: { width: "25%" } },
-                { name: "izdelek", type: "relationship", relationTo: "izdelki", label: "Izdelek", admin: { width: "25%" } },
-                { name: "velikostId", type: "text", label: "Id velikosti", admin: { width: "25%" } },
               ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "izdelek",
+                  type: "relationship",
+                  relationTo: "izdelki",
+                  label: "Izdelek",
+                  admin: { width: "50%" },
+                },
+                {
+                  name: "velikostId",
+                  type: "text",
+                  label: "Id velikosti",
+                  // Tehnično (vračanje zaloge ob preklicu), lastniku ne pove nič.
+                  admin: { hidden: true },
+                },
+              ],
+              admin: { condition: (_, siblingData) => siblingData?.tip !== "skatla" },
+            },
+            {
+              name: "tipSkatle",
+              type: "relationship",
+              relationTo: "tipi-skatel",
+              label: "Tip škatle",
+              admin: {
+                description: "Cena kosa zgoraj je cena prazne škatle (DDV 22 %); izdelki v njej so našteti spodaj.",
+                condition: (_, siblingData) => siblingData?.tip === "skatla",
+              },
+            },
+            {
+              name: "vsebina",
+              type: "array",
+              label: "Vsebina škatle",
+              labels: { singular: "Izdelek", plural: "Izdelki" },
+              admin: {
+                description: "Izdelki v eni škatli. Pri več enakih škatlah je vsak izdelek v vsaki od njih.",
+                condition: (_, siblingData) => siblingData?.tip === "skatla",
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    { name: "ime", type: "text", label: "Ime", required: true, admin: { width: "40%" } },
+                    { name: "velikost", type: "text", label: "Velikost", admin: { width: "30%" } },
+                    { name: "kolicina", type: "number", label: "Količina", required: true, admin: { width: "30%" } },
+                  ],
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "cenaCenti",
+                      type: "number",
+                      label: "Cena kosa (v centih)",
+                      required: true,
+                      admin: { width: "25%", description: "Z DDV." },
+                    },
+                    { name: "stopnjaDDV", type: "number", label: "DDV (%)", required: true, admin: { width: "25%" } },
+                    { name: "izdelek", type: "relationship", relationTo: "izdelki", label: "Izdelek", admin: { width: "50%" } },
+                    { name: "velikostId", type: "text", label: "Id velikosti", admin: { hidden: true } },
+                  ],
+                },
+              ],
+            },
+            {
+              name: "sporociloNaKartici",
+              type: "textarea",
+              label: "Sporočilo na kartici",
+              admin: {
+                description: "Napišite ga na kartico v škatli.",
+                condition: (_, siblingData) => siblingData?.tip === "skatla" && Boolean(siblingData?.sporociloNaKartici),
+              },
             },
           ],
         },
         {
-          name: "sporociloNaKartici",
-          type: "textarea",
-          label: "Sporočilo na kartici",
-          admin: {
-            description: "Napišite ga na kartico v škatli.",
-            condition: (_, siblingData) => siblingData?.tip === "skatla" && Boolean(siblingData?.sporociloNaKartici),
-          },
-        },
-      ],
-    },
-    {
-      type: "row",
-      fields: [
-        centi("vmesniSestevekCenti", "Vmesni seštevek (v centih)", "Vsota postavk z DDV."),
-        centi("postninaCenti", "Poštnina (v centih)", "0 pri prevzemu in nad pragom brezplačne poštnine."),
-        centi("skupajCenti", "Skupaj (v centih)", "Znesek, ki ga plača kupec."),
-      ],
-    },
-    {
-      name: "ddv",
-      type: "array",
-      label: "DDV po stopnjah",
-      labels: { singular: "Stopnja", plural: "Stopnje" },
-      access: samoBranje,
-      admin: { readOnly: true, description: "DDV, vključen v znesek, po stopnjah (poštnina 22 %)." },
-      fields: [
-        {
           type: "row",
           fields: [
-            { name: "stopnja", type: "number", label: "Stopnja (%)", required: true, admin: { width: "33%" } },
-            { name: "osnovaCenti", type: "number", label: "Osnova (v centih)", required: true, admin: { width: "33%" } },
-            { name: "ddvCenti", type: "number", label: "DDV (v centih)", required: true, admin: { width: "34%" } },
+            centi("vmesniSestevekCenti", "Vmesni seštevek (v centih)", "Vsota postavk z DDV."),
+            centi("postninaCenti", "Poštnina (v centih)", "0 pri prevzemu in nad pragom brezplačne poštnine."),
+            centi("skupajCenti", "Skupaj (v centih)", "Znesek, ki ga plača kupec."),
+          ],
+        },
+        {
+          name: "ddv",
+          type: "array",
+          label: "DDV po stopnjah",
+          labels: { singular: "Stopnja", plural: "Stopnje" },
+          access: samoBranje,
+          admin: { readOnly: true, description: "DDV, vključen v znesek, po stopnjah (poštnina 22 %)." },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "stopnja", type: "number", label: "Stopnja (%)", required: true, admin: { width: "33%" } },
+                { name: "osnovaCenti", type: "number", label: "Osnova (v centih)", required: true, admin: { width: "33%" } },
+                { name: "ddvCenti", type: "number", label: "DDV (v centih)", required: true, admin: { width: "34%" } },
+              ],
+            },
           ],
         },
       ],
