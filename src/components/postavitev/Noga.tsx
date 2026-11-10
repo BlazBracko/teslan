@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Kontakt } from "@/lib/kontakt";
 import { cn } from "@/lib/utils";
-import { GLAVNA_NAVIGACIJA, PRAVNE_POVEZAVE, type Povezava } from "./navigacija";
+import { GLAVNA_NAVIGACIJA, POMOC_POVEZAVE, PRAVNE_POVEZAVE, type Povezava } from "./navigacija";
 
 /**
  * Noga (Z8): kontakt, naslov s povezavo na zemljevid in pravne povezave.
@@ -38,8 +38,8 @@ function Stolpec({ naslov, povezave }: { naslov: string; povezave: Povezava[] })
 export function Noga({ kontakt }: { kontakt: Kontakt }) {
   return (
     <footer className="bg-surface-inverse text-ink-inverse">
-      <div className="mx-auto grid max-w-content gap-10 px-gutter py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-gutter-lg">
-        <div className="flex flex-col gap-3">
+      <div className="mx-auto grid max-w-content grid-cols-2 gap-x-6 gap-y-10 px-gutter py-14 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr_1fr] lg:px-gutter-lg">
+        <div className="col-span-2 flex flex-col gap-3 lg:col-span-1">
           <div className="flex items-center gap-3">
             <Image src="/logo.png" alt="" width={44} height={44} className="size-11 rounded-full bg-surface object-contain" />
             <span className="type-h3 text-ink-inverse">{kontakt.ime}</span>
@@ -50,8 +50,9 @@ export function Noga({ kontakt }: { kontakt: Kontakt }) {
         </div>
 
         <Stolpec naslov="Strani" povezave={GLAVNA_NAVIGACIJA} />
+        <Stolpec naslov="Pomoč pri nakupu" povezave={POMOC_POVEZAVE} />
 
-        <div>
+        <div className="col-span-2 sm:col-span-1">
           <h2 className="mb-2 type-label text-ink-inverse-muted">Kontakt</h2>
           <address className="not-italic">
             <ul>

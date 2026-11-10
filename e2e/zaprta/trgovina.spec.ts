@@ -39,7 +39,7 @@ test.afterAll(async ({ browser }) => {
 test("S15: zaprta trgovina skrije nakupne gumbe, blagajna zavrne oddajo", async ({ page, browser }) => {
   // Kupec ima košarico in izpolnjeno blagajno, ko trgovina še deluje.
   await page.goto("/products/cesen-v-prahu");
-  await page.getByRole("button", { name: "V košarico" }).click();
+  await page.getByRole("button", { name: "V košarico", exact: true }).click();
   await expect(page.getByText("Dodano v košarico", { exact: true }).last()).toBeVisible();
   await page.goto("/blagajna");
   await page.getByRole("textbox", { name: "Ime", exact: true }).fill("Ana");
@@ -63,7 +63,11 @@ test("S15: zaprta trgovina skrije nakupne gumbe, blagajna zavrne oddajo", async 
   await page.goto("/products/cesen-v-prahu");
   await expect(page.getByRole("heading", { level: 1, name: "Česen v prahu" })).toBeVisible();
   await expect(page.getByText("Spletna trgovina je trenutno zaprta")).toBeVisible();
+  // Tudi gumbov za hiter nakup pri sorodnih izdelkih in na seznamu ni (ime vsebuje „v košarico“).
   await expect(page.getByRole("button", { name: "V košarico" })).toHaveCount(0);
+  await page.goto("/products?kategorija=sokovi");
+  await expect(page.getByRole("heading", { name: "Aronija sok" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /v košarico/i })).toHaveCount(0);
   await page.goto("/kosarica");
   await expect(page.getByText("Spletna trgovina je trenutno zaprta")).toBeVisible();
   await expect(page.getByRole("link", { name: "Na blagajno" })).toHaveCount(0);
@@ -73,7 +77,7 @@ test("S15: zaprta trgovina skrije nakupne gumbe, blagajna zavrne oddajo", async 
 
   await nastaviTrgovino(adminStran, true);
   await page.goto("/products/cesen-v-prahu");
-  await expect(page.getByRole("button", { name: "V košarico" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "V košarico", exact: true })).toBeVisible();
   await adminStran.close();
 });
 

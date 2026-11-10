@@ -61,7 +61,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Gibanje>
           <ToastProvider>
             <Glava telefon={kontakt.telefon} telefonPovezava={kontakt.telefonPovezava} />
-            <main id="vsebina" className="flex-1">
+            {/* Glava je plavajoča (`fixed`), zato ji `main` rezervira prostor;
+                uvod domače strani in glave podstrani segajo podenj. */}
+            <main id="vsebina" className="flex-1 pt-glava">
               {children}
             </main>
             <Noga kontakt={kontakt} />

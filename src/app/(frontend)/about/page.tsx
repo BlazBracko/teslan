@@ -1,11 +1,31 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { LuHandHeart, LuMail, LuMapPin, LuNavigation, LuPhone, LuRecycle } from "react-icons/lu";
+import Link from "next/link";
+import {
+  LuArrowRight,
+  LuCalendarClock,
+  LuCookingPot,
+  LuGift,
+  LuHandHeart,
+  LuMail,
+  LuMapPin,
+  LuNavigation,
+  LuPhone,
+  LuRecycle,
+  LuShoppingBag,
+  LuSprout,
+  LuStore,
+} from "react-icons/lu";
+import { KoledarSezone } from "@/components/domov/KoledarSezone";
+import { POT_DARIL } from "@/components/postavitev/navigacija";
+import { OznakaOsnutka } from "@/components/vsebina/OznakaOsnutka";
+import { POT_TRGOVINE } from "@/katalog/nakup";
+import { trenutniMesec } from "@/katalog/sezona";
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { naloziKontakt } from "@/katalog/podatki";
+import { naloziKatalog, naloziKontakt } from "@/katalog/podatki";
 import type { VrsticaKontakta } from "@/lib/kontakt";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { okolje } from "@/env";
@@ -19,7 +39,7 @@ export const metadata: Metadata = metapodatkiStrani({
   pot: "/about",
 });
 
-/** Kontakt je iz nastavitev trgovine (baza). */
+/** Kontakt je iz nastavitev trgovine, koledar sezone iz kataloga (baza). */
 export const dynamic = "force-dynamic";
 
 const vrednote = [
@@ -40,8 +60,29 @@ const vrednote = [
   },
 ];
 
+/** Pot pridelka od njive do kupca. OSNUTEK za lastnikov pregled. */
+const pot = [
+  {
+    ikona: LuSprout,
+    naslov: "Pridelamo",
+    opis: "Šparglje, jagode, česen, krompir in drugo zelenjavo pridelamo na svojih njivah v Podgori. Sveže prodajamo, ko dozori.",
+  },
+  {
+    ikona: LuCookingPot,
+    naslov: "Predelamo",
+    opis: "Kar ne gre sveže s kmetije, posušimo, liofiliziramo, zmeljemo v začimbo ali vložimo. V majhnih količinah, da okus ostane.",
+  },
+  {
+    ikona: LuStore,
+    naslov: "Prodamo sami",
+    opis: "Na kmetiji in v spletni trgovini, brez posrednikov. Paket pošljemo po pošti ali ga pripravimo za prevzem.",
+  },
+];
+
 export default async function AboutPage() {
-  const kontakt = await naloziKontakt();
+  const [kontakt, katalog] = await Promise.all([naloziKontakt(), naloziKatalog()]);
+  const mesec = trenutniMesec();
+  const imaSezone = katalog.izdelki.some((i) => i.sezona !== null);
 
   const kandidati: Array<VrsticaKontakta | null | false | ""> = [
     kontakt.naslov && {
@@ -79,6 +120,7 @@ export default async function AboutPage() {
         </a>
       ),
     },
+    { ikona: LuCalendarClock, oznaka: "Odprtost", vsebina: "Po dogovoru, pokličite pred obiskom" },
   ];
   const vrsticeKontakta = kandidati.filter((v): v is VrsticaKontakta => Boolean(v));
 
@@ -127,19 +169,66 @@ export default async function AboutPage() {
       <Section tone="surface" className="border-y border-line">
         <Container className="flex flex-col gap-10">
           <SectionHeading title="Naše vrednote" />
-          <ul className="grid gap-5 md:grid-cols-3">
+          <ul className="grid gap-4 md:grid-cols-3 md:gap-5">
             {vrednote.map(({ ikona: Ikona, naslov, opis }) => (
-              <li key={naslov} className="flex flex-col gap-3 rounded-xl bg-canvas p-6 ring-1 ring-line">
-                <span className="grid size-12 place-items-center rounded-full bg-brand-soft text-brand">
+              <li key={naslov} className="flex gap-4 rounded-xl bg-canvas p-5 ring-1 ring-line md:flex-col md:gap-3 md:p-6">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                   <Ikona aria-hidden="true" className="size-6" />
                 </span>
-                <h3 className="type-h3 text-ink">{naslov}</h3>
-                <p className="type-small text-ink-muted">{opis}</p>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="type-h3 text-ink">{naslov}</h3>
+                  <p className="type-small text-ink-muted">{opis}</p>
+                </div>
               </li>
             ))}
           </ul>
         </Container>
       </Section>
+
+      <Section aria-labelledby="pot-naslov">
+        <Container className="flex flex-col gap-10">
+          <SectionHeading
+            id="pot-naslov"
+            label="Kako delamo"
+            title="Od njive do vaše mize"
+            description="Vse, kar prodajamo, gre skozi naše roke."
+          />
+          <OznakaOsnutka>Opis dela na kmetiji je predlog. Popravite, kar ne drži ali bi radi povedali drugače.</OznakaOsnutka>
+          <ol className="grid gap-4 md:grid-cols-3 md:gap-5">
+            {pot.map(({ ikona: Ikona, naslov, opis }, i) => (
+              <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line md:flex-col md:p-6">
+                <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
+                  <Ikona aria-hidden="true" className="size-6" />
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-brand type-caption leading-none font-semibold text-on-brand"
+                  >
+                    {i + 1}
+                  </span>
+                </span>
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="font-sans type-title text-ink">{naslov}</h3>
+                  <p className="type-small text-ink-muted">{opis}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+
+      {imaSezone && (
+        <Section tone="surface" className="border-y border-line" aria-labelledby="sezona-naslov">
+          <Container className="flex flex-col gap-8 md:gap-10">
+            <SectionHeading
+              id="sezona-naslov"
+              label="Sveže s kmetije"
+              title="Koledar sezone"
+              description="Kdaj so na kmetiji sveži pridelki. Pred obiskom nas pokličite, da vam jih pripravimo."
+            />
+            <KoledarSezone izdelki={katalog.izdelki} mesec={mesec} />
+          </Container>
+        </Section>
+      )}
 
       <Section>
         <Container size="prose" className="flex flex-col gap-5 text-center">
@@ -151,13 +240,14 @@ export default async function AboutPage() {
         </Container>
       </Section>
 
-      <Section tone="muted">
+      <Section tone="muted" id="kontakt" aria-labelledby="kontakt-naslov">
         <Container className="flex flex-col gap-10">
           <SectionHeading
+            id="kontakt-naslov"
             title="Kontakt"
             description="Vedno smo veseli novih obrazov na kmetiji. Pokličite pred obiskom, da vas zagotovo pričakamo."
           />
-          <ul className="grid gap-5 md:grid-cols-3">
+          <ul className="grid gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
             {vrsticeKontakta.map(({ ikona: Ikona, oznaka, vsebina }) => (
               <li key={oznaka} className="flex gap-4 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
@@ -179,6 +269,34 @@ export default async function AboutPage() {
               </a>
             </Button>
           )}
+        </Container>
+      </Section>
+
+      <Section aria-labelledby="naprej-naslov">
+        <Container className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex max-w-2xl flex-col gap-2">
+            <h2 id="naprej-naslov" className="type-h2 text-ink">
+              Okusite, kar pridelamo
+            </h2>
+            <p className="type-body-lg text-ink-muted">
+              Izdelke naročite v spletni trgovini ali sestavite darilo za nekoga, ki ima rad domače.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href={POT_TRGOVINE}>
+                <LuShoppingBag aria-hidden="true" />
+                V spletno trgovino
+                <LuArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="secondary">
+              <Link href={POT_DARIL}>
+                <LuGift aria-hidden="true" />
+                Darila
+              </Link>
+            </Button>
+          </div>
         </Container>
       </Section>
     </>

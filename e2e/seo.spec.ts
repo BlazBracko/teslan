@@ -79,6 +79,8 @@ test("zemljevid strani vsebuje objavljene izdelke in programe, neobjavljenih ne 
       "/products",
       "/darila",
       "/pogoji",
+      "/dostava",
+      "/vprasanja",
       "/products/cesen-v-prahu",
       "/products/jagode",
       "/darila/sestavi?program=okusi-dolenjske",

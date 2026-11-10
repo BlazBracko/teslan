@@ -15,7 +15,8 @@ import {
   ustrezaNacinuNakupa,
   type NacinNakupa,
 } from "@/katalog/nakup";
-import { naloziKatalog } from "@/katalog/podatki";
+import { naloziKatalog, naloziNastavitve } from "@/katalog/podatki";
+import { razvrstiZaSeznam } from "@/katalog/razvrscanje";
 import { trenutniMesec } from "@/katalog/sezona";
 import { IZDELEK, stevilo } from "@/lib/sklanjanje";
 import { metapodatkiStrani } from "@/seo/metapodatki";
@@ -34,7 +35,7 @@ const GLAVE: Record<NacinNakupa, { oznaka: string; naslov: string; opis: string;
   vse: {
     oznaka: "Ponudba",
     naslov: "Naši izdelki",
-    opis: "Vse, kar pridelamo in predelamo na kmetiji v Podgori. Zgoraj izberite, ali želite naročiti na spletu ali kupiti na kmetiji.",
+    opis: "Vse, kar pridelamo in predelamo na kmetiji v Podgori. Spodaj izberite, ali želite naročiti na spletu ali kupiti na kmetiji.",
   },
   splet: {
     oznaka: "Spletna trgovina",
@@ -59,7 +60,8 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<{ kategorija?: string | string[]; nakup?: string | string[] }>;
 }) {
-  const [katalog, iskanje] = await Promise.all([naloziKatalog(), searchParams]);
+  const [katalog, nastavitve, iskanje] = await Promise.all([naloziKatalog(), naloziNastavitve(), searchParams]);
+  const trgovinaOdprta = nastavitve.trgovinaOdprta !== false;
   const mesec = trenutniMesec();
   const nakup = nacinNakupaIzParametra(iskanje.nakup);
   const glava = GLAVE[nakup];
@@ -79,26 +81,23 @@ export default async function ProductsPage({
   // Neznana kategorija (stara povezava, tipkarska napaka) pokaže vse izdelke.
   const iskana = Array.isArray(iskanje.kategorija) ? iskanje.kategorija[0] : iskanje.kategorija;
   const izbrana = katalog.kategorije.find((k) => k.slug === iskana && kategorijeNacinov.vse.has(k.slug)) ?? null;
-  const izdelki = izbrana ? izdelkiNacina.filter((i) => i.kategorija.id === izbrana.id) : izdelkiNacina;
+  // Najprej tisto, kar se da naročiti zdaj; šparglji novembra niso prvi.
+  const izdelki = razvrstiZaSeznam(
+    izbrana ? izdelkiNacina.filter((i) => i.kategorija.id === izbrana.id) : izdelkiNacina,
+    mesec,
+  );
 
   return (
     <>
       <PageHeader label={glava.oznaka} title={glava.naslov} description={glava.opis} />
 
-      <Container className="flex flex-col gap-6 py-10 md:py-14">
+      <Container className="flex flex-col gap-4 py-6 md:gap-5 md:py-10">
         <FilterNakupa
           izbran={nakup}
           stevila={stevila}
           kategorija={izbrana?.slug ?? null}
           kategorijeNacinov={kategorijeNacinov}
         />
-
-        {glava.namig && (
-          <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-4 py-3 type-small text-brand">
-            <LuInfo aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {glava.namig}
-          </p>
-        )}
 
         {kategorije.length > 1 && (
           <FilterKategorij
@@ -114,10 +113,15 @@ export default async function ProductsPage({
         </p>
 
         {izdelki.length > 0 ? (
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 xl:grid-cols-4">
             {izdelki.map((izdelek, i) => (
               <li key={izdelek.id}>
-                <KarticaIzdelka izdelek={izdelek} mesec={mesec} prednostnaSlika={i === 0} />
+                <KarticaIzdelka
+                  izdelek={izdelek}
+                  mesec={mesec}
+                  prednostnaSlika={i === 0}
+                  trgovinaOdprta={trgovinaOdprta}
+                />
               </li>
             ))}
           </ul>
@@ -143,6 +147,13 @@ export default async function ProductsPage({
               </Button>
             }
           />
+        )}
+
+        {glava.namig && izdelki.length > 0 && (
+          <p className="flex items-start gap-2 rounded-lg bg-brand-soft px-4 py-3 type-small text-brand">
+            <LuInfo aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {glava.namig}
+          </p>
         )}
       </Container>
     </>

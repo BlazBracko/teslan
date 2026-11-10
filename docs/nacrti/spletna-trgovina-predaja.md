@@ -33,6 +33,8 @@ Ob pregledu v K13 (2026-11-10) so na stagingu nastavljene samo `DATABASE_URL` in
 - [ ] Ista stran: **zemljepisna širina in dolžina** kmetije (Google Maps → desni klik na kmetijo). Brez njiju Google ne dobi lege (JSON-LD `geo`).
 - [ ] Preverite *E-pošta za obvestila* (privzeto Sandijev naslov), poštnino, prag brezplačne poštnine in navodila za prevzem.
 - [ ] Fotografije izdelkov in škatel, opisi, sestavine, alergeni; pravi tipi darilnih škatel in programi (demo škatle in programa z „[DEMO]“ označite kot neaktivne oz. neobjavljene) (§7).
+- [ ] **Osnutki besedil iz prenove UI** (napisal agent, na stagingu z oznako „Osnutek besedila – za pregled“): pogosta vprašanja, stran *Dostava in plačilo*, opis dela na kmetiji in besedila na domači strani. Kje so in kaj preveriti, je v dnevniku *Prenova UI/UX* spodaj. Ta besedila so v kodi, ne v adminu; popravke sporočite razvijalcu.
+- [ ] **Prave fotografije**: uvod domače strani, portret za „Kdo smo“, fotografije izdelkov, skupin ponudbe in darilnih škatel (seznam mest v dnevniku *Prenova UI/UX*).
 - [ ] **Zgodbe izdelkov** (*Izdelki → izdelek → Dolg opis*): vsak izdelek iz seeda ima osnutek zgodbe, ki jo je napisal agent. Preberite jih in popravite, kar ne drži ali bi radi povedali drugače; izdelek brez dolgega opisa pokaže kratek opis in splošno besedilo o kmetiji.
 
 ### 4. Pregledi (računovodja, pravnik)
@@ -190,3 +192,23 @@ Ob pregledu v K13 (2026-11-10) so na stagingu nastavljene samo `DATABASE_URL` in
 - Ni novih zunanjih ključev in ni novih preskočenih preizkusov.
 - Podatkovna migracija `20261110_140000_zgodbe_izdelkov` vpiše osnutke zgodb izdelkom brez dolgega opisa in popravi kratek opis jagod (ne trdi več „brez pesticidov“). Na stagingu jo zažene `deploy-staging.sh`.
 - Admin je na `/admin`; v nogi je diskretna povezava „Urejanje trgovine“.
+
+### Prenova UI/UX (2026-11-10)
+- Ni novih zunanjih ključev, ni novih preskočenih preizkusov in **ni migracij** (po združitvi `deploy-staging.sh` ni potreben).
+- **Kaj je novo**: uvod domače strani v podobi produkcijske strani (fotografija čez cel zaslon, zamegljena, z mrežo pik) in plavajoča glava; seznam izdelkov v dveh stolpcih na telefonu, z naročljivimi izdelki na vrhu in gumbom za hiter nakup; podstran izdelka z dostavo, sorodnimi izdelki in vrstico „V košarico“ na dnu zaslona telefona; jasnejša košarica pri izdelkih samo za prevzem; novi strani `/dostava` in `/vprasanja`; na domači strani izbor iz trgovine, koraki naročila, „Kdo smo“, koledar sezone in izbor vprašanj.
+- **Mešana košarica (T4)**: pravilo je ostalo po načrtu (izdelek samo za prevzem onemogoči pošto za celo naročilo), spremenjeno je sporočilo. Košarica zdaj pove „To naročilo prevzamete na kmetiji“, ponudi gumb za odstranitev izdelkov samo za prevzem in pusti „Na blagajno“ omogočen; prej je stavek „Pošiljanje po pošti ni mogoče“ deloval, kot da naročila ni mogoče oddati. Deljenja naročila na dva dela (pošta + prevzem) ni; če ga želite, je to nova funkcija.
+- **Osnutki besedil za pregled** (v kodi; na stagingu z `NOINDEX=1` so označeni, v produkciji oznake ni):
+
+  | Kje na strani | Datoteka | Preverite predvsem |
+  |---|---|---|
+  | `/vprasanja` in izbor na domači strani | `src/vsebina/vprasanja.ts` | rok pošiljanja („praviloma v nekaj delovnih dneh“, „pošta običajno dostavi naslednji delovni dan“), spreminjanje in preklic naročila, nasvete za shranjevanje, opis liofilizacije |
+  | `/dostava` | `src/app/(frontend)/dostava/page.tsx` | rok pošiljanja, odstavek „Pakiranje in poškodbe“ (zamenjava ali vračilo kupnine), razlago, zakaj se jajca in sveža zelenjava ne pošiljajo |
+  | `/about`, „Od njive do vaše mize“ | `src/app/(frontend)/about/page.tsx` | ali res sušite, liofilizirate, meljete in vlagate sami; besedilo o prodaji brez posrednikov |
+  | domača stran, „Kdo smo“ | `src/components/domov/OKmetiji.tsx` | tri vrednote in opis kmetije |
+  | domača stran, „Naročilo v treh korakih“ | `src/components/domov/KakoNarocite.tsx` | opis poteka naročila |
+  | domača stran, uvod | `src/components/domov/Uvod.tsx` | „15+ let izkušenj“, „4 km od Novega mesta“, štiri dejstva o nakupu |
+
+  Zneski (poštnina, prag brezplačne poštnine), naslov, telefon, e-pošta in navodila za prevzem v teh besedilih niso zapisani ročno, ampak pridejo iz *Nastavitve trgovine*; seznam izdelkov samo za prevzem in koledar sezone prideta iz izdelkov (polji *Način prodaje* in *Sezona*).
+- **Fotografije so nadomestne.** Kje jih zamenjati: uvod domače strani `public/strawberryFields.jpg` (zamegljena, zato zadošča fotografija njive ali kmetije v ležečem formatu); „Kdo smo“, `/about` in zgodba izdelka `public/sandi.jpg`; „Obiščite nas“ `public/slika1.jpeg`; fotografije izdelkov, skupin ponudbe, darilnih škatel in programov v adminu (*Slike*). Kartice izdelkov so narejene za kvadratne fotografije (na telefonu kvadrat, na namizju 4 : 3, izrez po žarišču iz admina).
+- **Kaj namenoma ni dodano**: prijava na e-novice, ocene kupcev in seznam želja (zahtevajo soglasja, moderiranje oziroma račune kupcev, ki jih načrt izključuje); iskalnik po izdelkih (pri 25 izdelkih zadoščata načina nakupa in kategorije).
+- Plačilo s kartico: stran `/dostava` in uvod domače strani sama povesta, če kartica ni nastavljena (staging brez ključev Stripe), da kupca ne zavedeta.

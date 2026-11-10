@@ -23,3 +23,4 @@ export const KOS: OblikeSamostalnika = ["kos", "kosa", "kosi", "kosov"];
 /** Tožilnik: „za 1 škatlo, 2 škatli, 3 škatle, 5 škatel“. */
 export const SKATLO: OblikeSamostalnika = ["škatlo", "škatli", "škatle", "škatel"];
 export const MESTO: OblikeSamostalnika = ["mesto", "mesti", "mesta", "mest"];
+export const VELIKOST: OblikeSamostalnika = ["velikost", "velikosti", "velikosti", "velikosti"];

@@ -4,32 +4,20 @@ import { LuLayoutGrid, LuShoppingBag, LuStore } from "react-icons/lu";
 import { potSeznama, type NacinNakupa } from "@/katalog/nakup";
 import { cn } from "@/lib/utils";
 
-const MOZNOSTI: Array<{ nacin: NacinNakupa; oznaka: string; opis: string; ikona: IconType }> = [
-  {
-    nacin: "splet",
-    oznaka: "Spletna trgovina",
-    opis: "Naročite na spletu",
-    ikona: LuShoppingBag,
-  },
-  {
-    nacin: "kmetija",
-    oznaka: "Samo na kmetiji",
-    opis: "Kupite v živo v Podgori",
-    ikona: LuStore,
-  },
-  {
-    nacin: "vse",
-    oznaka: "Vsi izdelki",
-    opis: "Celotna ponudba",
-    ikona: LuLayoutGrid,
-  },
+const MOZNOSTI: Array<{ nacin: NacinNakupa; oznaka: string; ikona: IconType }> = [
+  { nacin: "splet", oznaka: "Spletna trgovina", ikona: LuShoppingBag },
+  { nacin: "kmetija", oznaka: "Samo na kmetiji", ikona: LuStore },
+  { nacin: "vse", oznaka: "Vsi izdelki", ikona: LuLayoutGrid },
 ];
 
 /**
- * Izbira načina nakupa nad seznamom izdelkov: tri velike ploščice, da kupec
- * takoj loči spletno trgovino od izdelkov, ki jih prodajamo samo na
- * kmetiji. Povezave ohranijo izbrano kategorijo samo, če je v novem načinu
- * kaj izdelkov te kategorije; sicer bi kupec pristal na prazni strani.
+ * Izbira načina nakupa nad seznamom izdelkov: preklopnik s tremi izbirami,
+ * da kupec takoj loči spletno trgovino od izdelkov, ki jih prodajamo samo
+ * na kmetiji, in da izdelki pridejo na vrsto že na prvem zaslonu telefona
+ * (prej so tri velike ploščice in opisi zavzeli ves zaslon).
+ *
+ * Povezave ohranijo izbrano kategorijo samo, če je v novem načinu kaj
+ * izdelkov te kategorije; sicer bi kupec pristal na prazni strani.
  */
 export function FilterNakupa({
   izbran,
@@ -45,8 +33,8 @@ export function FilterNakupa({
 }) {
   return (
     <nav aria-label="Način nakupa">
-      <ul className="grid grid-cols-3 gap-2 sm:gap-3">
-        {MOZNOSTI.map(({ nacin, oznaka, opis, ikona: Ikona }) => {
+      <ul className="grid grid-cols-3 gap-1 rounded-2xl bg-surface-muted p-1 sm:inline-grid sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
+        {MOZNOSTI.map(({ nacin, oznaka, ikona: Ikona }) => {
           const aktivna = nacin === izbran;
           const ohraniKategorijo = kategorija && kategorijeNacinov[nacin].has(kategorija);
           return (
@@ -56,30 +44,16 @@ export function FilterNakupa({
                 scroll={false}
                 aria-current={aktivna ? "page" : undefined}
                 className={cn(
-                  "flex h-full flex-col gap-1 rounded-xl p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-4",
+                  "flex h-full min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-center",
+                  "sm:flex-row sm:gap-2 sm:px-5",
                   "transition-[background-color,color,box-shadow,transform] duration-(--duration-fast)",
                   "active:scale-[0.98] motion-reduce:active:scale-100",
-                  aktivna
-                    ? "bg-brand text-on-brand shadow-floating"
-                    : "bg-surface text-ink shadow-raised ring-1 ring-line ring-inset hover:bg-surface-muted",
+                  aktivna ? "bg-surface text-ink shadow-raised" : "text-ink-muted hover:text-ink",
                 )}
               >
-                <span
-                  className={cn(
-                    "grid size-9 shrink-0 place-items-center rounded-full sm:size-11",
-                    aktivna ? "bg-on-brand/15" : "bg-brand-soft text-brand",
-                  )}
-                >
-                  <Ikona aria-hidden="true" className="size-5" />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="type-small font-semibold sm:type-title">
-                    {oznaka} <span className={cn("type-numeric font-normal", aktivna ? "text-on-brand" : "text-ink-muted")}>{stevila[nacin]}</span>
-                  </span>
-                  <span className={cn("hidden type-caption sm:block", aktivna ? "text-on-brand" : "text-ink-muted")}>
-                    {opis}
-                  </span>
-                </span>
+                <Ikona aria-hidden="true" className={cn("hidden size-4.5 shrink-0 sm:block", aktivna && "text-brand")} />
+                <span className="type-caption leading-tight font-semibold sm:type-small">{oznaka}</span>
+                <span className="type-caption type-numeric text-ink-muted sm:type-small">{stevila[nacin]}</span>
               </Link>
             </li>
           );

@@ -48,6 +48,17 @@ export const PRAVNE_POVEZAVE: Povezava[] = [
   { href: POT_ZASEBNOSTI, oznaka: "Politika zasebnosti" },
 ];
 
+/** Pomoč pri nakupu: dostava in plačilo, pogosta vprašanja, kontakt. */
+export const POT_DOSTAVE = "/dostava";
+export const POT_VPRASANJ = "/vprasanja";
+export const POT_KONTAKTA = "/about#kontakt";
+
+export const POMOC_POVEZAVE: Povezava[] = [
+  { href: POT_DOSTAVE, oznaka: "Dostava in plačilo" },
+  { href: POT_VPRASANJ, oznaka: "Pogosta vprašanja" },
+  { href: POT_KONTAKTA, oznaka: "Kontakt" },
+];
+
 /** Ali je povezava aktivna na dani poti (podstrani izdelkov štejejo k „Trgovina“). */
 export function jeAktivna(povezava: string, pot: string): boolean {
   const href = povezava.split("?")[0];

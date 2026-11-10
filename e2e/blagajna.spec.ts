@@ -66,8 +66,15 @@ test.describe("blagajna (Z25, T2, T4)", () => {
     const posta = dostava(page).getByRole("radio", { name: /Pošta/ });
     await expect(posta).toBeDisabled();
     await expect(dostava(page)).toContainText(
-      "Ni mogoče, ker so v košarici izdelki samo za prevzem na kmetiji: Jajca kokošja.",
+      "Za to naročilo ni na voljo, ker so v košarici izdelki samo za prevzem na kmetiji: Jajca kokošja.",
     );
+    // Prevzem je izbran in naročilo je mogoče oddati; do košarice vodi povezava.
+    await expect(dostava(page).getByRole("radio", { name: /Prevzem na kmetiji/ })).toBeChecked();
+    await expect(page.getByRole("link", { name: "V košarici odstranite izdelke samo za prevzem" })).toHaveAttribute(
+      "href",
+      "/kosarica",
+    );
+    await expect(page.getByRole("button", { name: "Oddaj naročilo" })).toBeEnabled();
     await expect(placilo(page).getByRole("radio")).toHaveCount(2);
 
     // Brez jajc je pošta mogoča, plačilo pa samo s kartico.

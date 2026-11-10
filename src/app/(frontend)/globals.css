@@ -45,6 +45,18 @@
   --color-brand-strong: #223a28;
   --color-brand-soft: #e2eadd;
   --color-on-brand: #fbf9f3;
+  /* Svetla zelena za temne ploskve (uvod domače strani, plavajoča glava):
+     poudarek v naslovu, številke in glavni gumb na fotografiji. Na svetli
+     podlagi je ne uporabljamo, ker tam ne doseže kontrasta. */
+  --color-brand-bright: #80c984;
+
+  /* ── Ilustracije (darilna škatla): karton in listje. Samo za risbe,
+     ne za besedilo ali ploskve vmesnika. */
+  --color-kraft-light: #dcbd8c;
+  --color-kraft: #c9a36b;
+  --color-kraft-dark: #a8824e;
+  --color-kraft-deep: #7a5c33;
+  --color-brand-leaf: #4f7a57;
 
   /* ── Poudarek: glina in jagoda ────────────────────────────────
      Redko: sezonske oznake, izpostavljeno, nič navigacijskega. */
@@ -101,6 +113,8 @@
   --spacing-gutter-lg: 2rem;
   --spacing-section: 4rem;
   --spacing-section-lg: 7rem;
+  /* Prostor, ki ga na vrhu strani zasede plavajoča glava (odmik + višina). */
+  --spacing-glava: 5.25rem;
   --container-prose: 40rem;
   --container-content: 72rem;
   --container-wide: 84rem;
@@ -149,11 +163,10 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
-    /* Sidra (#obisk) ne smejo pristati pod lepljivo glavo (h-16). Odmik ne
-       sme biti večji od višine glave: Next.js ob menjavi strani scrolla
-       samo, če vrh nove strani ni pod tem odmikom, in pri 5rem je vsako
-       stran zamaknil navzdol. */
-    scroll-padding-top: 4rem;
+    /* Sidra (#obisk) ne smejo pristati pod plavajočo glavo. Odmik ne sme
+       biti večji od prostora glave (`--spacing-glava`): Next.js ob menjavi
+       strani scrolla samo, če vrh nove strani ni pod tem odmikom. */
+    scroll-padding-top: 5.25rem;
     overflow-x: clip;
     background-color: var(--color-canvas);
   }
@@ -300,6 +313,22 @@
   letter-spacing: -0.03em;
 }
 
+/* Mreža drobnih pik čez zamegljeno fotografijo v uvodu domače strani
+   (videz stare strani, ki je lastniku ostal všeč). */
+@utility vzorec-pik {
+  background-image: radial-gradient(circle, var(--color-ink-inverse) 1.5px, transparent 1.5px);
+  background-size: 2rem 2rem;
+}
+
+/* Vodoravni drsni trak brez vidnega drsnika (filtri, sorodni izdelki). */
+@utility brez-drsnika {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ═════════════════════════════════════════════════════════════
    Dostopnost (Z6, apple-design §14) — tri neodvisne preference.
    Manj gibanja ne pomeni brez odziva, ampak nežnejši odziv:
@@ -321,10 +350,10 @@
   }
 }
 
-/* Prosojna glava (`bg-canvas/90` + zameglitev) postane polna. */
+/* Prosojne plasti (plavajoča glava, steklen trak v uvodu) postanejo polne. */
 @media (prefers-reduced-transparency: reduce) {
-  header.sticky {
-    background-color: var(--color-canvas);
+  [data-material] {
+    background-color: var(--color-brand);
     backdrop-filter: none;
   }
 }

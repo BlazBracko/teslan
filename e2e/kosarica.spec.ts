@@ -19,7 +19,7 @@ async function dodaj(page: Page, slug: string, velikost: RegExp | null, kolicina
   await page.goto(`/products/${slug}`);
   if (velikost) await page.getByRole("radiogroup").getByRole("radio", { name: velikost }).click();
   for (let i = 1; i < kolicina; i++) await page.getByRole("button", { name: "Povečaj količino" }).click();
-  await page.getByRole("button", { name: "V košarico" }).click();
+  await page.getByRole("button", { name: "V košarico", exact: true }).click();
   await expect(page.getByText("Dodano v košarico", { exact: true }).last()).toBeVisible();
 }
 
@@ -81,7 +81,7 @@ test.describe("košarica (Z20, Z21, T2)", () => {
 
   test("količina iste velikosti ne preseže zaloge", async ({ page }) => {
     await dodaj(page, "malo-zaloge", null, 2);
-    await page.getByRole("button", { name: "V košarico" }).click();
+    await page.getByRole("button", { name: "V košarico", exact: true }).click();
     await expect(page.getByText("Več kosov ni mogoče dodati", { exact: true })).toBeVisible();
     await expect(ikona(page)).toHaveAccessibleName("Košarica, 2 kosa");
   });
@@ -98,8 +98,33 @@ test.describe("košarica (Z20, Z21, T2)", () => {
     await dodaj(page, "jajca-kokosja", null);
     await page.goto("/kosarica");
     await expect(povzetek(page).getByTestId("posta")).toHaveText(
-      "Pošiljanje po pošti ni mogoče, ker so v košarici izdelki samo za prevzem na kmetiji: Jajca kokošja.",
+      "Pošta: za to naročilo ni na voljo, ker so v košarici izdelki samo za prevzem na kmetiji: Jajca kokošja.",
     );
+
+    // Mešana košarica ni napaka: naročilo se v celoti prevzame na kmetiji in ga je mogoče oddati.
+    const obvestilo = page.getByTestId("samo-prevzem");
+    await expect(obvestilo).toContainText("To naročilo prevzamete na kmetiji");
+    await expect(obvestilo).toContainText("Jajca kokošja");
+    await expect(page.getByText("Nekaterih izdelkov ni mogoče naročiti")).toHaveCount(0);
+    await expect(postavka(page, "Jajca kokošja", "10 kos").getByText("Samo prevzem na kmetiji")).toBeVisible();
+    await expect(postavka(page, "Česen v prahu", "41 ml").getByText("Samo prevzem na kmetiji")).toHaveCount(0);
+    await expect(povzetek(page).getByRole("link", { name: "Na blagajno" })).toHaveAttribute("href", "/blagajna");
+    await expect(povzetek(page)).toContainText("Naročilo oddate za prevzem na kmetiji.");
+
+    // Kupec, ki želi paket po pošti, izdelek samo za prevzem odstrani z enim gumbom.
+    await obvestilo.getByRole("button", { name: "Odstrani izdelek samo za prevzem" }).click();
+    await expect(postavka(page, "Jajca kokošja", "10 kos")).toHaveCount(0);
+    await expect(page.getByTestId("samo-prevzem")).toHaveCount(0);
+    await expect(povzetek(page).getByTestId("posta")).toContainText(/Pošta: 5,00\s€/);
+  });
+
+  test("T4: košarica samo z izdelki za prevzem ne ponuja odstranjevanja", async ({ page }) => {
+    await dodaj(page, "jajca-kokosja", null);
+    await page.goto("/kosarica");
+    const obvestilo = page.getByTestId("samo-prevzem");
+    await expect(obvestilo).toContainText("To naročilo prevzamete na kmetiji");
+    await expect(obvestilo.getByRole("button")).toHaveCount(0);
+    await expect(povzetek(page).getByRole("link", { name: "Na blagajno" })).toBeVisible();
   });
 
   test("Z21: nedosegljive in prevelike postavke so označene z razlogom", async ({ page, request }) => {

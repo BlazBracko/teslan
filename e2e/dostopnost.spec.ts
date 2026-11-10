@@ -26,6 +26,8 @@ const STRANI = [
   "/darila",
   "/darila/sestavi",
   "/about",
+  "/dostava",
+  "/vprasanja",
   "/privacyPolicy",
   "/pogoji",
   "/odstop",

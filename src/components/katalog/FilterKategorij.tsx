@@ -27,7 +27,7 @@ export function FilterKategorij({
   ];
   return (
     <nav aria-label="Kategorije izdelkov" className="-mx-gutter lg:mx-0">
-      <ul className="flex snap-x gap-2 overflow-x-auto px-gutter pt-1 pb-3 lg:flex-wrap lg:overflow-visible lg:px-0">
+      <ul className="flex snap-x scroll-px-4 gap-2 overflow-x-auto px-gutter py-1 brez-drsnika lg:flex-wrap lg:overflow-visible lg:px-0">
         {moznosti.map((m) => {
           const aktivna = m.slug === izbrana;
           return (

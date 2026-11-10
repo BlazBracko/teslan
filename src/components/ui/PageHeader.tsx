@@ -21,8 +21,9 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("border-b border-line bg-surface", className)}>
-      <Container className="flex flex-col gap-3 py-12 md:py-16">
+    // Ploskev sega pod plavajočo glavo, da nad njo ni pasu druge barve.
+    <header className={cn("-mt-glava border-b border-line bg-surface pt-glava", className)}>
+      <Container className="flex flex-col gap-3 py-8 md:py-14">
         {children}
         {label && <p className="type-label text-accent">{label}</p>}
         <h1 className="type-h1 max-w-3xl text-ink">{title}</h1>

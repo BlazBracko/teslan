@@ -48,6 +48,12 @@ const pari: Array<[string, string, number]> = [
   ["ink-inverse", "surface-inverse", BESEDILO],
   ["ink-inverse-muted", "surface-inverse", BESEDILO],
   ["on-brand", "brand", BESEDILO],
+  // Temne ploskve: plavajoča glava (brand) in uvod domače strani.
+  ["ink-inverse", "brand", BESEDILO],
+  ["brand-bright", "brand", BESEDILO],
+  ["brand-bright", "brand-strong", BESEDILO],
+  ["brand-bright", "surface-inverse", BESEDILO],
+  ["brand-strong", "brand-bright", BESEDILO],
   ["on-brand", "brand-strong", BESEDILO],
   ["on-accent", "accent", BESEDILO],
   ["on-accent", "accent-strong", BESEDILO],

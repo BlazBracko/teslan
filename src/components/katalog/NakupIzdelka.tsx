@@ -15,6 +15,7 @@ import { NAJVEC_KOSOV } from "@/kosarica/postavke";
 import { dodajVKosarico, kolicinaVKosarici } from "@/kosarica/shramba";
 import { formatirajCeno } from "@/lib/denar";
 import { KOS, stevilo } from "@/lib/sklanjanje";
+import { cn } from "@/lib/utils";
 
 export interface VelikostZaNakup {
   id: string;
@@ -41,6 +42,11 @@ function Obvestilo({ children }: { children: React.ReactNode }) {
  *
  * „V košarico“ shrani id-je in količino v `localStorage` (Z20). Količina
  * iste velikosti v košarici ne preseže zaloge in 20 kosov.
+ *
+ * Obrazec je `display: contents`, da je vrstica s ceno in gumbom otrok
+ * stolpca s podatki izdelka: na telefonu je `sticky` na dnu zaslona, dokler
+ * kupec bere stolpec, in se ustavi na svojem mestu, ko pride do nje. Gumb
+ * je tako en sam in vedno pri roki, brez podvojenega v plavajoči vrstici.
  */
 export function NakupIzdelka({
   izdelekId,
@@ -113,7 +119,7 @@ export function NakupIzdelka({
 
   return (
     <form
-      className="flex flex-col gap-6"
+      className="contents"
       onSubmit={(e) => {
         e.preventDefault();
         dodaj();
@@ -150,14 +156,20 @@ export function NakupIzdelka({
           <Field label="Količina" description={`Največ ${stevilo(najvec, KOS)} v eni postavki.`}>
             <QuantityInput value={kolicina} onChange={setKolicina} min={1} max={najvec} />
           </Field>
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5">
+          <div
+            className={cn(
+              "sticky bottom-0 z-20 -mx-gutter flex items-center justify-between gap-4 border-t border-line bg-canvas/95 px-gutter pt-3 backdrop-blur-md",
+              "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+              "md:static md:mx-0 md:bg-transparent md:px-0 md:pt-5 md:pb-0 md:backdrop-blur-none",
+            )}
+          >
             {izbrana.cenaCenti != null && (
-              <p className="flex items-baseline gap-2">
-                <span className="type-small text-ink-muted">Skupaj</span>
+              <p className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                <span className="type-caption text-ink-muted md:type-small">Skupaj</span>
                 <Price cents={izbrana.cenaCenti * kolicina} size="lg" />
               </p>
             )}
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" className="flex-1 md:flex-none">
               <LuShoppingBag aria-hidden="true" />V košarico
             </Button>
           </div>

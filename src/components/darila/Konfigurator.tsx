@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LuCircleAlert, LuGift, LuInfo, LuPlus, LuTrash2 } from "react-icons/lu";
+import { LuArrowDown, LuCircleAlert, LuGift, LuInfo, LuPlus, LuTrash2 } from "react-icons/lu";
 import { SlikaIzdelka } from "@/components/katalog/SlikaIzdelka";
 import { POT_DARIL, POT_KOSARICE } from "@/components/postavitev/navigacija";
 import { Button } from "@/components/ui/Button";
@@ -470,13 +470,32 @@ export function Konfigurator({
             />
           </Field>
         </Korak>
+
+        {/* Na telefonu je povzetek pod dolgim seznamom izdelkov: vrstica na
+            dnu zaslona kaže zasedena mesta in ceno ter vodi do povzetka. */}
+        {tip && (
+          <div className="sticky bottom-0 z-20 -mx-gutter flex items-center justify-between gap-4 border-t border-line bg-canvas/95 px-gutter pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
+            <p className="flex flex-col">
+              <span className="type-caption text-ink-muted">
+                V škatli {zasedeno} od {steviloMest}
+              </span>
+              {cena != null && <Price cents={cena} size="lg" />}
+            </p>
+            <Button asChild variant={zasedeno > 0 ? "primary" : "secondary"}>
+              <a href="#povzetek-darila">
+                Na povzetek
+                <LuArrowDown aria-hidden="true" />
+              </a>
+            </Button>
+          </div>
+        )}
       </div>
 
       <aside
         aria-labelledby="povzetek-darila"
         className="flex flex-col gap-5 rounded-xl bg-surface p-6 shadow-raised ring-1 ring-line lg:sticky lg:top-24"
       >
-        <h2 id="povzetek-darila" className="type-h3 text-ink">
+        <h2 id="povzetek-darila" className="scroll-mt-28 type-h3 text-ink">
           Vaše darilo
         </h2>
         <dl className="flex flex-col gap-3 type-body">

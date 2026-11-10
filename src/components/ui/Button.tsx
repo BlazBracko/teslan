@@ -34,6 +34,14 @@ export const buttonVariants = cva(
           "bg-accent text-on-accent shadow-raised hover:bg-accent-strong active:bg-accent-strong",
         danger:
           "bg-danger text-on-accent shadow-raised hover:bg-danger-strong active:bg-danger-strong",
+        // Na temnih ploskvah (uvod domače strani, plavajoča glava, darila):
+        // obroč fokusa je svetel, ker modri na temno zeleni ne doseže 3 : 1.
+        bright:
+          "bg-brand-bright text-brand-strong shadow-raised hover:bg-ink-inverse active:bg-ink-inverse focus-visible:outline-ink-inverse",
+        outlineInverse:
+          "bg-transparent text-ink-inverse ring-1 ring-ink-inverse/55 ring-inset hover:bg-ink-inverse/12 focus-visible:outline-ink-inverse",
+        ghostInverse:
+          "bg-transparent text-ink-inverse hover:bg-ink-inverse/12 focus-visible:outline-ink-inverse",
         link: "h-auto! rounded-none! px-0! text-brand underline decoration-1 underline-offset-4 hover:decoration-2 active:scale-100",
       },
       size: {
