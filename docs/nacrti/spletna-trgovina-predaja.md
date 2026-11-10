@@ -11,6 +11,9 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 | `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL` (R2 `teslan-staging`) | K3 | lokalni disk (`media/`); na Railwayu se slike ob vsakem deployu izgubijo | Cloudflare R2 + Railway → staging → Variables |
 | `STRIPE_SECRET_KEY` (testni `sk_test_…` za staging), `STRIPE_WEBHOOK_SECRET` | K8 | brez njiju je plačilo s kartico na blagajni onemogočeno, zato tudi pošiljanje po pošti (samo kartica, Z22); prevzem s plačilom ob prevzemu deluje | Stripe → Developers → API keys; Webhooks → endpoint `https://<staging>/api/stripe/webhook` z dogodki `checkout.session.completed`, `checkout.session.expired` (neobvezno še `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`) → Signing secret; oboje v Railway → staging → Variables |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (staging) | K4 | brez njiju seed administratorja ne ustvari; prvega uporabnika (vedno administrator) ustvarite na `/admin` | Railway → staging → Variables (geslo vsaj 12 znakov) |
+| `RESEND_API_KEY` (staging in produkcija) | K9 | brez ključa se vsa e-pošta (E1–E5, pozabljeno geslo v adminu) izpiše v log strežnika na Railwayu in **kupcem ne pride** | Resend → račun, *Domains* → dodajte `teslan.si` in DNS zapise (SPF, DKIM, po želji DMARC) v Cloudflare; ko je domena overjena, *API Keys* → ključ s pravico *Sending access* → Railway → Variables |
+| `EMAIL_REDIRECT_TO` (samo staging) | K9 | ni potreben, dokler ni `RESEND_API_KEY`; **s ključem na stagingu brez njega dobijo e-pošto pravi naslovi**, zato ga nastavite hkrati s ključem | Railway → staging → Variables: vaš e-naslov |
+| `EMAIL_FROM` (neobvezno) | K9 | privzeto `Domačija Tešlan <narocila@teslan.si>` | Railway → Variables, če želite drug naslov (mora biti na overjeni domeni) |
 
 ## Preskočeni preizkusi
 
@@ -19,6 +22,7 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 | Nalaganje slik v R2 (Z83, S19) | ni R2 ključev; testi preverijo lokalni disk in sestavo javnega URL-ja | R2 bucket in `S3_*` na stagingu, ročni preizkus v adminu (K13) |
 | S11 s pravim Stripom (`e2e/stripe-pravi.spec.ts`: kartica 4242 4242 4242 4242, prekinitev) | ni testnih ključev Stripe; isti tok (blagajna → Checkout → podpisan webhook → potrdilo, prekinitev) preveri `e2e/placilo.spec.ts` z nadomestnim Stripom (`e2e/stripe-nadomestek.ts`), logiko pa integracijski testi (S8) | GitHub secrets `STRIPE_SECRET_KEY` (testni) in `STRIPE_WEBHOOK_SECRET` (poljuben `whsec_…`, ali iz `stripe listen`) ter ju dodati v okolje koraka Playwright v `.github/workflows/ci.yml`; lokalno: ključa v okolju pred `npm run test:e2e` |
 | Testno kartično naročilo prek webhooka na stagingu (S19) | ni Stripe računa in webhooka za staging | ključa in webhook zgoraj, nato ročni preizkus (K13) |
+| Pošiljanje prek pravega Resenda (`src/eposta/adapter.test.ts`, „Resend s pravim ključem“) in prejem e-pošte na `EMAIL_REDIRECT_TO` na stagingu (S19) | ni ključa Resend; zahtevo za Resend (naslov, glava, telo, napaka) preveri test z nadomestnim `fetch`, vsebino predlog in sprožitev ob statusih enotski in integracijski testi, e2e pa e-pošto iz dnevnika | `RESEND_API_KEY` v okolju pred `npm test` (pošlje eno sporočilo na `delivered@resend.dev`); na stagingu ključ in `EMAIL_REDIRECT_TO`, nato testno naročilo (K13) |
 
 ## Dnevnik po korakih
 
@@ -66,6 +70,15 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Vračila ostajajo ročna v Stripu (izven obsega). Če kupec plača naročilo, ki ga je Sandi medtem preklical, se naročilo označi kot plačano z interno opombo „Znesek vrnite kupcu v Stripu.“
 - `STRIPE_API_URL` je samo za e2e teste (nadomestni Stripe); na stagingu in v produkciji ga ne nastavljajte.
 - Preskočen preizkus: S11 s pravim Stripom (gl. tabelo preskočenih preizkusov).
+
+### K9 E-pošta
+- Novi spremenljivki za staging: `RESEND_API_KEY` in `EMAIL_REDIRECT_TO` (gl. tabelo zgoraj). **Ključ in preusmeritev nastavite hkrati**, sicer staging pošilja pravim kupcem. V produkciji `EMAIL_REDIRECT_TO` ne sme biti nastavljen.
+- Dokler ključa ni, se vsaka e-pošta izpiše v log strežnika (Railway → Deployments → Logs, vrstica „E-pošta ni poslana (RESEND_API_KEY ni nastavljen)“). Naročila delujejo normalno.
+- Pošiljatelj je `narocila@teslan.si`: v Resendu morate overiti domeno `teslan.si` (DNS zapisi v Cloudflare). Odgovori kupcev gredo na *E-pošta za obvestila* v nastavitvah trgovine (privzeto Sandijev naslov).
+- Obvestila: E1 kupcu in E2 prodajalcu ob novem naročilu, E3 ob „Pripravljeno za prevzem“, E4 ob „Poslano“ (s številko pošiljke, če jo vpišete pred shranjevanjem), E5 ob „Preklicano“ (z razlogom preklica, če ga vpišete; pri plačilu s kartico „Znesek vrnemo na kartico v nekaj delovnih dneh.“). „Zaključeno“ ne pošlje ničesar, prav tako preklic naročila, ki še čaka na plačilo s kartico.
+- Če pošiljanje ne uspe, se naročilo ali sprememba statusa vseeno shrani; napaka je v adminu pri naročilu (*Tehnični podatki → Napaka pri pošiljanju e-pošte*) in v logu. Kupca tedaj obvestite sami.
+- Besedila e-pošte so v `src/eposta/narocila.ts` (vikanje). Videz preverite na stagingu, ko je Resend nastavljen.
+- Preskočen preizkus: pošiljanje s pravim ključem (gl. tabelo preskočenih preizkusov).
 
 ### K10 Darila
 - Ni novih zunanjih ključev in ni preskočenih preizkusov. E2E test darila po pošti na naslov prejemnika (`e2e/darila.spec.ts`, Z55) plača z nadomestnim Stripom; s pravimi ključi se preskoči kot ostali testi z nadomestkom.

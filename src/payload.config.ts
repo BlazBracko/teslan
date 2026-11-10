@@ -5,7 +5,7 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { sl } from "@payloadcms/translations/languages/sl";
 import { buildConfig } from "payload";
 import sharp from "sharp";
-import { dnevnikEposte, razberiPosiljatelja } from "./eposta/dnevnik";
+import { adapterEposte } from "./eposta/adapter";
 import { preberiOkolje } from "./env";
 import { NastavitveTrgovine } from "./payload/globali/NastavitveTrgovine";
 import { Izdelki } from "./payload/kolekcije/Izdelki";
@@ -45,11 +45,9 @@ export default buildConfig({
   collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, DarilniProgrami, TipiSkatel, Mediji, Uporabniki],
   globals: [NastavitveTrgovine],
   editor: lexicalEditor(),
-  // Do K9 (Resend) se e-pošta izpiše v log strežnika (Z58).
-  email: dnevnikEposte({
-    posiljatelj: razberiPosiljatelja(env.EMAIL_FROM),
-    datoteka: env.EPOSTA_DNEVNIK,
-  }),
+  // Resend, če je `RESEND_API_KEY` nastavljen, sicer izpis v log (Z58);
+  // z `EMAIL_REDIRECT_TO` gre vsa pošta na en naslov (staging).
+  email: adapterEposte(env),
   db: postgresAdapter({
     pool: { connectionString: env.DATABASE_URL ?? "" },
     // Shema se spreminja samo z migracijami v `src/migrations` (tudi lokalno),

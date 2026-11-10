@@ -1,6 +1,6 @@
 import type { Payload } from "payload";
 import { okolje } from "@/env";
-import { obvestiloProdajalcu, potrdiloKupcu } from "@/eposta/narocila";
+import { posljiObvestilaONovemNarocilu } from "@/eposta/obvestila";
 import { OZNAKA_KATALOG } from "@/katalog/oznake";
 import { izdelekPogled, type IzdelekPogled } from "@/katalog/pogled";
 import { trenutniMesec } from "@/katalog/sezona";
@@ -9,7 +9,6 @@ import { dovoljenaPlacila, nastevanje } from "@/kosarica/dostava";
 import { jeSkatla, normalizirajKosarico } from "@/kosarica/postavke";
 import { imePostavke, postavkeZaZnesek, preveriKosarico, type PostavkaPregled } from "@/kosarica/preverjanje";
 import { programPogled, tipSkatlePogled } from "@/darila/pogled";
-import { kontaktIzNastavitev } from "@/lib/kontakt";
 import type { Narocila, NastavitveTrgovine } from "@/payload-types";
 import { razveljavi } from "@/payload/revalidacija";
 import {
@@ -26,7 +25,7 @@ import {
 } from "./baza";
 import { preveriBlagajno, type NapakeBlagajne } from "./obrazec";
 import type { PonudnikPlacil } from "./placila";
-import { narociloPogled, potNarocila } from "./pogled";
+import { potNarocila } from "./pogled";
 import { zacetniStatus } from "./statusi";
 import { letoVLjubljani, oblikujStevilko, predponaLeta, ustvariZeton } from "./stevilka";
 
@@ -412,70 +411,5 @@ async function zacniPlacilo(
       );
     }
     return null;
-  }
-}
-
-/**
- * E1 kupcu in E2 prodajalcu (Z43, Z57). Napaka pri pošiljanju se zapiše v
- * log in na naročilo (`napakaEposte`), naročilo ostane veljavno (Z59).
- */
-export async function posljiObvestilaONovemNarocilu(
-  payload: Payload,
-  narocilo: Narocila,
-  nastavitve: {
-    emailObvestil?: string | null;
-    navodilaZaPrevzem?: string | null;
-    prodajalec?: Parameters<typeof kontaktIzNastavitev>[0];
-  },
-): Promise<void> {
-  const izvor = (okolje().NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
-  const pogled = narociloPogled(narocilo);
-  const kontakt = kontaktIzNastavitev(nastavitve.prodajalec);
-  const napake: string[] = [];
-
-  const e1 = potrdiloKupcu(pogled, {
-    povezava: `${izvor}${potNarocila(narocilo.stevilka, narocilo.zeton)}`,
-    navodilaZaPrevzem: nastavitve.navodilaZaPrevzem ?? null,
-    kontakt,
-  });
-  try {
-    await payload.sendEmail({
-      to: narocilo.kupec.email,
-      replyTo: nastavitve.emailObvestil ?? undefined,
-      subject: e1.zadeva,
-      text: e1.besedilo,
-    });
-  } catch (napaka) {
-    napake.push(`Potrdilo kupcu: ${napaka instanceof Error ? napaka.message : String(napaka)}`);
-  }
-
-  if (nastavitve.emailObvestil) {
-    const e2 = obvestiloProdajalcu(pogled, { povezavaAdmin: `${izvor}/admin/collections/narocila/${narocilo.id}` });
-    try {
-      await payload.sendEmail({
-        to: nastavitve.emailObvestil,
-        replyTo: narocilo.kupec.email,
-        subject: e2.zadeva,
-        text: e2.besedilo,
-      });
-    } catch (napaka) {
-      napake.push(`Obvestilo prodajalcu: ${napaka instanceof Error ? napaka.message : String(napaka)}`);
-    }
-  } else {
-    napake.push("Obvestilo prodajalcu: v nastavitvah trgovine ni e-pošte za obvestila.");
-  }
-
-  if (napake.length > 0) {
-    payload.logger.error({ narocilo: narocilo.stevilka, napake }, "Pošiljanje e-pošte ob naročilu ni uspelo");
-    try {
-      await payload.update({
-        collection: "narocila",
-        id: narocilo.id,
-        data: { napakaEposte: napake.join("\n") },
-        context: { sistem: true },
-      });
-    } catch (napaka) {
-      payload.logger.error({ err: napaka, narocilo: narocilo.stevilka }, "Napake e-pošte ni bilo mogoče zapisati");
-    }
   }
 }

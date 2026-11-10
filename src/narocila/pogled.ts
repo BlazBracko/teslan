@@ -1,10 +1,11 @@
-import type { DDVPoStopnji, NacinDostave, NacinPlacila } from "@/kosarica/cene";
-import type { Narocila } from "@/payload-types";
+import type { DDVPoStopnji, NacinDostave, NacinPlacila } from "../kosarica/cene";
+import type { Narocila } from "../payload-types";
 import type { StatusNarocila } from "./statusi";
 
 /**
  * Ploska oblika naročila za stran potrdila in e-pošto (brez Payloadovih
- * tipov in brez žetona).
+ * tipov in brez žetona). Dosegljiva iz konfiguracije Payloada (obvestila ob
+ * spremembi statusa), zato uvaža relativno.
  */
 
 export interface KosVsebineNarocilaPogled {
@@ -43,6 +44,10 @@ export interface NarociloPogled {
   darilo: boolean;
   prejemnik: { ime: string } | null;
   opomba: string | null;
+  /** Neobvezno, vpiše prodajalec ob pošiljanju (E4). */
+  stevilkaPosiljke: string | null;
+  /** Neobvezno, vpiše prodajalec ob preklicu (E5). */
+  razlogPreklica: string | null;
   postavke: PostavkaNarocilaPogled[];
   vmesniSestevekCenti: number;
   postninaCenti: number;
@@ -78,6 +83,8 @@ export function narociloPogled(n: Narocila): NarociloPogled {
     darilo: Boolean(n.darilo) && naslov !== null,
     prejemnik: n.darilo && n.prejemnik?.ime ? { ime: n.prejemnik.ime } : null,
     opomba: n.opomba ?? null,
+    stevilkaPosiljke: n.stevilkaPosiljke?.trim() || null,
+    razlogPreklica: n.razlogPreklica?.trim() || null,
     postavke: n.postavke.map((p) => {
       const vsebina = p.tip === "skatla" ? (p.vsebina ?? []) : [];
       const cenaCenti = p.cenaCenti + vsebina.reduce((s, v) => s + v.cenaCenti * v.kolicina, 0);

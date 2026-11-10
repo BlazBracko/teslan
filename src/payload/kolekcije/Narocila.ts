@@ -6,9 +6,17 @@ import {
   type Field,
   type FieldAccess,
 } from "payload";
+import { obvestiloObSpremembiStatusa } from "../../eposta/obvestila";
 import { OZNAKA_KATALOG } from "../../katalog/oznake";
 import { formatirajCeno } from "../../lib/denar";
-import { oznaciZalogoVrnjeno, povecajZalogo, povecajZalogoSkatel, sejaBaze } from "../../narocila/baza";
+import {
+  kljucPrejsnjegaStatusa,
+  oznaciZalogoVrnjeno,
+  povecajZalogo,
+  povecajZalogoSkatel,
+  sejaBaze,
+  zakleniStatus,
+} from "../../narocila/baza";
 import { ponudnikPlacil } from "../../narocila/placila";
 import { OZNAKE_STATUSOV, razlogNedovoljenegaPrehoda, STATUSI, type StatusNarocila } from "../../narocila/statusi";
 import { urednikAliAdmin } from "../dostop";
@@ -77,8 +85,15 @@ export function zalogaZaVrnitev(postavke: readonly PostavkaZaZalogo[]) {
  */
 const prehodInPreklic: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
   if (operation !== "update" || !originalDoc) return data;
-  const od = originalDoc.status as StatusNarocila;
+  let od = originalDoc.status as StatusNarocila;
   const na = (data.status ?? od) as StatusNarocila;
+  if (od !== na) {
+    // Sočasno shranjevanje je status morda že spremenilo: prehod se preveri
+    // od zaklenjenega stanja v bazi (tudi za obvestilo kupcu, E3–E5).
+    const seja = await sejaBaze(req.payload, req);
+    od = ((await zakleniStatus(seja, originalDoc.id)) ?? od) as StatusNarocila;
+    req.context[kljucPrejsnjegaStatusa(originalDoc.id)] = od;
+  }
   const razlog = razlogNedovoljenegaPrehoda(od, na, originalDoc.nacinDostave);
   if (razlog) {
     throw new ValidationError({ collection: "narocila", errors: [{ path: "status", message: razlog }], req });
@@ -151,6 +166,8 @@ export const Narocila: CollectionConfig = {
         return doc;
       },
       iztekSejeObPreklicu,
+      // E3–E5 kupcu ob spremembi statusa (Z57); napaka ne ustavi shranjevanja (Z59).
+      obvestiloObSpremembiStatusa,
     ],
   },
   fields: [
@@ -178,7 +195,7 @@ export const Narocila: CollectionConfig = {
           admin: {
             width: "50%",
             description:
-              "Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči.",
+              "Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči. Ob „Pripravljeno za prevzem“, „Poslano“ in „Preklicano“ kupec dobi e-pošto.",
           },
         },
       ],
@@ -506,7 +523,7 @@ export const Narocila: CollectionConfig = {
       type: "text",
       label: "Razlog preklica",
       admin: {
-        description: "Neobvezno. Zapišite ga, ko naročilo prekličete.",
+        description: "Neobvezno. Kupec ga dobi v e-pošti o preklicu, zato ga vpišite pred shranjevanjem.",
         condition: (data) => data?.status === "preklicano",
       },
     },

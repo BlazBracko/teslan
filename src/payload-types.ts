@@ -146,7 +146,7 @@ export interface Narocila {
    */
   stevilka: string;
   /**
-   * Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči.
+   * Novo → Pripravljeno za prevzem (prevzem) ali Poslano (pošta) → Zaključeno. Preklic vrne zalogo. Drugi prehodi niso mogoči. Ob „Pripravljeno za prevzem“, „Poslano“ in „Preklicano“ kupec dobi e-pošto.
    */
   status: 'caka-placilo' | 'novo' | 'pripravljeno' | 'poslano' | 'zakljuceno' | 'preklicano';
   zeton: string;
@@ -273,7 +273,7 @@ export interface Narocila {
    */
   stevilkaPosiljke?: string | null;
   /**
-   * Neobvezno. Zapišite ga, ko naročilo prekličete.
+   * Neobvezno. Kupec ga dobi v e-pošti o preklicu, zato ga vpišite pred shranjevanjem.
    */
   razlogPreklica?: string | null;
   /**

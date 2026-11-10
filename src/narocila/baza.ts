@@ -135,6 +135,20 @@ export function zdruziSpremembe(spremembe: readonly SpremembaZaloge[]): Sprememb
 }
 
 /**
+ * Zaklene vrstico naročila (`FOR UPDATE`) do konca transakcije in vrne
+ * njen trenutni status. Sočasni spremembi statusa istega naročila tečeta
+ * tako po vrsti: druga vidi status, ki ga je zapisala prva (prehod se
+ * preveri znova, obvestilo kupcu gre le enkrat).
+ */
+export async function zakleniStatus(seja: Seja, narociloId: number): Promise<string | null> {
+  const { rows } = await seja.execute(sql`SELECT status FROM narocila WHERE id = ${narociloId} FOR UPDATE`);
+  return ((rows[0] as { status?: string } | undefined)?.status ?? null);
+}
+
+/** Ključ v `req.context` za status pred spremembo (po zaklepu), za vsako naročilo posebej. */
+export const kljucPrejsnjegaStatusa = (narociloId: number | string) => `prejsnjiStatus:${narociloId}`;
+
+/**
  * Atomarno označi, da je bila zaloga naročila vrnjena. Vrne `true` samo
  * prvemu klicatelju; vsi nadaljnji (ponovno shranjevanje, sočasen preklic)
  * dobijo `false` in zaloge ne vrnejo še enkrat (Z34, S7).

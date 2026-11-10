@@ -3,7 +3,7 @@ import type { Payload } from "payload";
 import type Stripe from "stripe";
 import type { Narocila } from "@/payload-types";
 import { sejaBaze } from "./baza";
-import { posljiObvestilaONovemNarocilu } from "./oddaja";
+import { posljiObvestilaONovemNarocilu } from "../eposta/obvestila";
 import type { PonudnikPlacil, StanjeSeje } from "./placila";
 import { potNarocila } from "./pogled";
 import { zetonaSeUjemata } from "./stevilka";

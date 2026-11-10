@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import { prebranaEposta } from "../eposta";
 
 /**
- * Stikalo trgovine (Z27, S15) in seznam naročil v adminu (T7). Teče v
+ * Stikalo trgovine (Z27, S15), seznam naročil v adminu (T7) in obvestilo
+ * kupcu ob spremembi statusa (Z57, K9). Teče v
  * projektu `zaprta-trgovina` šele po ostalih testih (zapre trgovino za vse)
  * in uporabi administratorja, ki ga ustvari `admin.spec.ts`, ter naročila
  * iz `blagajna.spec.ts`. Na koncu trgovino spet odpre.
@@ -96,4 +98,34 @@ test("T7: admin vidi seznam naročil s stolpci, najnovejše zgoraj; brisanja ni"
   const prvo = await page.request.get("/api/narocila?limit=1", { headers: izvor(page) });
   const id = (await prvo.json()).docs[0].id;
   expect((await page.request.delete(`/api/narocila/${id}`, { headers: izvor(page) })).status()).toBe(403);
+});
+
+test("Z57: sprememba statusa v „Pripravljeno za prevzem“ pošlje kupcu E3 (HTML in besedilo)", async ({ page }) => {
+  await prijava(page);
+  // Naročilo za prevzem iz blagajna.spec (S9), ki je še „Novo“.
+  const odziv = await page.request.get(
+    "/api/narocila?where[status][equals]=novo&where[nacinDostave][equals]=prevzem&limit=1&depth=0",
+    { headers: izvor(page) },
+  );
+  expect(odziv.ok()).toBe(true);
+  const [narocilo] = (await odziv.json()).docs as Array<{ id: number; stevilka: string }>;
+  expect(narocilo).toBeTruthy();
+
+  const sprememba = await page.request.patch(`/api/narocila/${narocilo.id}`, {
+    headers: izvor(page),
+    data: { status: "pripravljeno" },
+  });
+  expect(sprememba.ok()).toBe(true);
+
+  const e3 = prebranaEposta().filter((e) => e.zadeva.includes(`${narocilo.stevilka} je pripravljeno za prevzem`));
+  expect(e3).toHaveLength(1);
+  expect(e3[0].za).toBe("ana.novak@primer.si");
+  expect(e3[0].odgovorNa).toBe("sandi.dercar@gmail.com");
+  expect(e3[0].besedilo).toContain(`/narocilo/${narocilo.stevilka}?k=`);
+  expect(e3[0].besedilo).toContain("https://www.google.com/maps/dir/");
+  expect(e3[0].html).toContain('<html lang="sl">');
+
+  // Ponovno shranjevanje ne pošlje še enega obvestila.
+  await page.request.patch(`/api/narocila/${narocilo.id}`, { headers: izvor(page), data: { internaOpomba: "E2E" } });
+  expect(prebranaEposta().filter((e) => e.zadeva.includes(`${narocilo.stevilka} je pripravljeno`))).toHaveLength(1);
 });
