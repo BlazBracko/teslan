@@ -24,8 +24,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const env = okolje();
   return {
     metadataBase: izvorStrani(env),
-    title: { default: `${IME_KMETIJE} — Sveža ekološka hrana iz Dolenjske`, template: PREDLOGA_NASLOVA },
-    keywords: ["kmetija", "ekološko", "šparglji", "Dolenjska", "Novo mesto", "lokalna hrana"],
+    title: { default: `${IME_KMETIJE} — Spletna trgovina s kmetije na Dolenjskem`, template: PREDLOGA_NASLOVA },
+    keywords: ["kmetija", "spletna trgovina", "šparglji", "darilne škatle", "Dolenjska", "Novo mesto", "lokalna hrana"],
     ...metapodatkiStrani({ naslov: null, opis: OPIS, pot: null }),
     ...(env.NOINDEX === "1" ? { robots: { index: false, follow: false } } : {}),
   };
@@ -48,7 +48,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const kontakt = await naloziKontakt();
 
   return (
-    <html lang="sl" className={razrediPisav}>
+    // `data-scroll-behavior`: Next.js med menjavo strani izklopi gladek
+    // scroll, da nova stran začne na vrhu, ne pa sredi animacije.
+    <html lang="sl" className={razrediPisav} data-scroll-behavior="smooth">
       <body className="flex min-h-dvh flex-col">
         <a
           href="#vsebina"

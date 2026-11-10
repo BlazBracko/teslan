@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/S
 import { cn } from "@/lib/utils";
 import { IkonaKosarice } from "@/components/kosarica/IkonaKosarice";
 import { GLAVNA_NAVIGACIJA, jeAktivna, POT_KOSARICE } from "./navigacija";
+import { zabeleziPot } from "./zgodovina";
 
 /** Nad to višino glava ostane vidna ne glede na smer scrolla. */
 const VEDNO_VIDNA_DO = 96;
@@ -46,6 +47,9 @@ export function Glava({ telefon, telefonPovezava }: { telefon: string | null; te
     setOdprt(false);
     setSkrita(false);
   }
+
+  // Za gumb „Nazaj“ na podstrani izdelka.
+  useEffect(() => zabeleziPot(pot), [pot]);
 
   useEffect(() => {
     izhodisce.current = window.scrollY;

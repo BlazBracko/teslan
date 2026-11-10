@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { LuLeaf, LuMail, LuMapPin, LuNavigation, LuPhone, LuRecycle } from "react-icons/lu";
+import { LuHandHeart, LuMail, LuMapPin, LuNavigation, LuPhone, LuRecycle } from "react-icons/lu";
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -15,7 +15,7 @@ import { metapodatkiStrani } from "@/seo/metapodatki";
 
 export const metadata: Metadata = metapodatkiStrani({
   naslov: "O nas",
-  opis: "Domačija Tešlan v Podgori pri Novem mestu se že več kot 15 let ukvarja z ekološkim kmetovanjem.",
+  opis: "Domačija Tešlan v Podgori pri Novem mestu že več kot 15 let prideluje zelenjavo in sadje ter pripravlja domače izdelke.",
   pot: "/about",
 });
 
@@ -24,9 +24,9 @@ export const dynamic = "force-dynamic";
 
 const vrednote = [
   {
-    ikona: LuLeaf,
-    naslov: "Ekološko",
-    opis: "Pridelujemo brez uporabe pesticidov in umetnih gnojil. Skrbimo za zdravo zemljo in zdravo hrano.",
+    ikona: LuHandHeart,
+    naslov: "Ročno delo",
+    opis: "Pridelke negujemo in pobiramo ročno, izdelke pripravimo v domači kuhinji, v majhnih količinah.",
   },
   {
     ikona: LuMapPin,
@@ -36,7 +36,7 @@ const vrednote = [
   {
     ikona: LuRecycle,
     naslov: "Trajnostno",
-    opis: "Spoštujemo naravo in uporabljamo trajnostne metode pridelave. Za boljši jutri.",
+    opis: "Skrbimo za zemljo, ki nas hrani, in uporabljamo čim manj embalaže.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default async function AboutPage() {
       <PageHeader
         label="Naša zgodba"
         title="O nas"
-        description="Spoznajte Domačijo Tešlan in našo strast do ekološkega kmetovanja."
+        description="Spoznajte Domačijo Tešlan in našo strast do kmetovanja in domače hrane."
       />
 
       <Section>
@@ -97,7 +97,7 @@ export default async function AboutPage() {
             <h2 className="type-h2 text-ink">Domačija Tešlan</h2>
             <p className="type-body-lg text-ink-muted">
               Kmetija Tešlan se nahaja na čudovitem območju Dolenjske, v vasi Podgora pri Novem mestu. Že več
-              kot 15 let se ukvarjamo z ekološkim kmetovanjem in pridelavo kakovostne hrane.
+              kot 15 let se ukvarjamo s kmetovanjem in pridelavo kakovostne hrane.
             </p>
             <p className="type-body text-ink-muted">
               Naša kmetija ponuja širok spekter lokalno pridelanih proizvodov, od svežih špargljev in zelenjave do

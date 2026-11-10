@@ -16,7 +16,8 @@ test.describe("glava in noga (Z7, Z8)", () => {
     await page.goto("/products");
     const nav = page.getByRole("navigation", { name: "Glavna navigacija" });
     await expect(nav.getByRole("link", { name: "Domov" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Izdelki" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Trgovina" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Trgovina" })).toHaveAttribute("href", "/products?nakup=splet");
     await expect(nav.getByRole("link", { name: "O nas" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Domačija Tešlan, na domačo stran/ })).toBeVisible();
   });
@@ -40,14 +41,31 @@ test.describe("glava in noga (Z7, Z8)", () => {
     await page.getByRole("button", { name: "Odpri meni" }).click();
     const predal = page.getByRole("dialog", { name: "Meni" });
     await expect(predal).toBeVisible();
-    await predal.getByRole("link", { name: "Izdelki" }).click();
-    await expect(page).toHaveURL(/\/products$/);
+    await predal.getByRole("link", { name: "Trgovina" }).click();
+    await expect(page).toHaveURL(/\/products\?nakup=splet$/);
     await expect(predal).toBeHidden();
   });
 });
 
 test.describe("domača stran (Z16)", () => {
-  test("prikazuje skupine ponudbe s ceno in izpostavljene izdelke", async ({ page }) => {
+  test("prvi gumb vodi v spletno trgovino, pod uvodom je darilni program", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByText(/ekološk/i)).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Izpostavljeno" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "V spletno trgovino" })).toHaveAttribute("href", "/products?nakup=splet");
+
+    // Darilni program je prva sekcija za uvodom, s pripravljenimi darili in poslovnimi darili.
+    const darila = page.locator("section", { has: page.locator("#darila-naslov") });
+    await expect(page.locator("main > section").nth(1)).toHaveAttribute("aria-labelledby", "darila-naslov");
+    await expect(darila.getByRole("link", { name: "Okusi Dolenjske" })).toHaveAttribute(
+      "href",
+      "/darila/sestavi?program=okusi-dolenjske",
+    );
+    await expect(darila.getByRole("heading", { name: "Poslovna darila" })).toBeVisible();
+    await expect(darila.getByRole("link", { name: "Izberite darilo" })).toHaveAttribute("href", "/darila");
+  });
+
+  test("prikazuje skupine ponudbe s ceno", async ({ page }) => {
     await page.goto("/");
     for (const skupina of ["Sveže z njive", "Začimbe in posušeno", "Sladko", "Iz domače kuhinje"]) {
       await expect(page.getByRole("heading", { name: skupina })).toBeVisible();
@@ -56,9 +74,6 @@ test.describe("domača stran (Z16)", () => {
     const zacimbe = page.locator("li", { has: page.getByRole("heading", { name: "Začimbe in posušeno" }) });
     await expect(zacimbe.getByText(/od\s*5,00\s€/)).toBeVisible();
     await expect(zacimbe.getByRole("link", { name: "Začimbe" })).toHaveAttribute("href", "/products?kategorija=zacimbe");
-    // Izpostavljena sta šparglji in jagode (seed).
-    await expect(page.getByRole("link", { name: "Šparglji", exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Jagode", exact: true })).toBeVisible();
     await expect(page.getByText(/Na ceniku je \d+ izdelkov/)).toBeVisible();
   });
 });
@@ -92,6 +107,50 @@ test.describe("seznam izdelkov (Z14)", () => {
     await expect(kartica(page, "Česen v prahu")).toBeVisible();
   });
 
+  test("način nakupa loči spletno trgovino od izdelkov samo na kmetiji", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("link", { name: "V spletno trgovino" }).click();
+    await expect(page).toHaveURL(/\/products\?nakup=splet$/);
+    const nacin = page.getByRole("navigation", { name: "Način nakupa" });
+    await expect(nacin.getByRole("link", { name: /^Spletna trgovina/ })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("heading", { level: 1, name: "Naročite na spletu" })).toBeVisible();
+    await expect(kartica(page, "Česen v prahu").getByText("Pošljemo po pošti")).toBeVisible();
+    await expect(kartica(page, "Jajca kokošja").getByText("Samo prevzem na kmetiji")).toBeVisible();
+    await expect(kartica(page, "Jagode")).toHaveCount(0);
+
+    // Izbrana kategorija ostane, filter kategorij ohrani način nakupa.
+    const kategorije = page.getByRole("navigation", { name: "Kategorije izdelkov" });
+    await kategorije.getByRole("link", { name: /^Začimbe/ }).click();
+    await expect(page).toHaveURL(/\?nakup=splet&kategorija=zacimbe$/);
+
+    await nacin.getByRole("link", { name: /^Samo na kmetiji/ }).click();
+    // Začimb na kmetiji ni, zato kategorija pade.
+    await expect(page).toHaveURL(/\?nakup=kmetija$/);
+    await expect(kartica(page, "Jagode")).toBeVisible();
+    await expect(kartica(page, "Česen v prahu")).toHaveCount(0);
+
+    await nacin.getByRole("link", { name: /^Vsi izdelki/ }).click();
+    await expect(page).toHaveURL(/\/products$/);
+    await expect(kartica(page, "Jagode")).toBeVisible();
+    await expect(kartica(page, "Česen v prahu")).toBeVisible();
+  });
+
+  test("ob odprtju nove strani je pogled na vrhu", async ({ page }) => {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Glavna navigacija" });
+    for (const [zamik, povezava, pot] of [
+      [0, "Trgovina", /\/products/],
+      [40, "Darila", /\/darila$/],
+      [0, "O nas", /\/about$/],
+    ] as const) {
+      await page.evaluate((y) => window.scrollTo(0, y), zamik);
+      await nav.getByRole("link", { name: povezava }).click();
+      await expect(page).toHaveURL(pot);
+      await page.waitForLoadState("networkidle");
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    }
+  });
+
   test("kartica vodi na podstran izdelka", async ({ page }) => {
     await page.goto("/products");
     await page.getByRole("link", { name: "Česen v prahu", exact: true }).click();
@@ -119,6 +178,22 @@ test.describe("podstran izdelka (Z13, Z15)", () => {
     await expect(page.getByText(/Skupaj\s*24,00\s€/)).toBeVisible();
 
     await expect(page.getByRole("button", { name: "V košarico" })).toBeEnabled();
+  });
+
+  test("ima zgodbo izdelka in gumb nazaj na prejšnjo stran", async ({ page }) => {
+    await page.goto("/products?nakup=splet&kategorija=zacimbe");
+    await page.getByRole("link", { name: "Česen v prahu", exact: true }).click();
+    await expect(page).toHaveURL(/\/products\/cesen-v-prahu$/);
+    const zgodba = page.getByRole("region", { name: "Česen v prahu z Domačije Tešlan" });
+    await expect(zgodba).toContainText("v fin prah");
+
+    // Nazaj vrne na seznam z istim filtrom.
+    await page.getByRole("link", { name: "Nazaj", exact: true }).click();
+    await expect(page).toHaveURL(/\/products\?nakup=splet&kategorija=zacimbe$/);
+
+    // Brez zgodovine (neposreden obisk) vodi na seznam, kamor izdelek spada.
+    await page.goto("/products/jagode");
+    await expect(page.getByRole("link", { name: "Nazaj", exact: true })).toHaveAttribute("href", "/products?nakup=kmetija");
   });
 
   test("izdelek brez slike ima nadomestno ploskev", async ({ page }) => {

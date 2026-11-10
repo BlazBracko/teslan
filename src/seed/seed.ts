@@ -16,6 +16,8 @@ import {
 import type { Mesec } from "../katalog/sezona";
 import { PRIVZETE_NASTAVITVE } from "../payload/globali/NastavitveTrgovine";
 import type { Izdelki } from "../payload-types";
+import { lexicalIzOdstavkov } from "./lexical";
+import { ZGODBE } from "./zgodbe";
 
 export type NacinSeeda =
   /** `npm run seed`: doda vse, kar manjka (po slugu), obstoječega ne spreminja. */
@@ -262,6 +264,7 @@ async function seedIzdelki(
         vrstniRed: (i + 1) * 10,
         kategorija: obvezno(kategorije.get(izdelek.kategorija), izdelek.kategorija),
         kratekOpis: izdelek.kratekOpis,
+        ...(ZGODBE[izdelek.slug] ? { opis: lexicalIzOdstavkov(ZGODBE[izdelek.slug]) } : {}),
         slike: await Promise.all((izdelek.slike ?? []).map(slike)),
         nacinProdaje: izdelek.nacin,
         sezona: izdelek.sezona ? { od: mesecPolja(izdelek.sezona.od), do: mesecPolja(izdelek.sezona.do) } : undefined,

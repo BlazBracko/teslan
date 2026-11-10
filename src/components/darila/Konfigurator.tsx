@@ -160,6 +160,87 @@ function Korak({ stevilka, naslov, children, id }: { stevilka: number; naslov: s
   );
 }
 
+/**
+ * Izdelek v konfiguratorju kot velika ploščica: klik kamorkoli doda en kos
+ * (prej majhen gumb „Dodaj“). Število v škatli je v kotu; nedosegljive
+ * velikosti so vidne, a onemogočene, z razlogom.
+ */
+function PloscicaIzdelka({
+  izdelek: i,
+  velikost: v,
+  vSkatli,
+  mogoce,
+  onDodaj,
+}: {
+  izdelek: IzdelekZaSkatlo;
+  velikost: IzdelekZaSkatlo["velikosti"][number];
+  vSkatli: number;
+  mogoce: boolean;
+  onDodaj: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={!mogoce}
+      onClick={onDodaj}
+      aria-label={[
+        `Dodaj v škatlo: ${i.ime}, ${v.oznaka}`,
+        v.cenaCenti != null && v.narocljiva && formatirajCeno(v.cenaCenti),
+        !v.narocljiva && v.oznakaRazpolozljivosti,
+        vSkatli > 0 && `V škatli: ${vSkatli}`,
+      ]
+        .filter(Boolean)
+        .join(" · ")}
+      className={cn(
+        "group relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-surface text-left shadow-raised ring-1 ring-line",
+        "transition-[transform,box-shadow] duration-(--duration-fast) ease-(--ease-out-soft)",
+        "hover:shadow-floating active:scale-[0.97] motion-reduce:active:scale-100",
+        "disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100",
+        vSkatli > 0 && "ring-2 ring-brand",
+      )}
+    >
+      {/* Slika je okras; ime gumba vsebuje vse vidno besedilo v istem vrstnem redu (axe). */}
+      <span aria-hidden="true" className="relative block">
+        <SlikaIzdelka
+          slika={i.slika}
+          sizes="(min-width: 1280px) 10rem, (min-width: 640px) 30vw, 45vw"
+          className={cn("aspect-[4/3] w-full", !v.narocljiva && "opacity-50")}
+        />
+        {v.narocljiva && (
+          <span
+            className={cn(
+              "absolute right-2 bottom-2 grid size-9 place-items-center rounded-full shadow-floating",
+              "transition-transform duration-(--duration-fast) group-hover:scale-110 group-disabled:scale-100",
+              mogoce ? "bg-brand text-on-brand" : "bg-surface-muted text-ink-subtle",
+            )}
+          >
+            <LuPlus className="size-5" />
+          </span>
+        )}
+      </span>
+      <span className="flex flex-1 flex-col gap-0.5 p-3">
+        <span className="type-small font-medium text-ink">{i.ime}</span>
+        {/* Presledek med vrsticami, da se vidno besedilo ujema z imenom gumba (axe). */}{" "}
+        <span className="type-caption text-ink-muted">
+          {v.oznaka}
+          {v.cenaCenti != null && v.narocljiva && <> · {formatirajCeno(v.cenaCenti)}</>}
+        </span>
+        {!v.narocljiva && " "}
+        {!v.narocljiva && (
+          <span className="type-caption font-medium text-ink-subtle">
+            {v.oznakaRazpolozljivosti}
+          </span>
+        )}
+      </span>
+      {vSkatli > 0 && (
+        <span className="absolute top-2 left-2 rounded-full bg-brand px-2.5 py-1 type-caption font-semibold text-on-brand shadow-raised">
+          {" "}V škatli: {vSkatli}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function Konfigurator({
   tipi,
   izdelki,
@@ -185,6 +266,16 @@ export function Konfigurator({
   const prevec = tip !== null && zasedeno > steviloMest;
   const cena = tip ? cenaSkatle(tip.cenaCenti, prikaz) : null;
   const lahkoVKosarico = trgovinaOdprta && tip !== null && tip.zaloga > 0 && vsebina.length > 0 && !prevec;
+
+  // Ena sličica na zasedeno mesto, v vrstnem redu vsebine.
+  const kosiVSkatli = useMemo(
+    () =>
+      vsebina.flatMap((k) => {
+        const slika = izdelki.find((i) => i.id === k.izdelekId)?.slika ?? null;
+        return Array.from({ length: k.kolicina }, () => ({ slika }));
+      }),
+    [vsebina, izdelki],
+  );
 
   const kategorije = useMemo(() => {
     const poKategoriji = new Map<string, IzdelekZaSkatlo[]>();
@@ -257,20 +348,29 @@ export function Konfigurator({
               {tip ? `Zasedena mesta: ${zasedeno} od ${steviloMest}` : "Najprej izberite škatlo."}
             </p>
             {tip && (
-              <ol aria-hidden="true" className="flex flex-wrap gap-2">
-                {Array.from({ length: Math.max(steviloMest, zasedeno) }, (_, i) => (
-                  <li
-                    key={i}
-                    className={cn(
-                      "size-6 rounded-md",
-                      i < zasedeno
-                        ? i < steviloMest
-                          ? "bg-brand"
-                          : "bg-danger"
-                        : "border-2 border-dashed border-line-strong bg-surface",
-                    )}
-                  />
-                ))}
+              <ol aria-hidden="true" className="flex flex-wrap gap-2 rounded-xl bg-surface-muted p-3">
+                {Array.from({ length: Math.max(steviloMest, zasedeno) }, (_, i) => {
+                  const kos = kosiVSkatli[i];
+                  return (
+                    <li
+                      key={i}
+                      className={cn(
+                        "relative grid size-14 place-items-center overflow-hidden rounded-lg",
+                        kos
+                          ? i < steviloMest
+                            ? "bg-surface ring-2 ring-brand"
+                            : "bg-surface ring-2 ring-danger"
+                          : "border-2 border-dashed border-line-strong bg-surface text-ink-subtle",
+                      )}
+                    >
+                      {kos ? (
+                        <SlikaIzdelka slika={kos.slika} sizes="56px" className="size-full" />
+                      ) : (
+                        <LuPlus className="size-4" />
+                      )}
+                    </li>
+                  );
+                })}
               </ol>
             )}
             {prevec && (
@@ -321,49 +421,32 @@ export function Konfigurator({
           )}
 
           <div className="flex flex-col gap-6">
-            <h3 className="type-title text-ink">Izdelki za darilo</h3>
+            <div className="flex flex-col gap-1">
+              <h3 className="type-title text-ink">Izdelki za darilo</h3>
+              <p className="type-small text-ink-muted">Kliknite izdelek, da ga dodate v škatlo. Vsak klik doda en kos.</p>
+            </div>
             {tip && prosto === 0 && !prevec && (
               <p className="type-small text-ink-muted">Škatla je polna. Za drug izdelek najprej enega odstranite.</p>
             )}
             {kategorije.map(([kategorija, izdelkiKategorije]) => (
-              <div key={kategorija} className="flex flex-col gap-2">
-                <p className="type-caption text-ink-subtle">{kategorija}</p>
-                <ul className="flex flex-col gap-2">
+              <div key={kategorija} className="flex flex-col gap-3">
+                <p className="type-caption font-medium text-ink-subtle">{kategorija}</p>
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                   {izdelkiKategorije.flatMap((i) =>
                     i.velikosti.map((v) => {
-                      const opis = `${i.ime}, ${v.oznaka}`;
                       const vSkatli = vsebina.find((x) => x.izdelekId === i.id && x.velikostId === v.id)?.kolicina ?? 0;
                       const mogoce = v.narocljiva && tip !== null && prosto > 0 && vSkatli < v.zaloga;
                       return (
-                        <li
-                          key={`${i.id}:${v.id}`}
-                          className="flex items-center gap-3 rounded-lg bg-surface p-2 pr-3 ring-1 ring-line"
-                        >
-                          <SlikaIzdelka
-                            slika={i.slika}
-                            sizes="48px"
-                            className={cn("size-12 shrink-0 rounded-md", !v.narocljiva && "opacity-60")}
-                          />
-                          <span className="min-w-0 flex-1 type-small">
-                            <span className="block font-medium text-ink">{i.ime}</span>
-                            <span className="text-ink-muted">
-                              {v.oznaka}
-                              {v.cenaCenti != null && v.narocljiva && <> · {formatirajCeno(v.cenaCenti)}</>}
-                              {!v.narocljiva && <> · {v.oznakaRazpolozljivosti}</>}
-                            </span>
-                          </span>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={!mogoce}
-                            onClick={() =>
+                        <li key={`${i.id}:${v.id}`} className="min-w-0">
+                          <PloscicaIzdelka
+                            izdelek={i}
+                            velikost={v}
+                            vSkatli={vSkatli}
+                            mogoce={mogoce}
+                            onDodaj={() =>
                               setVsebina((s) => dodajKos(s, { izdelekId: i.id, velikostId: v.id }, steviloMest, v.zaloga))
                             }
-                            aria-label={`Dodaj v škatlo: ${opis}`}
-                          >
-                            <LuPlus aria-hidden="true" />
-                            Dodaj
-                          </Button>
+                          />
                         </li>
                       );
                     }),

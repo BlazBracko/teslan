@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { LuArrowRight, LuGift, LuLeaf, LuMapPin, LuSprout } from "react-icons/lu";
+import { LuArrowRight, LuGift, LuHandHeart, LuMapPin, LuShoppingBag, LuSprout } from "react-icons/lu";
+import { DarilniProgram } from "@/components/domov/DarilniProgram";
 import { Obisk } from "@/components/domov/Obisk";
 import { SkupinePonudbe, type SkupinaZaPrikaz } from "@/components/domov/SkupinePonudbe";
-import { KarticaIzdelka } from "@/components/katalog/KarticaIzdelka";
 import { Button } from "@/components/ui/Button";
 import { Container, Section } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { POT_DARIL } from "@/components/postavitev/navigacija";
 import { naloziDarila } from "@/darila/podatki";
+import { prazniskiCas, programiZaPrikaz } from "@/darila/predstavitev";
+import { POT_TRGOVINE } from "@/katalog/nakup";
 import { naloziKatalog, naloziKontakt } from "@/katalog/podatki";
 import { najnizjaNarocljivaCena } from "@/katalog/razpolozljivost";
 import { trenutniMesec } from "@/katalog/sezona";
@@ -21,7 +23,7 @@ import { metapodatkiStrani } from "@/seo/metapodatki";
 
 export const metadata: Metadata = metapodatkiStrani({
   naslov: null,
-  opis: "Domačija Tešlan iz Podgore pri Novem mestu: ekološko pridelani šparglji, jagode, začimbe, liofilizirano sadje in domači izdelki. Naročite za prevzem na kmetiji ali po pošti.",
+  opis: "Spletna trgovina Domačije Tešlan iz Podgore pri Novem mestu: šparglji, jagode, začimbe, liofilizirano sadje, darilne škatle in domači izdelki. Pošljemo po pošti ali pripravimo za prevzem na kmetiji.",
   pot: "/",
 });
 
@@ -40,21 +42,23 @@ const vrednote = [
     opis: "Pobrano zjutraj, pri vas popoldne. Naši izdelki ne potujejo po skladiščih in trgovinah.",
   },
   {
-    ikona: LuLeaf,
-    naslov: "Trajnostno",
-    opis: "Skrbimo za okolje z ekološkimi metodami pridelave in čim manj embalaže.",
+    ikona: LuHandHeart,
+    naslov: "Ročno delo",
+    opis: "Pridelke negujemo in pobiramo ročno, izdelke pripravimo v majhnih količinah in z uporabo čim manj embalaže.",
   },
 ];
 
 /**
- * Domača stran (Z16, T1): znamka, izpostavljeni izdelki, skupine ponudbe
- * iz CMS z najnižjo naročljivo ceno, darila (K10), vrednote in obisk kmetije.
+ * Domača stran (Z16, T1): uvod s potjo v spletno trgovino, takoj pod njim
+ * darilni program (v novembru in decembru prazničen), skupine ponudbe iz
+ * CMS z najnižjo naročljivo ceno, vrednote in obisk kmetije.
  */
 export default async function HomePage() {
   const [katalog, kontakt, darila] = await Promise.all([naloziKatalog(), naloziKontakt(), naloziDarila()]);
   const mesec = trenutniMesec();
-
-  const izpostavljeni = katalog.izdelki.filter((i) => i.izpostavljen);
+  const danes = new Date();
+  const programi = programiZaPrikaz(darila, katalog.izdelki, mesec);
+  const narocljivih = katalog.izdelki.filter((i) => i.nacinProdaje !== "samo-prikaz").length;
   const skupine: SkupinaZaPrikaz[] = katalog.skupine.map((skupina) => {
     const izdelki = katalog.izdelki.filter((i) => skupina.kategorije.includes(i.kategorija.id));
     const cene = izdelki.map((i) => najnizjaNarocljivaCena(i, mesec)).filter((c): c is number => c !== null);
@@ -80,24 +84,28 @@ export default async function HomePage() {
               Iz naše zemlje <span className="text-brand italic">na vašo mizo</span>
             </h1>
             <p className="max-w-xl type-body-lg text-ink-muted">
-              Ekološko pridelana zelenjava in sadje ter domači izdelki iz naše kuhinje, neposredno s kmetije
-              pri Novem mestu.
+              Zelenjava, sadje in domači izdelki iz naše kuhinje, neposredno s kmetije pri Novem mestu. Naročite v
+              spletni trgovini: pošljemo po pošti ali pripravimo za prevzem na kmetiji.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link href="/products">
-                  Oglejte si ponudbo
+                <Link href={POT_TRGOVINE}>
+                  <LuShoppingBag aria-hidden="true" />
+                  V spletno trgovino
                   <LuArrowRight aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="secondary">
-                <Link href="/#obisk">Obiščite nas</Link>
+                <Link href={POT_DARIL}>
+                  <LuGift aria-hidden="true" />
+                  Darila
+                </Link>
               </Button>
             </div>
             <dl className="mt-4 grid grid-cols-3 gap-6 border-t border-line pt-6 sm:gap-10">
               {[
                 ["15+", "let izkušenj"],
-                ["100 %", "ekološko"],
+                [String(narocljivih), "izdelkov za naročilo na spletu"],
                 ["4 km", "od Novega mesta"],
               ].map(([vrednost, oznaka]) => (
                 <div key={oznaka} className="flex flex-col-reverse gap-1">
@@ -121,23 +129,13 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {izpostavljeni.length > 0 && (
-        <Section>
-          <Container className="flex flex-col gap-10">
-            <SectionHeading
-              label="Izpostavljeno"
-              title="Ponos naše njive"
-              description="Pridelki, po katerih nas poznate. Ko je sezona, jih naberemo vsako jutro."
-            />
-            <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {izpostavljeni.map((izdelek) => (
-                <li key={izdelek.id}>
-                  <KarticaIzdelka izdelek={izdelek} mesec={mesec} naslov="h3" />
-                </li>
-              ))}
-            </ul>
-          </Container>
-        </Section>
+      {(programi.length > 0 || darila.tipi.length > 0) && (
+        <DarilniProgram
+          programi={programi}
+          kontakt={kontakt}
+          praznicno={prazniskiCas(danes)}
+          leto={danes.getFullYear()}
+        />
       )}
 
       <Section tone="surface" className="border-y border-line">
@@ -145,34 +143,6 @@ export default async function HomePage() {
           <SkupinePonudbe skupine={skupine} steviloIzdelkov={katalog.izdelki.length} />
         </Container>
       </Section>
-
-      {(darila.programi.length > 0 || darila.tipi.length > 0) && (
-        <Section>
-          <Container>
-            <div className="flex flex-col items-start gap-6 rounded-2xl bg-brand-soft p-8 md:flex-row md:items-center md:justify-between md:p-10">
-              <div className="flex max-w-2xl gap-5">
-                <span className="hidden size-14 shrink-0 place-items-center rounded-full bg-surface text-brand sm:grid">
-                  <LuGift aria-hidden="true" className="size-7" />
-                </span>
-                <div className="flex flex-col gap-2">
-                  <p className="type-label text-accent">Darila</p>
-                  <h2 className="type-h2 text-ink">Podarite domače</h2>
-                  <p className="type-body text-ink-muted">
-                    Darilne škatle z našimi izdelki in sporočilom na kartici. Izberite pripravljeno darilo ali sestavite
-                    svoje; pošljemo ga tudi neposredno obdarovancu.
-                  </p>
-                </div>
-              </div>
-              <Button asChild size="lg">
-                <Link href={POT_DARIL}>
-                  Na darila
-                  <LuArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-          </Container>
-        </Section>
-      )}
 
       <Section>
         <Container className="flex flex-col gap-10">
