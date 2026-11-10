@@ -10,7 +10,7 @@ import { NACINI_PRODAJE, OZNAKE_NACINOV, type NacinProdaje } from "../../katalog
 import { MESECI } from "../../katalog/sezona";
 import { STOPNJE_DDV } from "../../katalog/ddv";
 import { jeUrednikAliAdmin, urednikAliAdmin } from "../dostop";
-import { slugPolje, vrstniRedPolje } from "../polja";
+import { slugPolje, vrstniRedPolje, ZNESEK_V_EVRIH } from "../polja";
 import { hookiRevalidacije } from "../revalidacija";
 
 /** Javnost vidi le objavljene izdelke (Z14); urednik in admin vse. */
@@ -246,6 +246,7 @@ export const Izdelki: CollectionConfig = {
               type: "number",
               label: "Cena (v centih)",
               admin: {
+                components: { afterInput: ZNESEK_V_EVRIH },
                 width: "30%",
                 step: 1,
                 description: "Cena z DDV v centih: 550 pomeni 5,50 €. Pri „Samo prikaz“ neobvezno.",

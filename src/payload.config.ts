@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { sl } from "@payloadcms/translations/languages/sl";
-import { buildConfig } from "payload";
+import { buildConfig, type CollectionConfig, type GlobalConfig } from "payload";
 import sharp from "sharp";
 import { adapterEposte } from "./eposta/adapter";
 import { preberiOkolje } from "./env";
@@ -20,6 +20,14 @@ import { shrambaSlik } from "./payload/shramba";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Zavihek „API“ (surovi JSON dokumenta) je za razvijalce; lastnika bi le
+ * zmedel. REST API ostane, kot je.
+ */
+function brezZavihkaAPI<T extends CollectionConfig | GlobalConfig>(config: T): T {
+  return { ...config, admin: { ...config.admin, hideAPIURL: true } };
+}
+
 // Tu se preveri samo oblika spremenljivk. Obvezne v produkciji preveri
 // `instrumentation.ts` ob zagonu strežnika, da gradnja (`next build`)
 // ne potrebuje skrivnosti.
@@ -34,16 +42,43 @@ export default buildConfig({
     meta: {
       titleSuffix: " — Domačija Tešlan",
       robots: "noindex, nofollow",
+      icons: [{ rel: "icon", type: "image/png", url: "/logo.png" }],
+      // Admin ni za deljenje; brez Payloadove slike in končne točke /api/og.
+      defaultOGImageType: "off",
     },
     dateFormat: "d. M. yyyy HH:mm",
+    // Prijazen admin za lastnika (gl. `src/payload/admin/`): vedno svetla
+    // tema v barvah kmetije (`app/(payload)/custom.css`), brez Gravatarja
+    // (ne pošilja e-pošte tretjim), lastna nadzorna plošča in pomoč.
+    theme: "light",
+    avatar: "default",
+    components: {
+      graphics: {
+        Logo: "/payload/admin/Logotip#Logotip",
+        Icon: "/payload/admin/Ikona#Ikona",
+      },
+      beforeNavLinks: ["/payload/admin/PovezaveVNavigaciji#PovezaveNaVrhu"],
+      afterNavLinks: ["/payload/admin/PovezaveVNavigaciji#PovezaveNaDnu"],
+      views: {
+        dashboard: { Component: "/payload/admin/NadzornaPlosca#NadzornaPlosca" },
+        pomoc: {
+          Component: "/payload/admin/Pomoc#Pomoc",
+          path: "/pomoc",
+          exact: true,
+          meta: { title: "Pomoč" },
+        },
+      },
+    },
   },
   // Admin v slovenščini (Z81).
   i18n: {
     supportedLanguages: { sl },
     fallbackLanguage: "sl",
   },
-  collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, DarilniProgrami, TipiSkatel, Mediji, Uporabniki],
-  globals: [NastavitveTrgovine],
+  collections: [Narocila, Izdelki, Kategorije, SkupinePonudbe, DarilniProgrami, TipiSkatel, Mediji, Uporabniki].map(
+    brezZavihkaAPI,
+  ),
+  globals: [NastavitveTrgovine].map(brezZavihkaAPI),
   editor: lexicalEditor(),
   // Resend, če je `RESEND_API_KEY` nastavljen, sicer izpis v log (Z58);
   // z `EMAIL_REDIRECT_TO` gre vsa pošta na en naslov (staging).

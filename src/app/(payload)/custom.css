@@ -1,0 +1,714 @@
+/* ═════════════════════════════════════════════════════════════
+   Admin v barvah Domačije Tešlan
+
+   Payload ima svoj slog v plasti `payload-default`; ta datoteka je
+   zunaj plasti, zato njena pravila veljajo pred privzetimi. Barve so
+   iz identitete javne strani (`src/app/(frontend)/globals.css`):
+   topel lan namesto sive in zelena njiv namesto modre. Admin je
+   vedno svetel (`admin.theme: "light"` v `payload.config.ts`).
+   ═════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: "Teslan Inter";
+  src: url("../(frontend)/pisave/inter.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Teslan Fraunces";
+  src: url("../(frontend)/pisave/fraunces.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  /* Sivine Payloada → topla lestvica od lanu (0) do črnila (800+). */
+  --color-base-0: rgb(255 253 248);
+  --color-base-50: rgb(246 243 236);
+  --color-base-100: rgb(237 232 221);
+  --color-base-150: rgb(226 218 203);
+  --color-base-200: rgb(213 205 190);
+  --color-base-250: rgb(201 193 177);
+  --color-base-300: rgb(188 180 164);
+  --color-base-350: rgb(176 167 151);
+  --color-base-400: rgb(163 154 138);
+  --color-base-450: rgb(151 142 125);
+  --color-base-500: rgb(138 129 112);
+  --color-base-550: rgb(118 115 100);
+  --color-base-600: rgb(99 100 89);
+  --color-base-650: rgb(79 86 77);
+  --color-base-700: rgb(62 68 61);
+  --color-base-750: rgb(46 51 44);
+  --color-base-800: rgb(29 33 28);
+  --color-base-850: rgb(25 28 24);
+  --color-base-900: rgb(21 24 20);
+  --color-base-950: rgb(16 19 15);
+  --color-base-1000: rgb(12 14 11);
+
+  /* „Uspeh“ (obvestila, izbrano besedilo, oznake) → zelena znamke. */
+  --color-success-50: rgb(235 241 232);
+  --color-success-100: rgb(226 234 221);
+  --color-success-150: rgb(211 223 205);
+  --color-success-200: rgb(196 211 189);
+  --color-success-250: rgb(181 200 173);
+  --color-success-300: rgb(154 175 149);
+  --color-success-350: rgb(127 151 125);
+  --color-success-400: rgb(101 126 101);
+  --color-success-450: rgb(74 102 77);
+  --color-success-500: rgb(47 77 53);
+  --color-success-550: rgb(44 72 50);
+  --color-success-600: rgb(41 68 47);
+  --color-success-650: rgb(37 63 43);
+  --color-success-700: rgb(34 58 40);
+  --color-success-750: rgb(31 52 36);
+  --color-success-800: rgb(27 46 32);
+  --color-success-850: rgb(24 41 28);
+  --color-success-900: rgb(20 35 23);
+  --color-success-950: rgb(17 29 19);
+
+  /* Lastni žetoni admina (komponente v `src/payload/admin/`). */
+  --teslan-zelena: rgb(47 77 53);
+  --teslan-zelena-mocna: rgb(34 58 40);
+  --teslan-zelena-mehka: rgb(226 234 221);
+  --teslan-na-zeleni: rgb(251 249 243);
+  --teslan-glina: rgb(163 68 40);
+  --teslan-glina-mehka: rgb(247 228 218);
+  --teslan-opozorilo: rgb(126 79 0);
+  --teslan-opozorilo-mehko: rgb(251 238 210);
+  --teslan-info: rgb(42 87 133);
+  --teslan-info-mehko: rgb(225 235 245);
+  --teslan-ploskev: rgb(255 253 248);
+  --teslan-podlaga: rgb(246 243 236);
+  --teslan-crta: rgb(226 218 203);
+  --teslan-crnilo: rgb(29 33 28);
+  --teslan-crnilo-blago: rgb(79 86 77);
+
+  --font-body: "Teslan Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --teslan-pisava-naslovov: "Teslan Fraunces", ui-serif, Georgia, serif;
+
+  --style-radius-s: 6px;
+  --style-radius-m: 10px;
+  --style-radius-l: 14px;
+
+  /* Moder obroč fokusa kot na javni strani: viden na vseh ploskvah. */
+  --accessibility-outline: 2px solid rgb(45 99 200);
+}
+
+/* Malo večja pisava: admin bo urejal netehničen uporabnik. */
+html {
+  font-size: 14px;
+}
+
+body {
+  background: var(--teslan-podlaga);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--teslan-pisava-naslovov);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Gumbi: glavni ukrepi (Shrani, Ustvari, Prijava) so zeleni ─── */
+.btn--style-primary {
+  --color: var(--teslan-na-zeleni);
+  --bg-color: var(--teslan-zelena);
+  --hover-bg: var(--teslan-zelena-mocna);
+  --hover-color: var(--teslan-na-zeleni);
+  font-weight: 600;
+}
+
+.btn--style-primary.btn--disabled {
+  --bg-color: var(--color-base-150);
+  --color: var(--color-base-650);
+  --hover-bg: var(--bg-color);
+  --hover-color: var(--color);
+}
+
+/* ── Opisi polj morajo biti berljivi (privzeto so presvetli) ─── */
+.field-description {
+  color: var(--color-base-650);
+  line-height: 1.5;
+}
+
+/* ── Navigacija ─────────────────────────────────────────────── */
+.nav {
+  background: var(--teslan-ploskev);
+  border-right: 1px solid var(--teslan-crta);
+}
+
+.nav__link {
+  border-radius: var(--style-radius-s);
+}
+
+.nav__link:hover {
+  background: var(--teslan-zelena-mehka);
+}
+
+.nav__link-indicator {
+  background: var(--teslan-zelena);
+}
+
+.nav-group__toggle {
+  font-weight: 600;
+  color: var(--teslan-crnilo-blago);
+}
+
+/* ── Vnosna polja in kartice ──────────────────────────────────── */
+.template-default {
+  background: var(--teslan-podlaga);
+}
+
+.collection-edit__main,
+.document-fields__main {
+  background: var(--teslan-ploskev);
+}
+
+.card {
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  box-shadow: none;
+}
+
+/* ── Prijava: kremna podlaga, obrazec na kartici ─────────────── */
+.template-minimal {
+  background: var(--teslan-podlaga);
+}
+
+.template-minimal__wrap {
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  border-radius: var(--style-radius-l);
+  padding: calc(var(--base) * 1.6);
+  box-shadow: 0 10px 30px -18px rgb(29 33 28 / 0.35);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Lastne komponente admina (`src/payload/admin/`)
+   ═════════════════════════════════════════════════════════════ */
+
+.teslan-skrito {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── Logotip na prijavi in ikona v glavi ─────────────────────── */
+.teslan-logotip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.teslan-logotip p {
+  margin: 0;
+}
+
+.teslan-logotip__ime {
+  font-family: var(--teslan-pisava-naslovov);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--teslan-zelena);
+  line-height: 1.15;
+}
+
+.teslan-logotip__podnaslov {
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-ikona {
+  display: block;
+  border-radius: 50%;
+}
+
+/* ── Dodatne povezave v meniju ───────────────────────────────── */
+.teslan-nav-skupina {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: calc(var(--base) * 0.5);
+}
+
+.teslan-nav-skupina--dno {
+  margin-top: calc(var(--base) * 0.5);
+  padding-top: calc(var(--base) * 0.5);
+  border-top: 1px solid var(--teslan-crta);
+}
+
+.teslan-nav-povezava {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.teslan-nav-povezava svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--teslan-zelena);
+}
+
+/* ── Nadzorna plošča ─────────────────────────────────────────── */
+.teslan-plosca {
+  padding-top: calc(var(--base) * 1);
+  padding-bottom: calc(var(--base) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base) * 1.2);
+}
+
+.teslan-plosca a {
+  text-decoration: none;
+}
+
+.teslan-plosca__glava {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--base);
+}
+
+.teslan-plosca__pozdrav {
+  margin: 0;
+  font-size: 32px;
+}
+
+.teslan-plosca__uvod {
+  margin: 6px 0 0;
+  color: var(--teslan-crnilo-blago);
+  font-size: 15px;
+}
+
+.teslan-plosca__naslov,
+.teslan-kartica h2,
+.teslan-kartica h3 {
+  margin: 0;
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teslan-plosca__del {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--base) * 0.6);
+}
+
+.teslan-plosca__stolpca {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: calc(var(--base) * 0.8);
+  align-items: start;
+}
+
+.teslan-plosca__noga {
+  margin: 0;
+  color: var(--teslan-crnilo-blago);
+}
+
+/* Stanje trgovine */
+.teslan-stanje {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--style-radius-m);
+  border: 1px solid;
+}
+
+.teslan-stanje > svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.teslan-stanje div {
+  display: flex;
+  flex-direction: column;
+}
+
+.teslan-stanje span {
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-stanje--odprta {
+  background: var(--teslan-zelena-mehka);
+  border-color: var(--color-success-250);
+  color: var(--teslan-zelena);
+}
+
+.teslan-stanje--zaprta {
+  background: var(--teslan-opozorilo-mehko);
+  border-color: rgb(231 205 150);
+  color: var(--teslan-opozorilo);
+}
+
+.teslan-stanje__povezava {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: var(--style-radius-s);
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  color: var(--teslan-crnilo);
+  font-weight: 600;
+}
+
+.teslan-stanje__povezava:hover {
+  border-color: var(--color-base-500);
+}
+
+/* Števci naročil */
+.teslan-stevci {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: calc(var(--base) * 0.6);
+}
+
+.teslan-stevec {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  border-radius: var(--style-radius-m);
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  color: var(--teslan-crnilo);
+  transition: border-color 120ms, box-shadow 120ms;
+}
+
+.teslan-stevec:hover {
+  border-color: var(--color-base-500);
+  box-shadow: 0 6px 18px -14px rgb(29 33 28 / 0.5);
+}
+
+.teslan-stevec__stevilo {
+  font-family: var(--teslan-pisava-naslovov);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.teslan-stevec__oznaka {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.teslan-stevec__namig {
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-stevec--poudarek {
+  background: var(--teslan-zelena);
+  border-color: var(--teslan-zelena);
+  color: var(--teslan-na-zeleni);
+}
+
+.teslan-stevec--poudarek .teslan-stevec__namig {
+  color: var(--teslan-zelena-mehka);
+}
+
+.teslan-stevec--poudarek:hover {
+  border-color: var(--teslan-zelena-mocna);
+  background: var(--teslan-zelena-mocna);
+}
+
+/* Kartice s seznami */
+.teslan-kartica {
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  border-radius: var(--style-radius-m);
+  padding: 16px 18px;
+}
+
+.teslan-kartica__glava {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.teslan-kartica__glava a {
+  color: var(--teslan-zelena);
+  font-weight: 600;
+}
+
+.teslan-kartica__glava a:hover {
+  text-decoration: underline;
+}
+
+.teslan-kartica__stevilo {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-kartica h2 svg {
+  color: var(--teslan-glina);
+}
+
+.teslan-prazno {
+  margin: 8px 0 0;
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-seznam {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.teslan-seznam li + li {
+  border-top: 1px solid var(--teslan-crta);
+}
+
+.teslan-seznam__vrstica {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 6px;
+  margin: 0 -6px;
+  border-radius: var(--style-radius-s);
+  color: var(--teslan-crnilo);
+}
+
+.teslan-seznam__vrstica:hover {
+  background: var(--teslan-podlaga);
+}
+
+.teslan-seznam__glavno {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.teslan-seznam__glavno span {
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-seznam__desno {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* Značke statusov in zaloge */
+.teslan-znacka {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--teslan-podlaga);
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-znacka--novo {
+  background: var(--teslan-zelena-mehka);
+  color: var(--teslan-zelena);
+}
+
+.teslan-znacka--caka-placilo {
+  background: var(--teslan-opozorilo-mehko);
+  color: var(--teslan-opozorilo);
+}
+
+.teslan-znacka--preklicano {
+  background: var(--teslan-glina-mehka);
+  color: var(--teslan-glina);
+}
+
+.teslan-znacka--pripravljeno,
+.teslan-znacka--poslano {
+  background: var(--teslan-info-mehko);
+  color: var(--teslan-info);
+}
+
+.teslan-znacka--malo {
+  background: var(--teslan-opozorilo-mehko);
+  color: var(--teslan-opozorilo);
+}
+
+.teslan-znacka--poslo {
+  background: var(--teslan-glina-mehka);
+  color: var(--teslan-glina);
+}
+
+/* Hitra opravila */
+.teslan-bliznjice {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.teslan-bliznjica {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--style-radius-s);
+  border: 1px solid var(--teslan-crta);
+  color: var(--teslan-crnilo);
+  font-weight: 500;
+}
+
+.teslan-bliznjica svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--teslan-zelena);
+}
+
+.teslan-bliznjica:hover {
+  background: var(--teslan-zelena-mehka);
+  border-color: var(--color-success-250);
+}
+
+/* ── Znesek v evrih pod poljem s centi ───────────────────────── */
+.teslan-evri {
+  margin: 6px 0 0;
+  color: var(--teslan-zelena);
+}
+
+/* ── Povzetek naročila ───────────────────────────────────────── */
+.teslan-povzetek {
+  margin-bottom: calc(var(--base) * 1.2);
+  padding: 16px 18px;
+  border-radius: var(--style-radius-m);
+  background: var(--teslan-podlaga);
+  border: 1px solid var(--teslan-crta);
+}
+
+.teslan-povzetek__kupec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.teslan-povzetek__kupec a {
+  color: var(--teslan-zelena);
+}
+
+.teslan-povzetek__tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.teslan-povzetek__tabela th,
+.teslan-povzetek__tabela td {
+  padding: 8px 6px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--teslan-crta);
+}
+
+.teslan-povzetek__tabela thead th {
+  font-weight: 600;
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-povzetek__tabela tfoot th {
+  font-weight: 500;
+}
+
+.teslan-povzetek__tabela .teslan-desno {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.teslan-povzetek__skupaj th,
+.teslan-povzetek__skupaj td {
+  font-weight: 700;
+  font-size: 15px;
+  border-bottom: 0;
+}
+
+.teslan-povzetek__velikost {
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-povzetek__vsebina {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-povzetek__sporocilo {
+  margin: 6px 0 0;
+  font-style: italic;
+}
+
+/* ── Pomoč ───────────────────────────────────────────────────── */
+.teslan-pomoc {
+  max-width: 820px;
+  padding-top: var(--base);
+  padding-bottom: calc(var(--base) * 2);
+}
+
+.teslan-pomoc h1 {
+  margin: 0 0 8px;
+}
+
+.teslan-pomoc h2 {
+  margin: calc(var(--base) * 1.2) 0 8px;
+  font-size: 20px;
+}
+
+.teslan-pomoc__uvod {
+  font-size: 15px;
+  color: var(--teslan-crnilo-blago);
+}
+
+.teslan-pomoc a {
+  color: var(--teslan-zelena);
+  font-weight: 600;
+}
+
+.teslan-vprasanje {
+  background: var(--teslan-ploskev);
+  border: 1px solid var(--teslan-crta);
+  border-radius: var(--style-radius-m);
+  margin-bottom: 8px;
+}
+
+.teslan-vprasanje summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.teslan-vprasanje[open] summary {
+  border-bottom: 1px solid var(--teslan-crta);
+}
+
+.teslan-vprasanje__odgovor {
+  padding: 4px 16px 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.teslan-vprasanje__odgovor li {
+  margin: 4px 0;
+}

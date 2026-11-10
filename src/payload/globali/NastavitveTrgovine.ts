@@ -1,6 +1,7 @@
 import type { GlobalConfig } from "payload";
 import { OZNAKA_NASTAVITVE } from "../../katalog/oznake";
 import { jeAdmin, samoAdmin } from "../dostop";
+import { ZNESEK_V_EVRIH } from "../polja";
 import { razveljaviGlobal } from "../revalidacija";
 
 /** Privzete vrednosti (§6); seed jih zapiše ob prvem zagonu. */
@@ -56,6 +57,7 @@ export const NastavitveTrgovine: GlobalConfig = {
           required: true,
           defaultValue: PRIVZETE_NASTAVITVE.postninaCenti,
           admin: {
+            components: { afterInput: ZNESEK_V_EVRIH },
             width: "50%",
             step: 1,
             description: "Cena pošiljanja z DDV v centih: 500 pomeni 5,00 €. Pri prevzemu je poštnina 0.",
@@ -69,6 +71,7 @@ export const NastavitveTrgovine: GlobalConfig = {
           required: true,
           defaultValue: PRIVZETE_NASTAVITVE.pragBrezplacnePostnineCenti,
           admin: {
+            components: { afterInput: ZNESEK_V_EVRIH },
             width: "50%",
             step: 1,
             description:

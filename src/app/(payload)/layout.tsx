@@ -7,6 +7,8 @@ import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
 import { importMap } from './admin/importMap.js'
+// Barve in pisave Domačije Tešlan (gl. komentar v datoteki).
+import './custom.css'
 
 type Args = {
   children: React.ReactNode

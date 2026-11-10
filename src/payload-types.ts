@@ -209,9 +209,6 @@ export interface Narocila {
     cenaCenti: number;
     stopnjaDDV: number;
     izdelek?: (number | null) | Izdelki;
-    /**
-     * Za vračanje zaloge ob preklicu.
-     */
     velikostId?: string | null;
     /**
      * Cena kosa zgoraj je cena prazne škatle (DDV 22 %); izdelki v njej so našteti spodaj.
@@ -612,7 +609,7 @@ export interface User {
    */
   ime: string;
   /**
-   * Administrator ureja vse, tudi nastavitve trgovine in uporabnike. Urednik ureja izdelke, darila, medije in naročila ter svoj račun.
+   * Administrator ureja vse, tudi nastavitve trgovine in uporabnike. Urednik ureja izdelke, darila, slike in naročila ter svoj račun.
    */
   vloga?: ('admin' | 'urednik') | null;
   updatedAt: string;
