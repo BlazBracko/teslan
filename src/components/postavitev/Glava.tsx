@@ -88,7 +88,7 @@ export function Glava({ telefon, telefonPovezava }: { telefon: string | null; te
           aria-label="Domačija Tešlan, na domačo stran"
           className="-mx-1 flex items-center gap-2.5 rounded-md px-1"
         >
-          <Image src="/logo.png" alt="" width={40} height={40} priority className="size-10 object-contain" />
+          <Image src="/logo.png" alt="" width={40} height={40} loading="eager" className="size-10 object-contain" />
           <span className="type-title font-display text-ink">Domačija Tešlan</span>
         </Link>
 

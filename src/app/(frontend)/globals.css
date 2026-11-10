@@ -70,10 +70,10 @@
   --color-focus: #2d63c8;
   --color-scrim: rgb(29 33 28 / 0.48);
 
-  /* ── Pisavi (Z1: največ dve družini, obe z latin-ext) ─────────
+  /* ── Pisavi (Z1: največ dve družini, obe s šumniki) ───────────
      Fraunces za naslove (optično skaliranje, mehki rezi), Inter za
-     besedilo in vmesnik. Spremenljivki nastavi `next/font` v
-     `src/app/layout.tsx`. */
+     besedilo in vmesnik. Spremenljivki nastavi `next/font/local` v
+     `src/app/(frontend)/pisave/index.ts`. */
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
@@ -169,8 +169,8 @@
     font-family: var(--font-display);
     color: var(--color-ink);
     text-wrap: balance;
-    /* Mehkejši rezi Fraunces; opsz nastavi brskalnik sam. */
-    font-variation-settings: 'SOFT' 50;
+    /* Optično velikost nastavi brskalnik sam; mehki rezi (SOFT 50) so že v
+       datoteki pisave (scripts/pripravi-pisave.sh). */
   }
 
   p {

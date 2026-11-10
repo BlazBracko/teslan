@@ -1,8 +1,6 @@
 # Domačija Tešlan — spletna stran in trgovina
 
-Spletna stran in (v nastajanju) spletna trgovina Domačije Tešlan. Načrt, ki je vir resnice za razvoj, je v [`docs/nacrti/spletna-trgovina.md`](docs/nacrti/spletna-trgovina.md); kar čaka na lastnika (ključi, nastavitve), je zbrano v [`docs/nacrti/spletna-trgovina-predaja.md`](docs/nacrti/spletna-trgovina-predaja.md).
-
-> Ta README je osnutek. Razdelek o predaji se dopolni v K13.
+Spletna stran in spletna trgovina Domačije Tešlan: katalog, košarica, blagajna s plačilom ob prevzemu ali s kartico (Stripe), darilne škatle, e-poštna obvestila in admin za urejanje ponudbe in naročil (Payload CMS). Načrt, ki je vir resnice za razvoj, je v [`docs/nacrti/spletna-trgovina.md`](docs/nacrti/spletna-trgovina.md); kar čaka na lastnika (ključi, nastavitve, pregledi, prehod v produkcijo), je **kontrolni seznam** v [`docs/nacrti/spletna-trgovina-predaja.md`](docs/nacrti/spletna-trgovina-predaja.md).
 
 ## Tehnologija
 
@@ -73,9 +71,22 @@ Obvestila o naročilu so v [`src/eposta/narocila.ts`](src/eposta/narocila.ts), v
 ## Identiteta in komponente
 
 - Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/(frontend)/globals.css`](<src/app/(frontend)/globals.css>) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.
-- Knjižnica komponent je v [`src/components/ui/`](src/components/ui/) (gumb, polja, izbirniki, dialog, predal, zavihki, oznake, kartica, cena, obvestila, okostje, prazno stanje). Interaktivni deli so na Radix primitivih, gibanje (vzmeti) je v [`src/lib/motion.ts`](src/lib/motion.ts). Ikone: Lucide prek `react-icons/lu`.
+- Pisavi sta v repu ([`src/app/(frontend)/pisave/`](<src/app/(frontend)/pisave/>), licenca SIL OFL 1.1) in se nalagata z `next/font/local`: vsaka je ena datoteka, omejena na latinico s šumniki in teže 400–700, Fraunces z zamrznjenimi mehkimi rezi (SOFT 50). Pripravi ju [`scripts/pripravi-pisave.sh`](scripts/pripravi-pisave.sh) (potrebuje `pip install fonttools brotli`); če potrebujete nov znak ali težo, popravite skripto in jo poženite znova.
+- Knjižnica komponent je v [`src/components/ui/`](src/components/ui/) (gumb, polja, izbirniki, dialog, predal, zavihki, oznake, kartica, cena, obvestila, okostje, prazno stanje). Interaktivni deli so na Radix primitivih, gibanje (vzmeti) je v [`src/lib/motion.ts`](src/lib/motion.ts). Komponente uporabljajo lahke `m.*` elemente Framer Motion; animacije se naložijo odloženo prek `LazyMotion` ([`Gibanje.tsx`](src/components/ui/Gibanje.tsx)), zato `motion.*` v javnem delu ni dovoljen (`strict`). Ikone: Lucide prek `react-icons/lu`.
 - Slogovni vodnik `/styleguide` pokaže vse to v vseh stanjih, a samo pri `NOINDEX=1` (staging, lokalno z `NOINDEX=1 npm run dev`); v produkciji vrne 404.
 - `src/components/ui/tokeni.test.ts` preverja kontraste parov besedilo/ozadje (WCAG 2.2 AA) in da nove komponente ne vsebujejo surovih barv.
+
+## Dostopnost in hitrost
+
+- **Dostopnost (Z6, S17)**: [`e2e/dostopnost.spec.ts`](e2e/dostopnost.spec.ts) požene axe (`@axe-core/playwright`, vsa pravila) na vseh javnih straneh na namizju in mobilnem, s polno košarico in blagajno, na strani 404 in z odprtim mobilnim menijem; dovoljenih ni nobenih kršitev stopnje „serious“ ali „critical“. Isti test preveri preskok na vsebino, viden fokus s tipkovnico in vidnost vsebine pri zmanjšanem gibanju. Stanja z napakami (blagajna), dialogi in konfigurator preverjajo še ostali e2e testi.
+- **Hitrost (S18)**: cilj na stagingu je Lighthouse (mobilno) Performance ≥ 85, Accessibility ≥ 95, SEO ≥ 95 za `/` in `/products`. Preverite z Lighthouse v Chromu (DevTools → Lighthouse → Mobile) ali z ukazom spodaj; za staging z geslom dodajte `--extra-headers` z glavo `Authorization: Basic …`. Pri `NOINDEX=1` SEO namenoma pade (stran se ne sme indeksirati), zato SEO merite brez njega.
+
+  ```bash
+  npx -y lighthouse@12.8.2 https://teslan-staging.up.railway.app/ --only-categories=performance,accessibility,best-practices,seo --view
+  ```
+
+- Kar pomaga hitrosti in naj ostane: glavna slika strani ima `preload` in `fetchPriority="high"` (ostale se nalagajo lenobno), slike se strežejo kot AVIF ali WebP (`next.config.ts`), pisavi sta podmnoženi (gl. zgoraj), animacije in polni `zod` niso v začetnem JavaScriptu (košarica v glavi uporablja `zod/mini`).
+- Neobstoječe poti vrnejo slovensko stran 404 iz [`src/app/global-not-found.tsx`](src/app/global-not-found.tsx) (aplikacija ima dva korenska layouta, zato je potrebna `experimental.globalNotFound`); neobstoječ izdelek ali naročilo pokaže `src/app/(frontend)/not-found.tsx`.
 
 ## Okolja in spremenljivke
 
@@ -84,7 +95,21 @@ Vse spremenljivke so opisane v [`.env.example`](.env.example) in jih ob zagonu s
 | Okolje | Veja | Opombe |
 |---|---|---|
 | produkcija | `main` | `https://www.teslan.si`; spaja samo lastnik |
-| staging | `staging` | Railway samodejno deploya; `NOINDEX=1` (robots `Disallow: /`, glava `X-Robots-Tag`), geslo z `BASIC_AUTH_USER` + `BASIC_AUTH_PASSWORD` (`src/proxy.ts`, brez obeh je stran odprta) |
+| staging | `staging` | <https://teslan-staging.up.railway.app>; Railway samodejno deploya; `NOINDEX=1` (robots `Disallow: /`, glava `X-Robots-Tag`), geslo z `BASIC_AUTH_USER` + `BASIC_AUTH_PASSWORD` (`src/proxy.ts`, brez obeh je stran odprta), `EMAIL_REDIRECT_TO`, testna ključa Stripe |
+
+Spremenljivke po okoljih (podrobno v `.env.example`):
+
+| Spremenljivka | Staging | Produkcija |
+|---|---|---|
+| `DATABASE_URL`, `PAYLOAD_SECRET` | obvezni | obvezni (drugačen `PAYLOAD_SECRET`) |
+| `NEXT_PUBLIC_SITE_URL` | staging URL | `https://www.teslan.si` |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | testna (`sk_test_…`) | live |
+| `RESEND_API_KEY`, `EMAIL_FROM` | da | da |
+| `EMAIL_REDIRECT_TO` | vaš e-naslov | **ne** |
+| `S3_*` (Cloudflare R2) | bucket `teslan-staging` | bucket `teslan-prod` |
+| `NOINDEX`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` | da | **ne** |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | neobvezno | neobvezno |
+| `STRIPE_API_URL`, `EPOSTA_DNEVNIK`, `OMEJITEV_NAROCIL_NA_IP`, `TESTNE_SLIKE`, `TEST_DATABASE_URL` | samo testi in razvoj | **ne** |
 
 ## CI
 
@@ -115,9 +140,18 @@ Vsak korak načrta je ena veja `nacrt/kN-<kratko>` iz najnovejšega `staging` in
 1. Če ni nobenega uporabnika in sta nastavljena `SEED_ADMIN_EMAIL` in `SEED_ADMIN_PASSWORD`, ustvari administratorja.
 2. Katalog: slike iz `public/` v `media`, 10 kategorij, 4 skupine ponudbe in 25 izdelkov s cenika (zaloga 20 na velikost, DDV 9,5 %). Doda le, kar manjka (po slugu oz. imenu). `seed:if-empty` katalog preskoči, če je v bazi že kak izdelek, zato se izdelki, ki jih lastnik izbriše, ob deployu ne vrnejo.
 3. Nastavitve trgovine s privzetimi vrednostmi (poštnina 5,00 €, brezplačna od 50,00 €, naslov in telefon kmetije), če še niso bile shranjene.
+4. Demo darila (mala in velika škatla, programa „Okusi Dolenjske“ in „Za kuharje“ z opisom „[DEMO]“), če v bazi ni nobene škatle in nobenega programa.
 
 ## Deploy (Railway)
 
 [`railway.json`](railway.json): gradnja `npm run build`, pred deployem `npm run pripravi-bazo` (`migrate` + `seed:if-empty`), zagon `npm run start`.
 
 V okolju morata biti nastavljena `DATABASE_URL` (Railway Postgres) in `PAYLOAD_SECRET`; brez njiju se produkcijski strežnik ne zažene. Za slike na stagingu in v produkciji so potrebne še `S3_*` spremenljivke (R2), sicer se slike shranijo na disk vsebnika in se ob naslednjem deployu izgubijo.
+
+- **Staging** se deploya samodejno ob vsakem pushu v `staging` (združen PR). Baza stagina je na strežniku blazServer; ker Railway ukaza pred deployem (`preDeployCommand`) doslej ni izvedel, migracije in seed po deployu zaženete s strežnika z `~/teslan-staging-db/deploy-staging.sh <pot do repa>` (zažene `npm run pripravi-bazo` na bazi stagina in deploya isti commit). Dokler nove migracije niso izvedene, strani, ki berejo nove stolpce, vračajo napako 500.
+- **Produkcija** (`main`): PR `staging` → `main` odpre in združi samo lastnik, ko je izpolnjen kontrolni seznam v [`docs/nacrti/spletna-trgovina-predaja.md`](docs/nacrti/spletna-trgovina-predaja.md) (načrt §12). Pred prvim deployem preverite, da ukaz pred deployem teče (log deploya *Pre-deploy*); če ne, `npm run pripravi-bazo` zaženite ročno s produkcijskim `DATABASE_URL`.
+- Po spremembi spremenljivk na Railwayu je potreben nov deploy (*Deploy* ali *Redeploy*); ob zagonu strežnik v log izpiše opozorila za manjkajoče neobvezne nastavitve (e-pošta, `NEXT_PUBLIC_SITE_URL`, delno nastavljeno geslo stagina).
+
+## Predaja
+
+Kontrolni seznam za lastnika (ključi Stripe, Resend, R2, geslo stagina, prvi admin, podatki trgovine, pravni pregled, pospravljanje vej, prehod v produkcijo) in stanje sprejemnih kriterijev S1–S20 sta v [`docs/nacrti/spletna-trgovina-predaja.md`](docs/nacrti/spletna-trgovina-predaja.md).

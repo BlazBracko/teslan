@@ -1,8 +1,9 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
 import { Glava } from "@/components/postavitev/Glava";
 import { Noga } from "@/components/postavitev/Noga";
+import { Gibanje } from "@/components/ui/Gibanje";
+import { razrediPisav } from "./pisave";
 import { ToastProvider } from "@/components/ui/Toast";
 import { okolje } from "@/env";
 import { naloziKontakt } from "@/katalog/podatki";
@@ -43,30 +44,11 @@ export const viewport: Viewport = {
  */
 export const dynamic = "force-dynamic";
 
-// Pisavi identitete (Z1): Fraunces za naslove, Inter za besedilo in
-// vmesnik. Obe sta spremenljivi z osjo optične velikosti in obe imata
-// latin-ext (č, š, ž). Izpostavita se kot CSS spremenljivki, ki ju
-// `globals.css` preslika v `--font-display` in `--font-sans`; literalno
-// ime družine ne deluje, ker ga next/font hashira.
-const fraunces = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  axes: ["opsz", "SOFT"],
-  display: "swap",
-  variable: "--font-fraunces",
-});
-
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  axes: ["opsz"],
-  display: "swap",
-  variable: "--font-inter",
-});
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const kontakt = await naloziKontakt();
 
   return (
-    <html lang="sl" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="sl" className={razrediPisav}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#vsebina"
@@ -74,13 +56,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skoči na vsebino
         </a>
-        <ToastProvider>
-          <Glava telefon={kontakt.telefon} telefonPovezava={kontakt.telefonPovezava} />
-          <main id="vsebina" className="flex-1">
-            {children}
-          </main>
-          <Noga kontakt={kontakt} />
-        </ToastProvider>
+        <Gibanje>
+          <ToastProvider>
+            <Glava telefon={kontakt.telefon} telefonPovezava={kontakt.telefonPovezava} />
+            <main id="vsebina" className="flex-1">
+              {children}
+            </main>
+            <Noga kontakt={kontakt} />
+          </ToastProvider>
+        </Gibanje>
       </body>
     </html>
   );

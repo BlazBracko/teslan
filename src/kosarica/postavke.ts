@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import { NAJDALJSE_SPOROCILO, NAJVEC_MEST, zdruziVsebino } from "@/darila/pravila";
 
 /**
@@ -12,7 +12,9 @@ import { NAJDALJSE_SPOROCILO, NAJVEC_MEST, zdruziVsebino } from "@/darila/pravil
  * konfigurator lahko uredi (T5 korak 4).
  *
  * Vse funkcije so čiste in vračajo novo košarico, zato jih uporabljata
- * brskalnik (`shramba.ts`) in strežnik (preverjanje vnosa).
+ * brskalnik (`shramba.ts`) in strežnik (preverjanje vnosa). Sheme so v
+ * `zod/mini`, ker modul teče v glavi vsake strani (ikona košarice) in je
+ * polni zod zanj predolg (S18).
  */
 
 /** Največja količina ene velikosti (ali enakih škatel) v eni postavki (Z15). */
@@ -21,28 +23,32 @@ export const NAJVEC_KOSOV = 20;
 /** Varovalka pred zlorabo: več različnih postavk strežnik ne preveri. */
 export const NAJVEC_POSTAVK = 50;
 
+const celoStevilo = (od: number, do_: number) => z.number().check(z.int(), z.gte(od), z.lte(do_));
+const id = () => z.number().check(z.int(), z.positive());
+const niz = (od: number, do_: number) => z.string().check(z.minLength(od), z.maxLength(do_));
+
 export const postavkaIzdelkaShema = z.object({
-  vrsta: z.literal("izdelek").optional(),
-  izdelekId: z.number().int().positive(),
-  velikostId: z.string().min(1).max(64),
-  kolicina: z.number().int().min(1).max(NAJVEC_KOSOV),
+  vrsta: z.optional(z.literal("izdelek")),
+  izdelekId: id(),
+  velikostId: niz(1, 64),
+  kolicina: celoStevilo(1, NAJVEC_KOSOV),
 });
 
 export const kosVsebineShema = z.object({
-  izdelekId: z.number().int().positive(),
-  velikostId: z.string().min(1).max(64),
-  kolicina: z.number().int().min(1).max(NAJVEC_MEST),
+  izdelekId: id(),
+  velikostId: niz(1, 64),
+  kolicina: celoStevilo(1, NAJVEC_MEST),
 });
 
 export const postavkaSkatleShema = z.object({
   vrsta: z.literal("skatla"),
-  id: z.string().regex(/^[\w-]{1,64}$/),
-  tipSkatleId: z.number().int().positive(),
+  id: z.string().check(z.regex(/^[\w-]{1,64}$/)),
+  tipSkatleId: id(),
   /** Slug programa, iz katerega je škatla nastala (za ime v košarici). */
-  program: z.string().max(100).optional(),
-  vsebina: z.array(kosVsebineShema).min(1).max(NAJVEC_MEST),
-  sporocilo: z.string().max(NAJDALJSE_SPOROCILO).optional(),
-  kolicina: z.number().int().min(1).max(NAJVEC_KOSOV),
+  program: z.optional(z.string().check(z.maxLength(100))),
+  vsebina: z.array(kosVsebineShema).check(z.minLength(1), z.maxLength(NAJVEC_MEST)),
+  sporocilo: z.optional(z.string().check(z.maxLength(NAJDALJSE_SPOROCILO))),
+  kolicina: celoStevilo(1, NAJVEC_KOSOV),
 });
 
 export type PostavkaIzdelka = z.infer<typeof postavkaIzdelkaShema>;

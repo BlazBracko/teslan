@@ -1,6 +1,74 @@
-# Predaja: kaj čaka na lastnika
+# Predaja: kontrolni seznam za lastnika
 
-Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravil, ki zahtevajo lastnikovo roko (načrt §11). Vsak korak K1–K13 dopiše svoje. K13 ga dokonča v kontrolni seznam.
+Kar čaka na lastnika (načrt §11 in §12): zunanji ključi, nastavitve, vsebina, pregledi in pospravljanje. Koraki K1–K13 so združeni v `staging`; spodnji seznam je dokončan v K13. Podrobnosti za vsako točko so v tabelah in dnevniku pod seznamom.
+
+Staging: <https://teslan-staging.up.railway.app> (Railway, okolje *staging*). Baza stagina teče na strežniku blazServer (ne na Railwayu), migracije po vsakem deployu zažene `~/teslan-staging-db/deploy-staging.sh`, ker Railway ukaza pred deployem ne izvede.
+
+## Kontrolni seznam
+
+### 1. Staging: spremenljivke v Railway → staging → Variables
+
+Ob pregledu v K13 (2026-11-10) so na stagingu nastavljene samo `DATABASE_URL` in `PAYLOAD_SECRET`.
+
+- [ ] **`NOINDEX=1`**: zdaj ni nastavljen, zato `/robots.txt` na stagingu dovoli indeksiranje in ni glave `X-Robots-Tag` (Z71). Nastavite ga takoj.
+- [ ] **`NEXT_PUBLIC_SITE_URL=https://teslan-staging.up.railway.app`**: zdaj ni nastavljen, zato sitemap, kanonični naslovi, OG slike, povezave v e-pošti in povratni naslovi Stripa kažejo na `http://localhost:8080`.
+- [ ] **`BASIC_AUTH_USER` in `BASIC_AUTH_PASSWORD`** (obe hkrati, dolgo naključno geslo): brez njiju je staging odprt vsem. Webhook Stripa je izvzet.
+- [ ] **Stripe (testni način)**: `STRIPE_SECRET_KEY` (`sk_test_…`) in `STRIPE_WEBHOOK_SECRET`. V Stripu ustvarite webhook `https://teslan-staging.up.railway.app/api/stripe/webhook` z dogodkoma `checkout.session.completed` in `checkout.session.expired`; njegov *Signing secret* je `STRIPE_WEBHOOK_SECRET`. Do takrat je kartica onemogočena in naročila po pošti ni mogoče oddati.
+- [ ] **Resend**: `RESEND_API_KEY` **in hkrati** `EMAIL_REDIRECT_TO` (vaš e-naslov), sicer staging pošilja pravim kupcem. Pred tem v Resendu overite domeno `teslan.si` (DNS zapisi SPF in DKIM v Cloudflare).
+- [ ] **Cloudflare R2**: bucket `teslan-staging` z javnim dostopom in API žeton samo zanj; `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`. Nato v adminu znova naložite slike (do takrat stran kaže testne slike).
+- [ ] Po spremembi spremenljivk na Railwayu sprožite *Deploy* in preverite, da se stran odpre (ob zagonu so v logu opozorila za manjkajoče neobvezne nastavitve).
+
+### 2. Staging: admin in preizkus delovanja (S19)
+
+- [ ] **Prvi admin račun**: na `/admin` ustvarite prvega uporabnika (vedno administrator; agenti računov ne ustvarjajo). Ali pa pred deployem nastavite `SEED_ADMIN_EMAIL` in `SEED_ADMIN_PASSWORD`.
+- [ ] **Račun urednika za Sandija**: *Nastavitve → Uporabniki → nov*, vloga `urednik` (§11, točka 7).
+- [ ] Z R2: v adminu naložite sliko in preverite, da se prikaže na strani izdelka.
+- [ ] Z Resendom: oddajte naročilo s prevzemom in preverite, da E1 in E2 prideta na `EMAIL_REDIRECT_TO` z zadevo `[STAGING → …]`.
+- [ ] S Stripom: naročilo po pošti s kartico `4242 4242 4242 4242` (poljuben datum v prihodnosti in CVC) in preverite, da je naročilo v adminu *Novo* in *plačano*; nato še eno, ki ga na Stripu prekinete (zaloga se vrne).
+- [ ] Preverite omejitev naročil na IP (K7): po šestem naročilu v desetih minutah z istega naslova mora blagajna zavrniti oddajo. Če zavrne že prvo ali nikoli, Railwayev posrednik glave `X-Forwarded-For` ne nastavlja, kot predvideva `src/narocila/omejitev.ts`; javite nam.
+
+### 3. Podatki trgovine in vsebina (admin)
+
+- [ ] *Nastavitve trgovine → Podatki prodajalca*: **naziv, davčna številka, KMG-MID** (in matična številka, če obstaja). Dokler jih ni, pravne strani kažejo `[manjka: …]`.
+- [ ] Ista stran: **zemljepisna širina in dolžina** kmetije (Google Maps → desni klik na kmetijo). Brez njiju Google ne dobi lege (JSON-LD `geo`).
+- [ ] Preverite *E-pošta za obvestila* (privzeto Sandijev naslov), poštnino, prag brezplačne poštnine in navodila za prevzem.
+- [ ] Fotografije izdelkov in škatel, opisi, sestavine, alergeni; pravi tipi darilnih škatel in programi (demo škatle in programa z „[DEMO]“ označite kot neaktivne oz. neobjavljene) (§7).
+
+### 4. Pregledi (računovodja, pravnik)
+
+- [ ] **Pravna besedila** `/pogoji`, `/odstop`, `/privacyPolicy` so osnutki (na stagingu z oznako „Osnutek – v pregledu“). Odločitve, ki jih je treba potrditi, so naštete v dnevniku K11 spodaj (IRPS, izjeme od odstopa, račun, rok pošiljanja, obdelovalci, hramba). Po spremembi posodobite `POSODOBLJENO` v `src/pravno/podatki.ts`.
+- [ ] **DDV stopnje** (seed: 9,5 % za živila, 22 % za škatle in poštnino) in **izdaja računov**: trgovina pošlje potrdilo naročila („To ni račun.“), ne davčno potrjenega računa (načrt P5, §12).
+- [ ] Pogodbe o obdelavi podatkov (DPA) s Stripe, Resend, Cloudflare in Railway.
+
+### 5. GitHub in pospravljanje
+
+- [ ] **Izbrišite združene veje** `nacrt/k1-temelji`, `nacrt/k2-identiteta`, `nacrt/k3-payload`, `nacrt/k4-katalog`, `nacrt/k5-izlozba`, `nacrt/k6-kosarica`, `nacrt/k7-blagajna`, `nacrt/k8-stripe`, `nacrt/k10-darila` (vse so v celoti v `staging`; agenti jih niso smeli izbrisati). Ostale veje (`nacrt/spletna-trgovina`, `railway-priprava`, `nav_integ`, `claude/…`) preglejte sami.
+- [ ] **Odklopite aplikacijo Vercel** z repozitorija (GitHub → Settings → Integrations → Vercel ali na Vercelu projekt `teslan-app1` → Settings → Git → Disconnect). Na PR-jih dodaja nepotrebno preverjanje; stran gostuje na Railwayu.
+- [ ] Neobvezno: GitHub secrets `STRIPE_SECRET_KEY` (testni) in `STRIPE_WEBHOOK_SECRET`, da CI požene S11 s pravim Stripom (gl. *Preskočeni preizkusi*).
+
+### 6. Pred prehodom v produkcijo (§12, PR `staging` → `main` odpre in združi lastnik)
+
+- [ ] Izpolnjeni S1–S20 (stanje spodaj), videz in delovanje na stagingu potrjena, točki 3 in 4 zaključeni.
+- [ ] Railway → *production*: Postgres (ali druga produkcijska baza), `DATABASE_URL`, nov `PAYLOAD_SECRET` (drugačen od staginga), `NEXT_PUBLIC_SITE_URL=https://www.teslan.si`, **live** ključa Stripe in webhook `https://www.teslan.si/api/stripe/webhook`, `RESEND_API_KEY`, R2 bucket `teslan-prod` (`S3_*`), po želji `SEED_ADMIN_*`.
+- [ ] V produkciji **ni** `NOINDEX`, `BASIC_AUTH_*`, `EMAIL_REDIRECT_TO`, `STRIPE_API_URL`, `EPOSTA_DNEVNIK`, `OMEJITEV_NAROCIL_NA_IP`, `TESTNE_SLIKE`.
+- [ ] Produkcijska baza migrirana in seedana (`npm run pripravi-bazo` z produkcijskim `DATABASE_URL`, če Railway ukaza pred deployem ne izvede), Sandi ima račun urednika.
+- [ ] Po izdaji: testno naročilo z majhnim zneskom, vračilo v Stripu, preklic v adminu; v Google Search Console oddajte `https://www.teslan.si/sitemap.xml`.
+
+## Stanje sprejemnih kriterijev (po K13)
+
+| S | Stanje | Kje / kaj manjka |
+|---|---|---|
+| S1 | izpolnjen ob zelenem CI na `staging` po združitvi K13 | `.github/workflows/ci.yml` (typecheck, Payload, lint, Vitest, Playwright) |
+| S2–S5 | izpolnjeni | enotski testi `src/kosarica/cene.test.ts`, `src/katalog/sezona.test.ts`, `src/narocila/statusi.test.ts` |
+| S6–S8 | izpolnjeni | integracijski testi `src/narocila/*.int.test.ts` |
+| S9, S10, S15 | izpolnjeni | `e2e/blagajna.spec.ts`, `e2e/zaprta/trgovina.spec.ts` |
+| S11 | z nadomestnim Stripom | `e2e/placilo.spec.ts`; s pravim Stripom `e2e/stripe-pravi.spec.ts`, ko so v CI testni ključi |
+| S12–S14 | izpolnjeni | `e2e/darila.spec.ts`, `e2e/admin.spec.ts`, `e2e/katalog.spec.ts` |
+| S16 | izpolnjen v e2e | `e2e/noindex/zascita.spec.ts`; na stagingu šele z `NOINDEX=1` in `BASIC_AUTH_*` (točka 1) |
+| S17 | izpolnjen | `e2e/dostopnost.spec.ts` (vse javne strani, namizje in mobilno) |
+| S18 | gl. dnevnik K13 | Lighthouse (mobilno) na stagingu za `/` in `/products` |
+| S19 | delno | deploy, migracije in seed delujejo; manjkajo admin račun, R2, Resend in Stripe (točki 1 in 2) |
+| S20 | izpolnjen | brez `slick`/`classnames`, brez `src/data/`, README opisuje zagon, okolja, seed, deploy in predajo |
 
 ## Manjkajoči ključi in nastavitve
 
@@ -108,3 +176,11 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - **Lega kmetije za Google** (JSON-LD `geo`): v *Nastavitve trgovine → Podatki prodajalca* vpišite zemljepisno širino in dolžino (Google Maps → desni klik na kmetijo → klik na številki ju kopira). Dokler polji nista izpolnjeni, se lega ne objavi; ostali podatki (ime, naslov, telefon, e-pošta) se že objavijo iz nastavitev. Na stagingu po deployu zaženite migracijo `20261110_110028_seo_lega` (`deploy-staging.sh`).
 - Privzeta slika za deljenje na družbenih omrežjih je `public/og.jpg` (izrez fotografije nasada jagod 1200 × 630). Podstran izdelka deli prvo sliko izdelka. Če želite drugo privzeto sliko, zamenjajte datoteko z enako velikostjo.
 - Pred prehodom v produkcijo preverite, da v produkciji **nista** nastavljena `NOINDEX` in `BASIC_AUTH_*` (§12) in da je `NEXT_PUBLIC_SITE_URL=https://www.teslan.si`; nato v Google Search Console oddajte `https://www.teslan.si/sitemap.xml`.
+
+### K13 Kakovost in predaja
+- Ni novih zunanjih ključev in ni novih preskočenih preizkusov. Kontrolni seznam na vrhu tega dokumenta je dokončan.
+- **Pregled stagina (2026-11-10)**: nastavljeni sta samo `DATABASE_URL` in `PAYLOAD_SECRET`. Manjkata tudi `NOINDEX=1` (staging je zdaj odprt za iskalnike) in `NEXT_PUBLIC_SITE_URL` (sitemap kaže na `http://localhost:8080`); oboje je v točki 1 seznama.
+- **Dostopnost (S17)**: `e2e/dostopnost.spec.ts` (axe z vsemi pravili na vseh javnih straneh, namizje in mobilno). Popravljeno: neobstoječe poti so vračale privzeto stran 404 brez jezika in glavne regije (zdaj `src/app/global-not-found.tsx`), tabela piškotkov na politiki zasebnosti na ozkem zaslonu ni bila dosegljiva s tipkovnico.
+- **Hitrost (S18)**: Lighthouse (mobilno) na stagingu pred K13: `/` Performance 76, `/products` 78 (Accessibility, Best practices in SEO 100). Zavirali so štiri datoteke pisav (425 KB) pred glavno sliko, polni Framer Motion in zod v začetnem JavaScriptu ter slike v WebP. Po popravkih lokalno na isti gradnji: `/` 88–89, `/products` 92, podstran izdelka 90, `/about` 92, `/darila` 86; ostale kategorije 100. Rezultat na stagingu po deployu K13 je zapisan v PR K13.
+- **Pisavi** sta od K13 v repu (`src/app/(frontend)/pisave/`, licenca OFL) namesto iz `next/font/google`: Google Fonts ne omogoča zamrznitve osi SOFT in podmnožice samo s šumniki, kar je skupaj prepolovilo velikost. Videz je enak (iste osi in rezi). Skripta `scripts/pripravi-pisave.sh` ju pripravi znova.
+- Lighthouse na stagingu z vklopljenim `NOINDEX=1` pri SEO namenoma izgubi točke (stran je označena za neindeksiranje); SEO preverjajte brez njega ali v produkciji.

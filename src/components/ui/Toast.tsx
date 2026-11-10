@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import * as ToastPrimitive from "@radix-ui/react-toast";
-import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion, type PanInfo } from "framer-motion";
 import { LuCircleAlert, LuCircleCheck, LuInfo, LuX } from "react-icons/lu";
 import { crossFade, shouldCommit, springUI } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -102,7 +102,7 @@ function EnoObvestilo({ obvestilo, onClose }: { obvestilo: Obvestilo; onClose: (
         if (!o) onClose();
       }}
     >
-      <motion.li
+      <m.li
         layout={!reduce}
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
@@ -141,7 +141,7 @@ function EnoObvestilo({ obvestilo, onClose }: { obvestilo: Obvestilo; onClose: (
           <LuX aria-hidden="true" className="size-4" />
           <span className="sr-only">Zapri obvestilo</span>
         </ToastPrimitive.Close>
-      </motion.li>
+      </m.li>
     </ToastPrimitive.Root>
   );
 }

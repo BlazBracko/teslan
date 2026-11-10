@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
@@ -158,26 +157,4 @@ test.describe("S14: samo prikaz in neobjavljeni izdelki", () => {
   });
 });
 
-test.describe("dostopnost javnih strani (Z6)", () => {
-  for (const pot of [
-    "/",
-    "/products",
-    "/products/cesen-v-prahu",
-    "/products/jagode",
-    "/kosarica",
-    "/blagajna",
-    "/pogoji",
-    "/odstop",
-    "/about",
-    "/privacyPolicy",
-  ]) {
-    test(`${pot} nima resnih ali kritičnih kršitev (axe)`, async ({ page }) => {
-      await page.goto(pot);
-      const rezultat = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
-      const resne = rezultat.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-      expect(resne.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
-    });
-  }
-});
+// Axe na vseh javnih straneh (namizje in mobilno) je v dostopnost.spec.ts (S17).

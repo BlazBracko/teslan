@@ -1,6 +1,6 @@
 'use client';
 
-import { MotionConfig, motion, type Variants } from 'framer-motion';
+import { MotionConfig, m, type Variants } from 'framer-motion';
 import { revealUp, springUI } from '@/lib/motion';
 
 type Direction = 'up' | 'left' | 'right' | 'scale' | 'fade';
@@ -46,7 +46,7 @@ export default function Reveal({
   as = 'div',
   amount = 0.25,
 }: RevealProps) {
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <MotionConfig reducedMotion="user">
       <Component
@@ -79,7 +79,7 @@ export function RevealGroup({
   as?: 'div' | 'section' | 'ul';
   amount?: number;
 }) {
-  const Component = motion[as];
+  const Component = m[as];
 
   return (
     <MotionConfig reducedMotion="user">
@@ -107,7 +107,7 @@ export function RevealItem({
   direction?: Direction;
   as?: 'div' | 'li' | 'article';
 }) {
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <Component className={className} variants={varianteRazkritja(direction)}>
       {children}

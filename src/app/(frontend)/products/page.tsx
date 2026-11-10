@@ -64,7 +64,7 @@ export default async function ProductsPage({
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {izdelki.map((izdelek, i) => (
               <li key={izdelek.id}>
-                <KarticaIzdelka izdelek={izdelek} mesec={mesec} prednostnaSlika={i < 3} />
+                <KarticaIzdelka izdelek={izdelek} mesec={mesec} prednostnaSlika={i === 0} />
               </li>
             ))}
           </ul>

@@ -112,7 +112,8 @@ export default async function HomePage() {
               src="/strawberryFields.jpg"
               alt="Nasad jagod na njivi Domačije Tešlan"
               fill
-              priority
+              preload
+              fetchPriority="high"
               sizes="(min-width: 1024px) 40rem, 100vw"
               className="object-cover"
             />

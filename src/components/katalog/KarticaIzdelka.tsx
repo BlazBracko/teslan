@@ -32,7 +32,7 @@ export function KarticaIzdelka({
       <SlikaIzdelka
         slika={izdelek.slike[0]}
         sizes="(min-width: 1024px) 22rem, (min-width: 640px) 50vw, 100vw"
-        priority={prednostnaSlika}
+        prednostna={prednostnaSlika}
         className="aspect-[4/3]"
         nadomestnaOznaka={`${izdelek.ime}: slika še ni na voljo`}
       />

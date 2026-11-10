@@ -113,7 +113,8 @@ export default async function AboutPage() {
               src="/sandi.jpg"
               alt="Sandi Derčar za stojnico Domačije Tešlan s svežo zelenjavo in šparglji"
               fill
-              priority
+              preload
+              fetchPriority="high"
               sizes="(min-width: 1024px) 36rem, 100vw"
               className="object-cover"
               /* Izvirnik je pokončen, okvir ležeč: obraz je na ~27 % višine. */

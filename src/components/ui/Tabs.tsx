@@ -2,7 +2,7 @@
 
 import { createContext, forwardRef, useContext, useId } from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { springMove } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useControllableState } from "@/lib/use-controllable-state";
@@ -71,7 +71,7 @@ export const TabsTrigger = forwardRef<
     >
       {children}
       {izbran === value && (
-        <motion.span
+        <m.span
           layoutId={reduce ? undefined : `podcrtaj-${skupina}`}
           transition={springMove}
           aria-hidden="true"
