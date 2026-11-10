@@ -1,11 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LuSearch } from "react-icons/lu";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-export const metadata = {
-  title: "Strani ni mogoče najti — Domačija Tešlan",
+export const metadata: Metadata = {
+  title: "Strani ni mogoče najti",
+  robots: { index: false },
 };
 
 /** 404 javnih strani (npr. neobstoječ ali neobjavljen izdelek). */

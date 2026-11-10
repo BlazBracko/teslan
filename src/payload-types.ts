@@ -1069,6 +1069,14 @@ export interface NastavitveTrgovine {
      * Javni e-naslov za kupce.
      */
     email?: string | null;
+    /**
+     * Lega kmetije za iskalnike (Google), npr. 45.7756. V Google Maps desni klik na kmetijo pokaže obe številki. Prazno: lega se ne objavi.
+     */
+    geoSirina?: number | null;
+    /**
+     * Druga številka iz Google Maps, npr. 15.0937. Izpolnite obe ali nobene.
+     */
+    geoDolzina?: number | null;
   };
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -1093,6 +1101,8 @@ export interface NastavitveTrgovineSelect<T extends boolean = true> {
         kmgMid?: T;
         telefon?: T;
         email?: T;
+        geoSirina?: T;
+        geoDolzina?: T;
       };
   updatedAt?: T;
   createdAt?: T;

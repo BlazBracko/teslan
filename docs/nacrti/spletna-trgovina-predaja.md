@@ -14,6 +14,8 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 | `RESEND_API_KEY` (staging in produkcija) | K9 | brez ključa se vsa e-pošta (E1–E5, pozabljeno geslo v adminu) izpiše v log strežnika na Railwayu in **kupcem ne pride** | Resend → račun, *Domains* → dodajte `teslan.si` in DNS zapise (SPF, DKIM, po želji DMARC) v Cloudflare; ko je domena overjena, *API Keys* → ključ s pravico *Sending access* → Railway → Variables |
 | `EMAIL_REDIRECT_TO` (samo staging) | K9 | ni potreben, dokler ni `RESEND_API_KEY`; **s ključem na stagingu brez njega dobijo e-pošto pravi naslovi**, zato ga nastavite hkrati s ključem | Railway → staging → Variables: vaš e-naslov |
 | `EMAIL_FROM` (neobvezno) | K9 | privzeto `Domačija Tešlan <narocila@teslan.si>` | Railway → Variables, če želite drug naslov (mora biti na overjeni domeni) |
+| `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` (samo staging) | K12 | **staging je brez gesla dostopen vsem** (iskalniki ga zaradi `NOINDEX=1` ne indeksirajo); ob zagonu je v logu opozorilo. Geslo se vklopi šele, ko sta nastavljeni **obe**; ena sama strani ne zaklene, le izpiše opozorilo | Railway → staging → Variables: obe hkrati (npr. `teslan` in dolgo naključno geslo), nato *Deploy*. V produkciji ju ne nastavljajte |
+| `NEXT_PUBLIC_SITE_URL` (staging in produkcija) | K12 (prej K7–K9) | brez nje kanonični naslovi, sitemap, OG slike in JSON-LD kažejo na `localhost`; ob zagonu v produkciji je opozorilo v logu | Railway → Variables: staging URL oz. `https://www.teslan.si` |
 
 ## Preskočeni preizkusi
 
@@ -99,3 +101,10 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
   - **Obdelovalci**: Stripe (Irska), Resend, Cloudflare in Railway (ZDA) s prenosom na podlagi okvira EU-ZDA oz. standardnih pogodbenih klavzul. Lastnik preveri, da ima s ponudniki sprejete pogodbe o obdelavi (DPA), ki so običajno del njihovih pogojev.
   - **Hramba**: podatki o naročilih praviloma 10 let po koncu leta izdaje računa (davčni predpisi).
 - Datum zadnje posodobitve na straneh je konstanta `POSODOBLJENO` v `src/pravno/podatki.ts`; ob vsaki vsebinski spremembi ga posodobite.
+
+### K12 SEO in zaščita staginga
+- Ni preskočenih preizkusov. Zaščito (S16) preverja e2e na strežniku, ki posnema staging (`NOINDEX=1` in testno geslo iz `e2e/zascita.ts`).
+- **Geslo za staging**: nastavite `BASIC_AUTH_USER` in `BASIC_AUTH_PASSWORD` v Railway → staging → Variables (gl. tabelo zgoraj). Brskalnik ob prvem obisku vpraša za ime in geslo. Stripe webhook (`/api/stripe/webhook`) je izvzet, zato ga Stripe doseže brez gesla. Če boste na Railwayu kdaj vklopili *Healthcheck Path*, bo zaradi gesla dobival 401; v tem primeru geslo začasno odstranite ali nam javite, da dodamo izjemo.
+- **Lega kmetije za Google** (JSON-LD `geo`): v *Nastavitve trgovine → Podatki prodajalca* vpišite zemljepisno širino in dolžino (Google Maps → desni klik na kmetijo → klik na številki ju kopira). Dokler polji nista izpolnjeni, se lega ne objavi; ostali podatki (ime, naslov, telefon, e-pošta) se že objavijo iz nastavitev. Na stagingu po deployu zaženite migracijo `20261110_110028_seo_lega` (`deploy-staging.sh`).
+- Privzeta slika za deljenje na družbenih omrežjih je `public/og.jpg` (izrez fotografije nasada jagod 1200 × 630). Podstran izdelka deli prvo sliko izdelka. Če želite drugo privzeto sliko, zamenjajte datoteko z enako velikostjo.
+- Pred prehodom v produkcijo preverite, da v produkciji **nista** nastavljena `NOINDEX` in `BASIC_AUTH_*` (§12) in da je `NEXT_PUBLIC_SITE_URL=https://www.teslan.si`; nato v Google Search Console oddajte `https://www.teslan.si/sitemap.xml`.

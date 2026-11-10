@@ -4,12 +4,13 @@ import { EpostaProdajalca, PodatkiProdajalca, Poglavje, PravnaStran, povezavaBes
 import { POT_POGOJEV } from "@/components/postavitev/navigacija";
 import { KLJUC_SHRAMBE } from "@/kosarica/postavke";
 import { naloziPravnePodatke, POSODOBLJENO } from "@/pravno/podatki";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Politika zasebnosti — Domačija Tešlan",
-  description:
-    "Kako Domačija Tešlan zbira, uporablja in varuje osebne podatke kupcev, kateri obdelovalci jih obdelujejo in katere piškotke uporablja stran.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Politika zasebnosti",
+  opis: "Kako Domačija Tešlan zbira, uporablja in varuje osebne podatke kupcev, kateri obdelovalci jih obdelujejo in katere piškotke uporablja stran.",
+  pot: "/privacyPolicy",
+});
 
 /** Podatki upravljavca so iz nastavitev trgovine (baza). */
 export const dynamic = "force-dynamic";

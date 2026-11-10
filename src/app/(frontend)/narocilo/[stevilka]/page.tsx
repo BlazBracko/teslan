@@ -17,16 +17,24 @@ import { narociloZZetonom, RAZLOG_NEPLACANO, uskladiSPonudnikom } from "@/naroci
 import { OZNAKE_STATUSOV } from "@/narocila/statusi";
 import { OBLIKA_STEVILKE } from "@/narocila/stevilka";
 import { PARAMETER_PLACILA } from "@/narocila/stripe";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
 /** Vedno sveže stanje naročila (status se spreminja v adminu). */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Vaše naročilo — Domačija Tešlan",
-  robots: { index: false, follow: false },
-  // Žeton je v naslovu strani: ne sme oditi drugim stranem kot referer.
-  referrer: "no-referrer",
-};
+export async function generateMetadata({ params }: Pick<Parametri, "params">): Promise<Metadata> {
+  return {
+    ...metapodatkiStrani({
+      naslov: "Vaše naročilo",
+      opis: "Stanje vašega naročila na Domačiji Tešlan.",
+      // Brez žetona: kanonični URL ne sme razkriti dostopa do naročila.
+      pot: `/narocilo/${encodeURIComponent((await params).stevilka)}`,
+      brezSledenja: true,
+    }),
+    // Žeton je v naslovu strani: ne sme oditi drugim stranem kot referer.
+    referrer: "no-referrer",
+  };
+}
 
 type Parametri = {
   params: Promise<{ stevilka: string }>;

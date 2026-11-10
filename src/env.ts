@@ -86,8 +86,9 @@ export const envShema = z
     ),
   })
   .superRefine((env, ctx) => {
+    // Basic Auth ni v seznamu: nepopolna nastavitev geslo le izklopi in izpiše
+    // opozorilo (src/zascita/staging.ts), da staging ne postane nedosegljiv.
     const skupine: Array<[string, Array<keyof typeof env>]> = [
-      ["Basic Auth", ["BASIC_AUTH_USER", "BASIC_AUTH_PASSWORD"]],
       [
         "S3/R2",
         [

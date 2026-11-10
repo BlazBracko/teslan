@@ -4,19 +4,31 @@ import { Fraunces, Inter } from "next/font/google";
 import { Glava } from "@/components/postavitev/Glava";
 import { Noga } from "@/components/postavitev/Noga";
 import { ToastProvider } from "@/components/ui/Toast";
+import { okolje } from "@/env";
 import { naloziKontakt } from "@/katalog/podatki";
+import { IME_KMETIJE } from "@/lib/kontakt";
+import { izvorStrani } from "@/seo/izvor";
+import { metapodatkiStrani, PREDLOGA_NASLOVA } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Domačija Tešlan — Sveža ekološka hrana iz Dolenjske",
-  description:
-    "Lokalno pridelani šparglji, jagode, začimbe, liofilizirano sadje in domači izdelki. Obiščite nas v Podgori pri Novem mestu.",
-  keywords: "kmetija, ekološko, šparglji, Dolenjska, Novo mesto, lokalna hrana",
-  openGraph: {
-    title: "Domačija Tešlan",
-    description: "Iz naše zemlje na vašo mizo.",
-    locale: "sl_SI",
-  },
-};
+const OPIS =
+  "Lokalno pridelani šparglji, jagode, začimbe, liofilizirano sadje in domači izdelki. Obiščite nas v Podgori pri Novem mestu.";
+
+/**
+ * Skupni metapodatki (Z70): `metadataBase` iz `NEXT_PUBLIC_SITE_URL`, da so
+ * kanonični in OG naslovi absolutni, predloga naslova in privzeta OG slika.
+ * Okolje se bere ob zahtevi (ista gradnja teče na stagingu in v produkciji);
+ * na stagingu (`NOINDEX=1`) je vsaka stran tudi v HTML označena z noindex.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const env = okolje();
+  return {
+    metadataBase: izvorStrani(env),
+    title: { default: `${IME_KMETIJE} — Sveža ekološka hrana iz Dolenjske`, template: PREDLOGA_NASLOVA },
+    keywords: ["kmetija", "ekološko", "šparglji", "Dolenjska", "Novo mesto", "lokalna hrana"],
+    ...metapodatkiStrani({ naslov: null, opis: OPIS, pot: null }),
+    ...(env.NOINDEX === "1" ? { robots: { index: false, follow: false } } : {}),
+  };
+}
 
 export const viewport: Viewport = {
   // Barva sistemske vrstice na mobilnem = `--color-canvas` (meta oznaka ne

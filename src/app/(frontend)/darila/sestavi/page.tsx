@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { KonfiguratorStran, type ZacetekKonfiguratorja } from "@/components/darila/Konfigurator";
-import { POT_DARIL } from "@/components/postavitev/navigacija";
+import { POT_DARIL, POT_KONFIGURATORJA, potPrograma } from "@/components/postavitev/navigacija";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { izdelkiZaSkatlo, prilagodiVsebino } from "@/darila/konfigurator";
 import { naloziDarila } from "@/darila/podatki";
 import { naloziKatalog, naloziKontakt, naloziNastavitve } from "@/katalog/podatki";
 import { trenutniMesec } from "@/katalog/sezona";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Sestavite darilo — Domačija Tešlan",
-  description: "Izberite darilno škatlo, napolnite jo z domačimi izdelki in dodajte sporočilo na kartici.",
-};
+export async function generateMetadata({ searchParams }: Parametri): Promise<Metadata> {
+  // Pripravljen program je samostojna vsebina (v zemljevidu strani), zato ga
+  // kanonični URL ohrani; ostali parametri (`tip`, `uredi`) ne.
+  const slug = prvi((await searchParams).program);
+  const program = slug ? (await naloziDarila()).programi.find((p) => p.slug === slug) : undefined;
+  return metapodatkiStrani({
+    naslov: program ? `${program.ime}: sestavite darilo` : "Sestavite darilo",
+    opis: program?.opis ?? "Izberite darilno škatlo, napolnite jo z domačimi izdelki in dodajte sporočilo na kartici.",
+    pot: program ? potPrograma(program.slug) : POT_KONFIGURATORJA,
+    slike: program?.slika ? [{ ...program.slika, width: program.slika.sirina, height: program.slika.visina }] : undefined,
+  });
+}
 
 /** Zaloga in sezone so vedno trenutne. */
 export const dynamic = "force-dynamic";

@@ -159,6 +159,36 @@ export const NastavitveTrgovine: GlobalConfig = {
             },
           ],
         },
+        {
+          type: "row",
+          fields: [
+            {
+              name: "geoSirina",
+              type: "number",
+              label: "Zemljepisna širina",
+              min: -90,
+              max: 90,
+              admin: {
+                width: "50%",
+                step: 0.000001,
+                description:
+                  "Lega kmetije za iskalnike (Google), npr. 45.7756. V Google Maps desni klik na kmetijo pokaže obe številki. Prazno: lega se ne objavi.",
+              },
+            },
+            {
+              name: "geoDolzina",
+              type: "number",
+              label: "Zemljepisna dolžina",
+              min: -180,
+              max: 180,
+              admin: {
+                width: "50%",
+                step: 0.000001,
+                description: "Druga številka iz Google Maps, npr. 15.0937. Izpolnite obe ali nobene.",
+              },
+            },
+          ],
+        },
       ],
     },
   ],
