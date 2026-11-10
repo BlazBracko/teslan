@@ -17,7 +17,8 @@ export function Price({
   from?: boolean;
   /** Prejšnja cena, prečrtana. */
   previousCents?: number;
-  size?: "sm" | "md" | "lg";
+  /** `card`: velika cena na kartici izdelka. */
+  size?: "sm" | "md" | "card" | "lg" | "xl";
   className?: string;
 }) {
   return (
@@ -26,7 +27,9 @@ export function Price({
         "inline-flex items-baseline gap-1.5 text-ink type-numeric",
         size === "sm" && "type-small font-medium",
         size === "md" && "type-body font-semibold",
+        size === "card" && "text-[1.125rem] leading-snug font-semibold tracking-[-0.011em]",
         size === "lg" && "type-h3 font-display",
+        size === "xl" && "font-display text-[1.75rem] leading-tight font-medium tracking-[-0.02em]",
         className,
       )}
     >

@@ -64,6 +64,7 @@ const barve: Array<{ skupina: string; tokeni: Array<{ ime: string; opis: string;
       { ime: "brand", opis: "Zelena njiv: glavna dejanja", svetlo: true },
       { ime: "brand-strong", opis: "Pritisk, lebdenje", svetlo: true },
       { ime: "brand-soft", opis: "Izbrano, oznake" },
+      { ime: "brand-bright", opis: "Poudarek na temnih ploskvah" },
       { ime: "accent", opis: "Glina: sezona, izpostavljeno", svetlo: true },
       { ime: "accent-soft", opis: "Ozadje poudarka" },
     ],
@@ -96,7 +97,7 @@ const tipi = [
 export function Styleguide() {
   return (
     <ToastProvider>
-      <div className="min-h-dvh bg-canvas pt-32 pb-section-lg text-ink-muted">
+      <div className="min-h-dvh bg-canvas pt-10 pb-section-lg text-ink-muted">
         <div className="mx-auto flex max-w-content flex-col gap-section px-gutter sm:px-gutter-lg">
           <header className="flex flex-col gap-3">
             <p className="type-label text-accent">Samo na stagingu</p>
@@ -282,6 +283,15 @@ function Gumbi() {
         <Button asChild variant="outline">
           <Link href="/products">Povezava kot gumb</Link>
         </Button>
+      </Primer>
+      <Primer naslov="Na temni ploskvi (uvod, glava, darila)">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-brand-strong p-5">
+          <Button variant="bright">V spletno trgovino</Button>
+          <Button variant="outlineInverse">Darila</Button>
+          <Button variant="ghostInverse" size="icon" aria-label="Košarica">
+            <LuShoppingBag aria-hidden="true" />
+          </Button>
+        </div>
       </Primer>
       <Primer naslov="Čez celo širino" className="max-w-sm">
         <Button block size="lg">

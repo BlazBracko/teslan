@@ -13,3 +13,11 @@ for (const pot of ["/pogoji", "/odstop", "/privacyPolicy"]) {
     expect(predPoglavji).toBe(true);
   });
 }
+
+/** Besedila, ki jih je napisal agent, so na stagingu označena za lastnikov pregled. */
+for (const pot of ["/dostava", "/vprasanja", "/about"]) {
+  test(`${pot} ima na stagingu oznako osnutka besedila`, async ({ page }) => {
+    await page.goto(pot);
+    await expect(page.getByRole("note").filter({ hasText: "Osnutek besedila – za pregled." })).toBeVisible();
+  });
+}

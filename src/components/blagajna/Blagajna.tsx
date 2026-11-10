@@ -451,12 +451,22 @@ function ObrazecBlagajne({
                     ? dostava.postninaCenti === 0
                       ? "Pošljemo po pošti, poštnina je brezplačna."
                       : `Brezplačno od ${formatirajCeno(dostava.pragBrezplacnePostnineCenti)}. Plačilo samo s kartico.`
-                    : `Ni mogoče, ker so v košarici izdelki samo za prevzem na kmetiji: ${nastevanje(dostava.samoPrevzem)}.`
+                    : `Za to naročilo ni na voljo, ker so v košarici izdelki samo za prevzem na kmetiji: ${nastevanje(dostava.samoPrevzem)}.`
                 }
                 aside={dostava.postaDovoljena ? (dostava.postninaCenti === 0 ? "brezplačno" : formatirajCeno(dostava.postninaCenti)) : undefined}
               />
             </RadioGroup>
           </Field>
+
+          {!dostava.postaDovoljena && (
+            <p className="type-small text-ink-muted">
+              Želite ostale izdelke prejeti po pošti?{" "}
+              <Link href={POT_KOSARICE} className="font-medium text-brand underline underline-offset-4">
+                V košarici odstranite izdelke samo za prevzem
+              </Link>{" "}
+              in jih naročite posebej.
+            </p>
+          )}
 
           {posta && pregled.imaSkatlo && (
             <Checkbox

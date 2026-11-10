@@ -21,7 +21,7 @@ export function GalerijaIzdelka({ slike, ime }: { slike: SlikaPogled[]; ime: str
         slika={slika}
         sizes="(min-width: 1024px) 36rem, 100vw"
         prednostna={izbrana === 0}
-        className="aspect-square rounded-xl ring-1 ring-line"
+        className="aspect-[4/3] rounded-xl ring-1 ring-line sm:aspect-square"
         nadomestnaOznaka={`${ime}: slika še ni na voljo`}
       />
       {slike.length > 1 && (

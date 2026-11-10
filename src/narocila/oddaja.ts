@@ -204,7 +204,7 @@ export async function oddajNarocilo(
       throw new Razveljavi({
         ok: false,
         vrsta: "zavrnjeno",
-        sporocilo: `Pošiljanje po pošti ni mogoče, ker so v košarici izdelki samo za prevzem na kmetiji: ${nastevanje(pregled.dostava.samoPrevzem)}.`,
+        sporocilo: `Pošiljanje po pošti za to naročilo ni na voljo, ker so v košarici izdelki samo za prevzem na kmetiji: ${nastevanje(pregled.dostava.samoPrevzem)}. Izberite prevzem na kmetiji ali te izdelke odstranite iz košarice.`,
       });
     }
     if (!dovoljenaPlacila(podatki.nacinDostave).includes(podatki.nacinPlacila)) {

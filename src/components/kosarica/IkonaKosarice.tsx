@@ -9,7 +9,7 @@ import { KOS, stevilo } from "@/lib/sklanjanje";
 import { cn } from "@/lib/utils";
 
 /**
- * Ikona košarice v glavi (Z7) s številom kosov. Število pride iz
+ * Ikona košarice v glavi (Z7) s številom kosov, na temni plavajoči glavi. Število pride iz
  * `localStorage`, zato ga strežnik ne pozna: do hidracije je ikona brez
  * značke, nato se posodobi ob vsaki spremembi košarice (tudi v drugem
  * zavihku).
@@ -24,7 +24,7 @@ export function IkonaKosarice({ aktivna }: { aktivna: boolean }) {
       href={POT_KOSARICE}
       aria-label={opis}
       aria-current={aktivna ? "page" : undefined}
-      className={cn(buttonVariants({ variant: "ghost", size: "icon" }), aktivna && "bg-surface-muted")}
+      className={cn(buttonVariants({ variant: "ghostInverse", size: "icon" }), aktivna && "bg-ink-inverse/15")}
     >
       <LuShoppingBag aria-hidden="true" />
       {kosi !== null && kosi > 0 && (
@@ -33,8 +33,8 @@ export function IkonaKosarice({ aktivna }: { aktivna: boolean }) {
           data-testid="stevilo-v-kosarici"
           className={cn(
             "absolute top-0.5 right-0.5 grid h-5 min-w-5 place-items-center rounded-full px-1",
-            "bg-brand text-on-brand type-caption type-numeric leading-none font-semibold",
-            "ring-2 ring-canvas",
+            "bg-brand-bright text-brand-strong type-caption type-numeric leading-none font-semibold",
+            "ring-2 ring-brand",
           )}
         >
           {kosi > 99 ? "99+" : kosi}

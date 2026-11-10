@@ -7,7 +7,7 @@ export const ikona = (page: Page) => page.getByRole("banner").getByRole("link", 
 export async function dodaj(page: Page, slug: string, velikost: RegExp | null = null) {
   await page.goto(`/products/${slug}`);
   if (velikost) await page.getByRole("radiogroup").getByRole("radio", { name: velikost }).click();
-  await page.getByRole("button", { name: "V košarico" }).click();
+  await page.getByRole("button", { name: "V košarico", exact: true }).click();
   await expect(page.getByText("Dodano v košarico", { exact: true }).last()).toBeVisible();
 }
 

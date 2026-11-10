@@ -2,14 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LuCircleAlert, LuGift, LuInfo, LuPencil, LuRefreshCw, LuShoppingBag, LuTrash2, LuTruck } from "react-icons/lu";
+import {
+  LuCheck,
+  LuCircleAlert,
+  LuGift,
+  LuInfo,
+  LuPencil,
+  LuRefreshCw,
+  LuShoppingBag,
+  LuStore,
+  LuTrash2,
+  LuTruck,
+} from "react-icons/lu";
 import { SlikaIzdelka } from "@/components/katalog/SlikaIzdelka";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field } from "@/components/ui/Field";
 import { Price } from "@/components/ui/Price";
 import { QuantityInput } from "@/components/ui/QuantityInput";
-import { POT_BLAGAJNE, potUrejanjaSkatle } from "@/components/postavitev/navigacija";
+import { POT_BLAGAJNE, POT_DOSTAVE, potUrejanjaSkatle } from "@/components/postavitev/navigacija";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { preveriKosaricoNaStrezniku } from "@/kosarica/akcije";
 import { oznakaStopnje } from "@/kosarica/cene";
@@ -34,6 +46,12 @@ const ZAMIK_PREVERJANJA_MS = 150;
  * brskalniku, strežnik ob vsaki spremembi izračuna cene, zalogo in pravila
  * dostave. Postavke s težavo so označene z razlogom; na blagajno se ne da,
  * dokler jih kupec ne odstrani ali popravi.
+ *
+ * Mešana košarica (T4): izdelek samo za prevzem ni težava, naročilo se le
+ * v celoti prevzame na kmetiji. Zato to pove mirno obvestilo z rešitvijo
+ * (prevzem za vse ali odstranitev teh izdelkov), ne opozorilo; prej je
+ * stavek „Pošiljanje po pošti ni mogoče“ kupec bral, kot da naročila ni
+ * mogoče oddati.
  *
  * Nakupni tok je brez okrasnih animacij (Z2).
  */
@@ -71,7 +89,7 @@ export function Kosarica({ telefon, telefonPovezava }: { telefon: string | null;
       <EmptyState
         icon={<LuShoppingBag aria-hidden="true" />}
         title="Vaša košarica je prazna"
-        description="Izberite izdelke na ceniku in jih dodajte v košarico. Shranjena ostane v tem brskalniku."
+        description="Izberite izdelke v spletni trgovini in jih dodajte v košarico. Shranjena ostane v tem brskalniku."
         action={
           <Button asChild>
             <Link href="/products">Na izdelke</Link>
@@ -103,6 +121,16 @@ export function Kosarica({ telefon, telefonPovezava }: { telefon: string | null;
   const zastarelo = rezultat.za !== kosarica;
   const lokalno = new Map(kosarica.map((p) => [kljucPostavke(p), p]));
   const vrstice = pregled.postavke.filter((p) => lokalno.has(p.kljuc));
+  // Izdelki, ki jih ne pošiljamo (T4), in ali je ob njih še kaj, kar bi lahko šlo po pošti.
+  const samoPrevzem = vrstice.filter(
+    (p): p is PostavkaIzdelkaPregled =>
+      p.vrsta === "izdelek" && p.tezava?.vrsta !== "nedosegljivo" && p.izdelek?.nacinProdaje === "samo-prevzem",
+  );
+  const imaPosiljljive = vrstice.some(
+    (p) =>
+      p.tezava?.vrsta !== "nedosegljivo" &&
+      (p.vrsta === "skatla" || p.izdelek?.nacinProdaje === "posta-in-prevzem"),
+  );
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
@@ -116,6 +144,41 @@ export function Kosarica({ telefon, telefonPovezava }: { telefon: string | null;
             Nekaterih izdelkov ni mogoče naročiti, kot so v košarici. Pri označenih postavkah preberite razlog ter
             jih odstranite ali popravite količino.
           </p>
+        )}
+        {samoPrevzem.length > 0 && (
+          <div
+            role="status"
+            data-testid="samo-prevzem"
+            className="flex gap-3 rounded-xl bg-brand-soft p-4 type-small text-ink sm:p-5"
+          >
+            <LuStore aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand" />
+            <div className="flex flex-col items-start gap-2">
+              <p className="type-body font-semibold text-ink">To naročilo prevzamete na kmetiji</p>
+              <p>
+                V košarici {samoPrevzem.length === 1 ? "je izdelek, ki ga" : "so izdelki, ki jih"} ne pošiljamo po
+                pošti: <strong className="font-semibold">{nastevanje(pregled.dostava.samoPrevzem)}</strong>. Naročilo
+                zato v celoti pripravimo za brezplačen prevzem na kmetiji v Podgori. Nadaljujte na blagajno.
+              </p>
+              {imaPosiljljive && (
+                <>
+                  <p>
+                    Želite ostale izdelke prejeti po pošti? Odstranite{" "}
+                    {samoPrevzem.length === 1 ? "ta izdelek in ga" : "te izdelke in jih"} naročite posebej.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      for (const p of samoPrevzem) odstraniIzKosarice(p.kljuc);
+                    }}
+                  >
+                    <LuTruck aria-hidden="true" />
+                    {samoPrevzem.length === 1 ? "Odstrani izdelek samo za prevzem" : "Odstrani izdelke samo za prevzem"}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
         )}
         <ul className="flex flex-col divide-y divide-line border-y border-line">
           {vrstice.map((p) =>
@@ -176,9 +239,9 @@ function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaIzdelkaPregled; 
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+        <div className="flex items-start justify-between gap-x-4 gap-y-1">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h3 className="type-title text-ink">
+            <h3 className="font-sans type-title text-ink">
               {povezava ? (
                 <Link href={povezava} className="rounded-xs hover:underline">
                   {ime}
@@ -192,6 +255,12 @@ function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaIzdelkaPregled; 
                 {p.velikost}
                 {p.cenaCenti != null && <> · {formatirajCeno(p.cenaCenti)} / kos</>}
               </p>
+            )}
+            {p.izdelek?.nacinProdaje === "samo-prevzem" && !nedosegljivo && (
+              <Badge variant="outline" className="mt-1 self-start">
+                <LuStore aria-hidden="true" />
+                Samo prevzem na kmetiji
+              </Badge>
             )}
           </div>
           {p.skupajCenti != null && !p.tezava && <Price cents={p.skupajCenti} />}
@@ -263,7 +332,7 @@ function VrsticaSkatle({ postavka: p, kolicina }: { postavka: PostavkaSkatlePreg
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h3 className="type-title text-ink">{ime}</h3>
+            <h3 className="font-sans type-title text-ink">{ime}</h3>
             {p.cenaSkatleCenti != null && (
               <p className="type-small text-ink-muted">Darilna škatla · {formatirajCeno(p.cenaSkatleCenti)} / kos</p>
             )}
@@ -381,29 +450,45 @@ function Povzetek({
         ))}
       </dl>
 
-      <div className="flex flex-col gap-2 border-t border-line pt-5 type-small">
+      <div className="flex flex-col gap-3 border-t border-line pt-5 type-small">
         <p className="flex items-center gap-2 font-semibold text-ink">
           <LuTruck aria-hidden="true" className="size-4" />
           Dostava
         </p>
-        <p className="text-ink-muted">Prevzem na kmetiji: brezplačno.</p>
-        {dostava.postaDovoljena ? (
-          <p className="text-ink-muted" data-testid="posta">
-            Pošta:{" "}
-            {dostava.postninaCenti === 0
-              ? "brezplačno."
-              : `${formatirajCeno(dostava.postninaCenti)}, brezplačno od ${formatirajCeno(dostava.pragBrezplacnePostnineCenti)}.`}
-            {dostava.doBrezplacnePostnineCenti > 0 && (
-              <> Do brezplačne poštnine vam manjka {formatirajCeno(dostava.doBrezplacnePostnineCenti)}.</>
-            )}
-          </p>
-        ) : (
-          <p className="text-ink-muted" data-testid="posta">
-            Pošiljanje po pošti ni mogoče, ker so v košarici izdelki samo za prevzem na kmetiji:{" "}
-            {nastevanje(dostava.samoPrevzem)}.
-          </p>
-        )}
-        <p className="text-ink-subtle">Način dostave in plačila izberete na blagajni.</p>
+        <ul className="flex flex-col gap-2.5 text-ink-muted">
+          <li className="flex gap-2.5">
+            <LuCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
+            <span>Prevzem na kmetiji: brezplačno.</span>
+          </li>
+          {dostava.postaDovoljena ? (
+            <li className="flex gap-2.5">
+              <LuCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
+              <span data-testid="posta">
+                Pošta:{" "}
+                {dostava.postninaCenti === 0
+                  ? "brezplačno."
+                  : `${formatirajCeno(dostava.postninaCenti)}, brezplačno od ${formatirajCeno(dostava.pragBrezplacnePostnineCenti)}.`}
+                {dostava.doBrezplacnePostnineCenti > 0 && (
+                  <> Do brezplačne poštnine vam manjka {formatirajCeno(dostava.doBrezplacnePostnineCenti)}.</>
+                )}
+              </span>
+            </li>
+          ) : (
+            <li className="flex gap-2.5">
+              <LuInfo aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-subtle" />
+              <span data-testid="posta">
+                Pošta: za to naročilo ni na voljo, ker so v košarici izdelki samo za prevzem na kmetiji:{" "}
+                {nastevanje(dostava.samoPrevzem)}.
+              </span>
+            </li>
+          )}
+        </ul>
+        <p className="text-ink-subtle">
+          Način dostave in plačila izberete na blagajni.{" "}
+          <Link href={POT_DOSTAVE} className="rounded-xs text-brand underline underline-offset-4">
+            Več o dostavi
+          </Link>
+        </p>
       </div>
 
       {!pregled.trgovinaOdprta ? (
@@ -413,9 +498,14 @@ function Povzetek({
       ) : (
         <div className="flex flex-col gap-3 border-t border-line pt-5">
           {pregled.lahkoNaBlagajno ? (
-            <Button asChild size="lg" block>
-              <Link href={POT_BLAGAJNE}>Na blagajno</Link>
-            </Button>
+            <>
+              <Button asChild size="lg" block>
+                <Link href={POT_BLAGAJNE}>Na blagajno</Link>
+              </Button>
+              {!dostava.postaDovoljena && (
+                <p className="text-center type-small text-ink-muted">Naročilo oddate za prevzem na kmetiji.</p>
+              )}
+            </>
           ) : (
             <>
               <Button size="lg" block disabled aria-describedby="blagajna-opis">

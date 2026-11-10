@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LuChevronRight } from "react-icons/lu";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { DostavaIzdelka } from "@/components/katalog/DostavaIzdelka";
 import { GalerijaIzdelka } from "@/components/katalog/GalerijaIzdelka";
+import { SorodniIzdelki, sorodniIzdelki } from "@/components/katalog/SorodniIzdelki";
 import { GumbNazaj } from "@/components/katalog/GumbNazaj";
 import { ZgodbaIzdelka } from "@/components/katalog/ZgodbaIzdelka";
 import { NakupIzdelka, type VelikostZaNakup } from "@/components/katalog/NakupIzdelka";
@@ -32,6 +34,12 @@ async function najdiIzdelek(slug: string): Promise<IzdelekPogled | undefined> {
   return katalog.izdelki.find((i) => i.slug === slug);
 }
 
+/** Izdelek in sorodni izdelki iz istega (predpomnjenega) kataloga. */
+async function najdiIzdelekInKatalog(slug: string) {
+  const katalog = await naloziKatalog();
+  return { izdelek: katalog.izdelki.find((i) => i.slug === slug), vsi: katalog.izdelki };
+}
+
 export async function generateMetadata({ params }: Parametri): Promise<Metadata> {
   const izdelek = await najdiIzdelek((await params).slug);
   if (!izdelek) return { title: "Izdelka ni mogoče najti", robots: { index: false } };
@@ -46,17 +54,19 @@ export async function generateMetadata({ params }: Parametri): Promise<Metadata>
 
 /**
  * Podstran izdelka (Z15): gumb „Nazaj“ in drobtinice, galerija, izbira
- * velikosti in količine, sestavine in alergeni, pod tem zgodba izdelka.
- * Neobstoječ ali neobjavljen slug vrne 404.
+ * velikosti in količine, dostava in prevzem, sestavine in alergeni, pod tem
+ * zgodba izdelka in sorodni izdelki. Neobstoječ ali neobjavljen slug vrne
+ * 404.
  */
 export default async function ProductPage({ params }: Parametri) {
   const { slug } = await params;
-  const [izdelek, nastavitve, kontakt] = await Promise.all([
-    najdiIzdelek(slug),
+  const [{ izdelek, vsi }, nastavitve, kontakt] = await Promise.all([
+    najdiIzdelekInKatalog(slug),
     naloziNastavitve(),
     naloziKontakt(),
   ]);
   if (!izdelek) notFound();
+  const trgovinaOdprta = nastavitve.trgovinaOdprta !== false;
 
   const mesec = trenutniMesec();
   const seznam = potSeznamaZaIzdelek(izdelek);
@@ -76,9 +86,9 @@ export default async function ProductPage({ params }: Parametri) {
   ].filter((p): p is { naslov: string; vsebina: string } => Boolean(p));
 
   return (
-    <Container className="py-8 md:py-12">
+    <Container className="py-4 md:py-10">
       <JsonLd podatki={jsonLd} />
-      <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 md:mb-6">
         <GumbNazaj nadomestna={seznam} />
         <nav aria-label="Drobtinice">
           <ol className="flex flex-wrap items-center gap-1 type-small text-ink-muted">
@@ -108,18 +118,20 @@ export default async function ProductPage({ params }: Parametri) {
         </nav>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-14">
-        <GalerijaIzdelka slike={izdelek.slike} ime={izdelek.ime} />
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-14">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <GalerijaIzdelka slike={izdelek.slike} ime={izdelek.ime} />
+        </div>
 
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <p className="type-label text-accent">{izdelek.kategorija.ime}</p>
             <h1 className="type-h1 text-ink">{izdelek.ime}</h1>
+            {cena && <Price cents={cena.centi} from={cena.od} size="xl" />}
             <div className="flex flex-wrap gap-1.5">
               <OznakaRazpolozljivosti razpolozljivost={razpolozljivostIzdelka(izdelek, mesec)} />
               <OznakaNacina nacin={izdelek.nacinProdaje} />
             </div>
-            {cena && <Price cents={cena.centi} from={cena.od} size="lg" />}
             {izdelek.kratekOpis && <p className="type-body-lg text-ink-muted">{izdelek.kratekOpis}</p>}
           </div>
 
@@ -128,9 +140,15 @@ export default async function ProductPage({ params }: Parametri) {
             ime={izdelek.ime}
             samoPrikaz={izdelek.nacinProdaje === "samo-prikaz"}
             velikosti={velikosti}
-            trgovinaOdprta={nastavitve.trgovinaOdprta !== false}
+            trgovinaOdprta={trgovinaOdprta}
             telefon={kontakt.telefon}
             telefonPovezava={kontakt.telefonPovezava}
+          />
+
+          <DostavaIzdelka
+            nacin={izdelek.nacinProdaje}
+            postninaCenti={nastavitve.postninaCenti}
+            pragBrezplacnePostnineCenti={nastavitve.pragBrezplacnePostnineCenti}
           />
 
           {podrobnosti.length > 0 && (
@@ -147,6 +165,7 @@ export default async function ProductPage({ params }: Parametri) {
       </div>
 
       <ZgodbaIzdelka izdelek={izdelek} />
+      <SorodniIzdelki izdelki={sorodniIzdelki(izdelek, vsi, mesec)} mesec={mesec} trgovinaOdprta={trgovinaOdprta} />
     </Container>
   );
 }

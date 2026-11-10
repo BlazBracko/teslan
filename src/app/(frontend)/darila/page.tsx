@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LuArrowRight, LuGift, LuMessageSquareHeart, LuPackageOpen, LuSparkles, LuTruck } from "react-icons/lu";
 import { KarticaPrograma } from "@/components/darila/KarticaPrograma";
 import { PoslovnaDarila } from "@/components/darila/PoslovnaDarila";
-import { SlikaIzdelka } from "@/components/katalog/SlikaIzdelka";
+import { RenderDarilneSkatle } from "@/components/darila/RenderDarilneSkatle";
 import { POT_KONFIGURATORJA } from "@/components/postavitev/navigacija";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -12,14 +12,11 @@ import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Price } from "@/components/ui/Price";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { izdelkiZaSkatlo } from "@/darila/konfigurator";
 import { naloziDarila } from "@/darila/podatki";
 import { prazniskiCas, programiZaPrikaz } from "@/darila/predstavitev";
-import type { SlikaPogled } from "@/katalog/pogled";
 import { naloziKatalog, naloziKontakt } from "@/katalog/podatki";
 import { trenutniMesec } from "@/katalog/sezona";
 import { MESTO, stevilo } from "@/lib/sklanjanje";
-import { cn } from "@/lib/utils";
 import { metapodatkiStrani } from "@/seo/metapodatki";
 
 export const metadata: Metadata = metapodatkiStrani({
@@ -39,7 +36,7 @@ const KORAKI = [
 ];
 
 /**
- * Darila (T5 korak 1): uvod z darilno škatlo iz fotografij izdelkov, kako
+ * Darila (T5 korak 1): uvod z ilustracijo darilne škatle, kako
  * poteka nakup, pripravljeni programi z vsebino in ceno, škatle za lastno
  * sestavo in poslovna darila. Cena programa upošteva samo izdelke, ki so
  * ta čas na voljo (enako kot konfigurator, Z53).
@@ -50,20 +47,16 @@ export default async function DarilaPage() {
   const danes = new Date();
   const praznicno = prazniskiCas(danes);
   const programi = programiZaPrikaz(darila, katalog.izdelki, mesec);
-  const slike = izdelkiZaSkatlo(katalog.izdelki, mesec)
-    .map((i) => i.slika)
-    .filter((s): s is SlikaPogled => s !== null)
-    .filter((s, i, vse) => vse.findIndex((x) => x.url === s.url) === i)
-    .slice(0, 4);
 
   return (
     <>
-      <header className="relative isolate overflow-hidden border-b border-line bg-surface">
+      {/* Ploskev sega pod plavajočo glavo (gl. PageHeader). */}
+      <header className="relative isolate -mt-glava overflow-hidden border-b border-line bg-surface pt-glava">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 text-accent/10">
           <LuSparkles className="absolute top-8 left-[46%] size-16 rotate-12" />
           <LuSparkles className="absolute bottom-6 left-[4%] size-10 -rotate-12" />
         </div>
-        <Container className="grid items-center gap-10 py-12 md:py-16 lg:grid-cols-12 lg:gap-14">
+        <Container className="grid items-center gap-10 py-8 md:py-14 lg:grid-cols-12 lg:gap-14">
           <div className="flex flex-col items-start gap-5 lg:col-span-6">
             <p className="inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1.5 type-label text-accent-strong">
               <LuSparkles aria-hidden="true" className="size-4" />
@@ -91,7 +84,9 @@ export default async function DarilaPage() {
               )}
             </div>
           </div>
-          <DarilnaSkatla slike={slike} className="lg:col-span-6" />
+          <div className="mx-auto w-full max-w-sm lg:col-span-6 lg:max-w-lg">
+            <RenderDarilneSkatle oznaka="Ilustracija: odprta darilna škatla z domačimi izdelki, prevezana s trakom" />
+          </div>
         </Container>
       </header>
 
@@ -199,29 +194,6 @@ export default async function DarilaPage() {
         )}
       </Container>
     </>
-  );
-}
-
-/** Okras uvoda: škatla iz fotografij izdelkov, prevezana s trakom. */
-function DarilnaSkatla({ slike, className }: { slike: SlikaPogled[]; className?: string }) {
-  if (slike.length < 2) return null;
-  const stiri = [...slike, ...slike].slice(0, 4);
-  return (
-    <div aria-hidden="true" className={cn("relative mx-auto w-full max-w-md lg:max-w-none", className)}>
-      <div className="relative rotate-[-2deg] rounded-2xl bg-surface-muted p-3 shadow-floating ring-1 ring-line">
-        <div className="grid grid-cols-2 gap-3">
-          {stiri.map((s, i) => (
-            <SlikaIzdelka key={i} slika={s} sizes="(min-width: 1024px) 18rem, 45vw" className="aspect-square rounded-xl" />
-          ))}
-        </div>
-        {/* Trak čez škatlo in pentlja. */}
-        <span className="absolute inset-y-0 left-1/2 w-5 -translate-x-1/2 bg-accent/90" />
-        <span className="absolute inset-x-0 top-1/2 h-5 -translate-y-1/2 bg-accent/90" />
-        <span className="absolute top-1/2 left-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-accent text-on-accent shadow-floating ring-4 ring-surface">
-          <LuGift className="size-7" />
-        </span>
-      </div>
-    </div>
   );
 }
 

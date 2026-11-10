@@ -12,6 +12,8 @@ export const STATICNE_STRANI: ReadonlyArray<{ pot: string; prednost: number }> =
   { pot: "/darila", prednost: 0.8 },
   { pot: "/darila/sestavi", prednost: 0.6 },
   { pot: "/about", prednost: 0.6 },
+  { pot: "/dostava", prednost: 0.5 },
+  { pot: "/vprasanja", prednost: 0.5 },
   ...PRAVNE_POVEZAVE.map((p) => ({ pot: p.href, prednost: 0.3 })),
 ];
 

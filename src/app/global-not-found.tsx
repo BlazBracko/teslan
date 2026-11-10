@@ -25,13 +25,23 @@ export default function GlobalNotFound() {
   return (
     <html lang="sl" className={razrediPisav}>
       <body className="flex min-h-dvh flex-col">
-        <header className="border-b border-line bg-canvas">
-          <Container className="flex h-16 items-center">
-            <Link href="/" className="-mx-1 flex items-center gap-2.5 rounded-md px-1">
-              <Image src="/logo.png" alt="" width={40} height={40} className="size-10 object-contain" />
-              <span className="type-title font-display text-ink">{IME_KMETIJE}</span>
+        {/* Enak otok kot glava ostalih strani, le brez navigacije in košarice. */}
+        <header className="px-3 pt-3 lg:px-gutter-lg">
+          <div className="mx-auto flex h-14 max-w-content items-center rounded-[1.375rem] bg-brand px-3 shadow-floating md:h-16 md:px-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 rounded-xl py-1 pr-2 focus-visible:outline-ink-inverse"
+            >
+              <Image
+                src="/logo.png"
+                alt=""
+                width={40}
+                height={40}
+                className="size-9 rounded-full bg-surface object-contain md:size-10"
+              />
+              <span className="font-display type-title text-ink-inverse">{IME_KMETIJE}</span>
             </Link>
-          </Container>
+          </div>
         </header>
         <main id="vsebina" className="flex-1">
           <Container size="prose" className="py-section">
