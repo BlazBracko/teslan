@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { Kosarica } from "@/components/kosarica/Kosarica";
 import { Container } from "@/components/ui/Container";
 import { naloziKontakt } from "@/katalog/podatki";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Košarica — Domačija Tešlan",
-  description: "Izdelki, ki ste jih izbrali za naročilo na Domačiji Tešlan.",
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Košarica",
+  opis: "Izdelki, ki ste jih izbrali za naročilo na Domačiji Tešlan.",
+  pot: "/kosarica",
   // Vsebina je v brskalniku obiskovalca; iskalniki tu nimajo česa najti.
-  robots: { index: false },
-};
+  brezIndeksa: true,
+});
 
 /**
  * Košarica (Z20, Z21, T2 korak 2). Vsebino hrani brskalnik, zato se izriše

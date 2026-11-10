@@ -53,7 +53,7 @@ Ob prvem obisku `/admin` (prazna baza) se odpre obrazec za prvega uporabnika, ki
 | `npm run generate:types` / `generate:importmap` | osveži `src/payload-types.ts` in import map admina |
 | `npm run preveri:payload` | vse tri zgornje naenkrat; CI zahteva, da za njimi ni sprememb |
 
-Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo. Ista gradnja teče dvakrat: na portu 3100 kot produkcija in na 3101 z `NOINDEX=1` kot staging; testi v `e2e/noindex/` tečejo samo proti drugemu.
+Za e2e je potreben Chromium: `npx playwright install chromium`. Če je brskalnik že nameščen drugje, nastavite `PLAYWRIGHT_CHROMIUM_EXECUTABLE=<pot>`. Z `E2E_SKIP_BUILD=1` Playwright preskoči gradnjo in uporabi obstoječo. Ista gradnja teče dvakrat: na portu 3100 kot produkcija in na 3101 z `NOINDEX=1` in Basic Auth (testno geslo iz `e2e/zascita.ts`) kot staging; testi v `e2e/noindex/` tečejo samo proti drugemu.
 
 Plačila s kartico v e2e: brez testnih ključev Stripe v okolju Playwright zažene nadomestni Stripe ([`e2e/stripe-nadomestek.ts`](e2e/stripe-nadomestek.ts)) in tok s kartico preveri `e2e/placilo.spec.ts`; s `STRIPE_SECRET_KEY` (testni) in `STRIPE_WEBHOOK_SECRET` v okolju strežnika uporabljata pravi Stripe in teče `e2e/stripe-pravi.spec.ts` (S11).
 
@@ -84,7 +84,7 @@ Vse spremenljivke so opisane v [`.env.example`](.env.example) in jih ob zagonu s
 | Okolje | Veja | Opombe |
 |---|---|---|
 | produkcija | `main` | `https://www.teslan.si`; spaja samo lastnik |
-| staging | `staging` | Railway samodejno deploya; `NOINDEX=1`, basic auth |
+| staging | `staging` | Railway samodejno deploya; `NOINDEX=1` (robots `Disallow: /`, glava `X-Robots-Tag`), geslo z `BASIC_AUTH_USER` + `BASIC_AUTH_PASSWORD` (`src/proxy.ts`, brez obeh je stran odprta) |
 
 ## CI
 

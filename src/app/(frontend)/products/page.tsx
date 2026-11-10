@@ -10,12 +10,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { naloziKatalog } from "@/katalog/podatki";
 import { trenutniMesec } from "@/katalog/sezona";
 import { IZDELEK, stevilo } from "@/lib/sklanjanje";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Naši izdelki — Domačija Tešlan",
-  description:
-    "Izdelki Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Naši izdelki",
+  opis: "Izdelki Domačije Tešlan: šparglji, začimbe, jajca, liofilizirano sadje, marmelade, olja in sokovi.",
+  // Filter kategorije (`?kategorija=`) je ista stran, zato kanonični URL nima parametra.
+  pot: "/products",
+});
 
 /**
  * Seznam vseh objavljenih izdelkov (Z14) s filtrom po kategoriji v URL.

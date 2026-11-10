@@ -52,13 +52,16 @@ describe("preberiOkolje", () => {
     }
   });
 
-  it("zahteva celotno skupino (basic auth, S3, Stripe, seed)", () => {
-    expect(() =>
-      preberiOkolje({ NODE_ENV: "development", BASIC_AUTH_USER: "staging" }),
-    ).toThrowError(/BASIC_AUTH_PASSWORD/);
+  it("zahteva celotno skupino (S3, Stripe, seed)", () => {
     expect(() =>
       preberiOkolje({ NODE_ENV: "development", S3_BUCKET: "teslan-staging" }),
     ).toThrowError(/S3_ENDPOINT[\s\S]*S3_PUBLIC_URL/);
+  });
+
+  it("nepopoln basic auth ne ustavi zagona (geslo se izklopi z opozorilom, K12)", () => {
+    expect(preberiOkolje({ NODE_ENV: "development", BASIC_AUTH_USER: "staging" }).BASIC_AUTH_USER).toBe(
+      "staging",
+    );
   });
 
   it("v produkciji ustavi zagon, ko manjka obvezna spremenljivka", () => {

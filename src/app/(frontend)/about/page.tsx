@@ -7,12 +7,17 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { naloziKontakt } from "@/katalog/podatki";
 import type { VrsticaKontakta } from "@/lib/kontakt";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { okolje } from "@/env";
+import { izvorStrani } from "@/seo/izvor";
+import { lokalnoPodjetje } from "@/seo/json-ld";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "O nas — Domačija Tešlan",
-  description:
-    "Domačija Tešlan v Podgori pri Novem mestu se že več kot 15 let ukvarja z ekološkim kmetovanjem.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "O nas",
+  opis: "Domačija Tešlan v Podgori pri Novem mestu se že več kot 15 let ukvarja z ekološkim kmetovanjem.",
+  pot: "/about",
+});
 
 /** Kontakt je iz nastavitev trgovine (baza). */
 export const dynamic = "force-dynamic";
@@ -79,6 +84,7 @@ export default async function AboutPage() {
 
   return (
     <>
+      <JsonLd podatki={lokalnoPodjetje(kontakt, izvorStrani(okolje()))} />
       <PageHeader
         label="Naša zgodba"
         title="O nas"

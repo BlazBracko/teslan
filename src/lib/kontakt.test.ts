@@ -41,6 +41,12 @@ describe("kontaktIzNastavitev", () => {
     });
     expect(kontaktIzNastavitev(undefined).ime).toBe("Domačija Tešlan");
   });
+
+  it("lega samo, ko sta nastavljeni obe koordinati", () => {
+    expect(kontaktIzNastavitev({ geoSirina: 45.7, geoDolzina: 15.1 }).geo).toEqual({ sirina: 45.7, dolzina: 15.1 });
+    expect(kontaktIzNastavitev({ geoSirina: 45.7, geoDolzina: null }).geo).toBeNull();
+    expect(kontaktIzNastavitev({ geoSirina: 0, geoDolzina: 0 }).geo).toEqual({ sirina: 0, dolzina: 0 });
+  });
 });
 
 describe("stevilo", () => {

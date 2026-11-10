@@ -5,12 +5,13 @@ import { POT_DARIL, POT_ODSTOPA, POT_ZASEBNOSTI } from "@/components/postavitev/
 import { NAJDALJSE_SPOROCILO } from "@/darila/pravila";
 import { formatirajCeno } from "@/lib/denar";
 import { naloziPravnePodatke, POSODOBLJENO } from "@/pravno/podatki";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Splošni pogoji poslovanja — Domačija Tešlan",
-  description:
-    "Splošni pogoji spletne trgovine Domačije Tešlan: naročilo, cene, plačilo, prevzem in pošiljanje, odstop in pritožbe.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Splošni pogoji poslovanja",
+  opis: "Splošni pogoji spletne trgovine Domačije Tešlan: naročilo, cene, plačilo, prevzem in pošiljanje, odstop in pritožbe.",
+  pot: "/pogoji",
+});
 
 /** Podatki prodajalca in poštnina so iz nastavitev trgovine (baza). */
 export const dynamic = "force-dynamic";

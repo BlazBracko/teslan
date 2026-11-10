@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { LuChevronRight } from "react-icons/lu";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { GalerijaIzdelka } from "@/components/katalog/GalerijaIzdelka";
 import { NakupIzdelka, type VelikostZaNakup } from "@/components/katalog/NakupIzdelka";
 import { OznakaNacina, OznakaRazpolozljivosti } from "@/components/katalog/OznakaRazpolozljivosti";
@@ -11,11 +12,17 @@ import { Price } from "@/components/ui/Price";
 import { naloziKatalog, naloziKontakt, naloziNastavitve, type IzdelekPogled } from "@/katalog/podatki";
 import { cenaNaKartici, razpolozljivostIzdelka, razpolozljivostVelikosti } from "@/katalog/razpolozljivost";
 import { oznakaSezone, trenutniMesec } from "@/katalog/sezona";
+import { okolje } from "@/env";
+import { izvorStrani } from "@/seo/izvor";
+import { izdelekJsonLd } from "@/seo/json-ld";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
 /** Izdelki in zaloga so iz CMS (predpomnjeni, Z17); mesec je vedno trenuten. */
 export const dynamic = "force-dynamic";
 
 type Parametri = { params: Promise<{ slug: string }> };
+
+const potIzdelka = (slug: string) => `/products/${encodeURIComponent(slug)}`;
 
 /** Objavljen izdelek po slugu; neobjavljeni sploh niso v katalogu (Z14). */
 async function najdiIzdelek(slug: string): Promise<IzdelekPogled | undefined> {
@@ -25,11 +32,14 @@ async function najdiIzdelek(slug: string): Promise<IzdelekPogled | undefined> {
 
 export async function generateMetadata({ params }: Parametri): Promise<Metadata> {
   const izdelek = await najdiIzdelek((await params).slug);
-  if (!izdelek) return { title: "Izdelka ni mogoče najti — Domačija Tešlan" };
-  return {
-    title: `${izdelek.ime} — Domačija Tešlan`,
-    description: izdelek.kratekOpis ?? `${izdelek.ime} z Domačije Tešlan v Podgori pri Novem mestu.`,
-  };
+  if (!izdelek) return { title: "Izdelka ni mogoče najti", robots: { index: false } };
+  return metapodatkiStrani({
+    naslov: izdelek.ime,
+    opis: izdelek.kratekOpis ?? `${izdelek.ime} z Domačije Tešlan v Podgori pri Novem mestu.`,
+    pot: potIzdelka(izdelek.slug),
+    // Slika izdelka za deljenje (Z72); brez nje privzeta slika kmetije.
+    slike: izdelek.slike.slice(0, 1).map((s) => ({ url: s.url, alt: s.alt, width: s.sirina, height: s.visina })),
+  });
 }
 
 /**
@@ -47,6 +57,7 @@ export default async function ProductPage({ params }: Parametri) {
 
   const mesec = trenutniMesec();
   const cena = cenaNaKartici(izdelek, mesec);
+  const jsonLd = izdelekJsonLd(izdelek, kontakt, izvorStrani(okolje()), mesec);
   const velikosti: VelikostZaNakup[] = izdelek.velikosti.map((v) => ({
     id: v.id,
     oznaka: v.oznaka,
@@ -62,6 +73,7 @@ export default async function ProductPage({ params }: Parametri) {
 
   return (
     <Container className="py-8 md:py-12">
+      <JsonLd podatki={jsonLd} />
       <nav aria-label="Drobtinice" className="mb-6">
         <ol className="flex flex-wrap items-center gap-1 type-small text-ink-muted">
           <li>

@@ -5,12 +5,13 @@ import { EpostaProdajalca, Podatek, PodatkiProdajalca, Poglavje, PravnaStran, po
 import { POT_POGOJEV } from "@/components/postavitev/navigacija";
 import { naloziPravnePodatke, POSODOBLJENO } from "@/pravno/podatki";
 import { obrazecZaOdstop } from "@/pravno/prodajalec";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Odstop od pogodbe — Domačija Tešlan",
-  description:
-    "Pravica do odstopa od pogodbe v 14 dneh, izjeme za živila in darilne škatle ter obrazec za odstop za kopiranje.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Odstop od pogodbe",
+  opis: "Pravica do odstopa od pogodbe v 14 dneh, izjeme za živila in darilne škatle ter obrazec za odstop za kopiranje.",
+  pot: "/odstop",
+});
 
 /** Podatki prodajalca so iz nastavitev trgovine (baza). */
 export const dynamic = "force-dynamic";

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { DNEVNIK_EPOSTE } from "./e2e/eposta";
 import { NADOMESTEK, PRAVI_STRIPE } from "./e2e/stripe";
+import { TESTNA_ZASCITA } from "./e2e/zascita";
 import { testnoOkolje } from "./src/test/testna-baza";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
@@ -14,8 +15,10 @@ const baseURLNoindex = `http://localhost:${PORT_NOINDEX}`;
  * (npr. v peskovniku), sicer se uporabi brskalnik iz `npx playwright install`.
  *
  * Ista gradnja teče dvakrat: kot produkcija (brez NOINDEX) in kot staging
- * (`NOINDEX=1`). Testi v `e2e/noindex/` tečejo samo proti drugi. Strežnika
- * se zaženeta po vrsti, zato drugi počaka na gradnjo prvega.
+ * (`NOINDEX=1` in Basic Auth s testnim geslom, Z74). Testi v `e2e/noindex/`
+ * tečejo samo proti drugi in se prijavijo s `TESTNA_ZASCITA`. Strežnika
+ * se zaženeta po vrsti, zato drugi počaka na gradnjo prvega (preverjanje
+ * pripravljenosti sprejme tudi odgovor 401).
  *
  * Oba uporabljata testno bazo (`teslan_test`), ki jo `e2e/priprava.ts` pred
  * testi izprazni, migrira in napolni s seedom. Strežnika Playwright zažene
@@ -81,7 +84,7 @@ export default defineConfig({
     {
       name: "noindex",
       testMatch: /noindex\/.*\.spec\.ts/,
-      use: { ...chromium, baseURL: baseURLNoindex },
+      use: { ...chromium, baseURL: baseURLNoindex, httpCredentials: TESTNA_ZASCITA },
     },
     {
       name: "zaprta-trgovina",
@@ -107,14 +110,19 @@ export default defineConfig({
         ? `npm run start -- --port ${PORT}`
         : `npm run build && npm run start -- --port ${PORT}`,
       url: pripravljen(baseURL),
-      env: { ...okoljeStreznika, NOINDEX: "" },
+      env: { ...okoljeStreznika, NOINDEX: "", BASIC_AUTH_USER: "", BASIC_AUTH_PASSWORD: "" },
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
     },
     {
       command: `npm run start -- --port ${PORT_NOINDEX}`,
       url: pripravljen(baseURLNoindex),
-      env: { ...okoljeStreznika, NOINDEX: "1" },
+      env: {
+        ...okoljeStreznika,
+        NOINDEX: "1",
+        BASIC_AUTH_USER: TESTNA_ZASCITA.username,
+        BASIC_AUTH_PASSWORD: TESTNA_ZASCITA.password,
+      },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

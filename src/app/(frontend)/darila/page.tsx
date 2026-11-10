@@ -16,12 +16,13 @@ import { naloziDarila } from "@/darila/podatki";
 import { naloziKatalog } from "@/katalog/podatki";
 import { trenutniMesec } from "@/katalog/sezona";
 import { MESTO, stevilo } from "@/lib/sklanjanje";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Darila — Domačija Tešlan",
-  description:
-    "Darilne škatle z domačimi izdelki Domačije Tešlan: izberite pripravljeno darilo ali sestavite svoje in ga pošljite obdarovancu.",
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Darila",
+  opis: "Darilne škatle z domačimi izdelki Domačije Tešlan: izberite pripravljeno darilo ali sestavite svoje in ga pošljite obdarovancu.",
+  pot: "/darila",
+});
 
 /** Programi, škatle in zaloga so iz CMS (predpomnjeni, Z17). */
 export const dynamic = "force-dynamic";

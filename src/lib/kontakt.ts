@@ -14,6 +14,8 @@ export interface PodatkiProdajalca {
   naslov?: string | null;
   telefon?: string | null;
   email?: string | null;
+  geoSirina?: number | null;
+  geoDolzina?: number | null;
 }
 
 export interface Kontakt {
@@ -30,6 +32,8 @@ export interface Kontakt {
   zemljevid: string | null;
   /** Google Maps s potjo do naslova (izhodišče izbere naprava). */
   pot: string | null;
+  /** Lega kmetije (za JSON-LD); samo, če sta v nastavitvah obe koordinati. */
+  geo: { sirina: number; dolzina: number } | null;
 }
 
 export const IME_KMETIJE = "Domačija Tešlan";
@@ -80,6 +84,10 @@ export function kontaktIzNastavitev(prodajalec: PodatkiProdajalca | null | undef
     email: prazno(prodajalec?.email),
     zemljevid: zemljevid?.zemljevid ?? null,
     pot: zemljevid?.pot ?? null,
+    geo:
+      typeof prodajalec?.geoSirina === "number" && typeof prodajalec?.geoDolzina === "number"
+        ? { sirina: prodajalec.geoSirina, dolzina: prodajalec.geoDolzina }
+        : null,
   };
 }
 

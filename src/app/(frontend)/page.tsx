@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { LuArrowRight, LuGift, LuLeaf, LuMapPin, LuSprout } from "react-icons/lu";
@@ -12,6 +13,17 @@ import { naloziDarila } from "@/darila/podatki";
 import { naloziKatalog, naloziKontakt } from "@/katalog/podatki";
 import { najnizjaNarocljivaCena } from "@/katalog/razpolozljivost";
 import { trenutniMesec } from "@/katalog/sezona";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { okolje } from "@/env";
+import { izvorStrani } from "@/seo/izvor";
+import { lokalnoPodjetje } from "@/seo/json-ld";
+import { metapodatkiStrani } from "@/seo/metapodatki";
+
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: null,
+  opis: "Domačija Tešlan iz Podgore pri Novem mestu: ekološko pridelani šparglji, jagode, začimbe, liofilizirano sadje in domači izdelki. Naročite za prevzem na kmetiji ali po pošti.",
+  pot: "/",
+});
 
 /** Ponudba in sezone so iz CMS (predpomnjeni, Z17). */
 export const dynamic = "force-dynamic";
@@ -57,6 +69,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd podatki={lokalnoPodjetje(kontakt, izvorStrani(okolje()))} />
       {/* Uvod: velik naslov in fotografija njive. Brez vstopne animacije:
           naslov in slika sta LCP in morata biti tam takoj. */}
       <section className="bg-surface">

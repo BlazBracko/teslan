@@ -6,12 +6,14 @@ import { POT_KOSARICE } from "@/components/postavitev/navigacija";
 import { Container } from "@/components/ui/Container";
 import { naloziKontakt, naloziNastavitve } from "@/katalog/podatki";
 import { karticaNaVoljo } from "@/narocila/placila";
+import { metapodatkiStrani } from "@/seo/metapodatki";
 
-export const metadata: Metadata = {
-  title: "Blagajna — Domačija Tešlan",
-  description: "Oddaja naročila na Domačiji Tešlan.",
-  robots: { index: false },
-};
+export const metadata: Metadata = metapodatkiStrani({
+  naslov: "Blagajna",
+  opis: "Oddaja naročila na Domačiji Tešlan.",
+  pot: "/blagajna",
+  brezIndeksa: true,
+});
 
 /**
  * Blagajna (Z25–Z27, T2 korak 3). Košarica je v brskalniku, zato se obrazec
