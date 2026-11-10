@@ -44,6 +44,7 @@ Sproten seznam manjkajočih zunanjih ključev, preskočenih preizkusov in opravi
 - Pred deployem teče `npm run pripravi-bazo` (`migrate` + `seed:if-empty`). Ob prvem uspešnem deployu na staging seed napolni katalog (25 izdelkov, 10 kategorij, 4 skupine ponudbe) in nastavitve trgovine; ob naslednjih deployih katalog ne spreminja, če je v bazi vsaj en izdelek.
 - Novi spremenljivki `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` (neobvezni, gl. tabelo zgoraj).
 - Seed naloži slike iz `public/` v `media`. Brez R2 so na disku vsebnika in se ob naslednjem deployu izgubijo, zapisi v bazi pa ostanejo (slike na strani se ne prikažejo, dokler jih lastnik ne naloži znova ali dokler ni R2). Zato je R2 na stagingu priporočljiv pred prvim deployem s seedom.
+- **Testne slike (po K11):** dokler na stagingu ni R2, stran namesto manjkajoče datoteke pokaže isto sliko iz `public/` ali testno fotografijo kmetije (alt se konča s „(testna slika)“), izdelki, skupine, škatle in programi brez slike pa dobijo testno sliko (`src/katalog/testne-slike.ts`). Z R2 se to samodejno izklopi; po nastavitvi R2 je treba slike naložiti znova, sicer okvirji ostanejo prazni ali kažejo nadomestno ploskev.
 - Podatki prodajalca v *Nastavitve trgovine* so prazni razen naslova, telefona in e-pošte kmetije (§7); naziv, davčno, matično številko in KMG-MID vnese lastnik.
 - `src/data/contact.ts` ostane, ker ga še uporabljajo noga, sekcije domače strani in podstrani; K5 ga zamenja z nastavitvami trgovine.
 - Ni preskočenih preizkusov.

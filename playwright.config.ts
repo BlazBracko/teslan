@@ -51,6 +51,8 @@ const okoljeStreznika = {
   ...okoljeStripe,
   EPOSTA_DNEVNIK: DNEVNIK_EPOSTE,
   OMEJITEV_NAROCIL_NA_IP: "1000",
+  // Testi preverjajo nadomestno ploskev brez slike (Z15), ne testnih slik.
+  TESTNE_SLIKE: "0",
 };
 const pripravljen = (izvor: string) => `${izvor}/logo.png`;
 const chromium = {
