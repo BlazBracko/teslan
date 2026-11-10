@@ -10,10 +10,19 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const r2 = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : undefined;
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Lastna stran 404 za neobstoječe poti (src/app/global-not-found.tsx):
+    // aplikacija ima dva korenska layouta, zato je privzeta brez jezika (S17).
+    globalNotFound: true,
+  },
   turbopack: {
     root: path.resolve(dirname),
   },
   images: {
+    // AVIF je pri fotografijah za tretjino do polovico manjši od WebP, kar na
+    // mobilnem omrežju skrajša nalaganje glavne slike (S18). Brskalniki brez
+    // AVIF dobijo WebP.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: r2
       ? [
           {

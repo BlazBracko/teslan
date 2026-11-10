@@ -20,7 +20,7 @@ export function GalerijaIzdelka({ slike, ime }: { slike: SlikaPogled[]; ime: str
       <SlikaIzdelka
         slika={slika}
         sizes="(min-width: 1024px) 36rem, 100vw"
-        priority
+        prednostna={izbrana === 0}
         className="aspect-square rounded-xl ring-1 ring-line"
         nadomestnaOznaka={`${ime}: slika še ni na voljo`}
       />

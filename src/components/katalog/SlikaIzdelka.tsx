@@ -7,17 +7,19 @@ import { cn } from "@/lib/utils";
  * Slika iz CMS v okvirju s stalnim razmerjem (mreža se ne premika, ko slika
  * pride). Brez slike nadomestna ploskev (Z15). Prosojni PNG-ji in izrezki z
  * belim ozadjem dobijo `contain`, fotografije `cover` z žariščem iz admina.
+ * `prednostna` je za glavno sliko strani (LCP): prednaloži se z visoko
+ * prednostjo (S18), ostale se naložijo lenobno.
  */
 export function SlikaIzdelka({
   slika,
   sizes,
-  priority = false,
+  prednostna = false,
   className,
   nadomestnaOznaka,
 }: {
   slika: SlikaPogled | null | undefined;
   sizes: string;
-  priority?: boolean;
+  prednostna?: boolean;
   className?: string;
   nadomestnaOznaka?: string;
 }) {
@@ -32,7 +34,8 @@ export function SlikaIzdelka({
         alt={slika.alt}
         fill
         sizes={sizes}
-        priority={priority}
+        preload={prednostna}
+        fetchPriority={prednostna ? "high" : undefined}
         className={izrezek ? "object-contain p-4" : "object-cover"}
         style={
           !izrezek && slika.zarisce

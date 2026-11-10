@@ -161,7 +161,14 @@ export default async function PrivacyPolicyPage() {
           Stran uporablja samo nujne piškotke in shrambo, brez katerih trgovina ne deluje. Analitičnih, oglasnih ali
           sledilnih piškotkov ne uporabljamo, zato vas za soglasje ne sprašujemo.
         </p>
-        <div className="overflow-x-auto rounded-lg ring-1 ring-line">
+        {/* Na ozkem zaslonu tabela drsi vodoravno: območje mora biti
+            dosegljivo s tipkovnico (puščici), zato ima fokus in ime (Z6). */}
+        <div
+          role="region"
+          aria-label="Tabela piškotkov"
+          tabIndex={0}
+          className="overflow-x-auto rounded-lg ring-1 ring-line"
+        >
           <table className="w-full min-w-[32rem] text-left type-small">
             <caption className="sr-only">Nujni piškotki in shramba v brskalniku</caption>
             <thead className="bg-surface text-ink">

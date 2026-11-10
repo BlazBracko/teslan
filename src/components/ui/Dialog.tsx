@@ -2,7 +2,7 @@
 
 import { createContext, forwardRef, useContext } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { LuX } from "react-icons/lu";
 import { crossFade, springUI } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export function Scrim() {
   const reduce = useReducedMotion();
   return (
     <DialogPrimitive.Overlay asChild forceMount>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-50 bg-scrim"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -106,7 +106,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
           <Scrim />
           <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center p-gutter">
             <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
-              <motion.div
+              <m.div
                 className={cn(
                   "pointer-events-auto relative flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col gap-4 overflow-y-auto",
                   "rounded-xl bg-surface p-6 shadow-overlay outline-none sm:p-8",
@@ -119,7 +119,7 @@ export const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(func
               >
                 {children}
                 {!hideClose && <CloseButton className="absolute top-3 right-3" />}
-              </motion.div>
+              </m.div>
             </DialogPrimitive.Content>
           </div>
         </DialogPrimitive.Portal>

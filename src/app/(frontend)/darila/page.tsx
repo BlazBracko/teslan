@@ -81,7 +81,7 @@ export default async function DarilaPage() {
                         <SlikaIzdelka
                           slika={p.slika}
                           sizes="(min-width: 1024px) 22rem, (min-width: 640px) 50vw, 100vw"
-                          priority={i < 3}
+                          prednostna={i === 0}
                           className="aspect-[4/3]"
                           nadomestnaOznaka={`${p.ime}: slika še ni na voljo`}
                         />

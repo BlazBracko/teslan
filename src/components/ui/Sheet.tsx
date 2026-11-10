@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   AnimatePresence,
-  motion,
+  m,
   useDragControls,
   useReducedMotion,
   type PanInfo,
@@ -64,7 +64,7 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(functi
         <DialogPrimitive.Portal forceMount>
           <Scrim />
           <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
-            <motion.div
+            <m.div
               className={cn(
                 "fixed z-50 flex flex-col bg-surface shadow-overlay outline-none",
                 postavitev[side],
@@ -107,7 +107,7 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(functi
               <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6 pt-5">
                 {children}
               </div>
-            </motion.div>
+            </m.div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       )}
