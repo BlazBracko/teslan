@@ -61,6 +61,15 @@ Plačila s kartico v e2e: brez testnih ključev Stripe v okolju Playwright zaže
 
 Kartično plačilo teče prek gostovanega Stripe Checkout ([`src/narocila/stripe.ts`](src/narocila/stripe.ts)). Naročilo nastane s statusom „Čaka na plačilo“ in rezervirano zalogo; webhook `/api/stripe/webhook` ga ob plačilu označi kot plačano (status „Novo“, e-pošta E1 in E2), ob izteku seje (30 min) ali prekinitvi pa prekliče in vrne zalogo ([`src/narocila/potek-placila.ts`](src/narocila/potek-placila.ts)). Lokalno webhook posredujete s Stripe CLI: `stripe listen --forward-to localhost:3000/api/stripe/webhook` (izpisano skrivnost nastavite kot `STRIPE_WEBHOOK_SECRET`). Brez ključev je kartica na blagajni onemogočena.
 
+## E-pošta (Resend)
+
+Obvestila o naročilu so v [`src/eposta/narocila.ts`](src/eposta/narocila.ts), vsako v HTML in besedilni različici: E1 potrdilo kupcu in E2 obvestilo prodajalcu ob oddaji (ali plačilu s kartico), E3 „Pripravljeno za prevzem“, E4 „Poslano“ in E5 „Preklicano“ ob spremembi statusa v adminu ([`src/eposta/obvestila.ts`](src/eposta/obvestila.ts)). Preklic naročila, ki še čaka na plačilo s kartico, ne pošlje ničesar.
+
+- Z `RESEND_API_KEY` gre pošta prek Resenda, sicer se izpiše v log strežnika ([`src/eposta/adapter.ts`](src/eposta/adapter.ts)). Pošiljatelj je `EMAIL_FROM` (privzeto `Domačija Tešlan <narocila@teslan.si>`, domena mora biti v Resendu overjena), odgovor gre na *E-pošta za obvestila* iz nastavitev trgovine.
+- Z `EMAIL_REDIRECT_TO` (staging) gre vsa pošta na en naslov, zadeva se začne z `[STAGING → <prvotni prejemnik>]`.
+- Napaka pri pošiljanju ne ustavi naročila ne spremembe statusa: zapiše se v log in na naročilo (*Tehnični podatki → Napaka pri pošiljanju e-pošte*).
+- Test s pravim ključem (`src/eposta/adapter.test.ts`) pošlje eno sporočilo na Resendov testni naslov `delivered@resend.dev`; brez `RESEND_API_KEY` je preskočen.
+
 ## Identiteta in komponente
 
 - Barve, pisavi (Fraunces za naslove, Inter za besedilo), radiji, sence, razmiki in gibanje so tokeni Tailwind 4 v [`src/app/(frontend)/globals.css`](<src/app/(frontend)/globals.css>) (`@theme`). Privzeta Tailwind paleta je izklopljena; v komponentah ni surovih barv.

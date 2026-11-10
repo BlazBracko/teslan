@@ -3,12 +3,11 @@ import path from "node:path";
 import type { EmailAdapter, SendEmailOptions } from "payload";
 
 /**
- * E-pošta brez Resenda (Z58): sporočilo se izpiše v log strežnika. Če je
- * nastavljen `EPOSTA_DNEVNIK` (samo testi), se zapis doda še v to datoteko
- * kot ena vrstica JSON, da ga e2e testi lahko preberejo (S9).
- *
- * K9 doda adapter za Resend, ki se uporabi, ko je `RESEND_API_KEY`
- * nastavljen.
+ * E-pošta brez Resenda (Z58): besedilna različica sporočila se izpiše v
+ * log strežnika. Če je nastavljen `EPOSTA_DNEVNIK` (samo testi), se zapis
+ * (z HTML) doda še v to datoteko kot ena vrstica JSON, da ga e2e testi
+ * lahko preberejo (S9). Ko je `RESEND_API_KEY` nastavljen, se namesto tega
+ * uporabi Resend (`adapter.ts`).
  */
 
 export interface Posiljatelj {
@@ -34,6 +33,7 @@ export interface ZapisEposte {
   odgovorNa: string | null;
   zadeva: string;
   besedilo: string;
+  html: string | null;
 }
 
 function naslovi(v: SendEmailOptions["to"] | SendEmailOptions["replyTo"]): string | null {
@@ -62,6 +62,7 @@ export function dnevnikEposte({
         odgovorNa: naslovi(sporocilo.replyTo),
         zadeva: String(sporocilo.subject ?? ""),
         besedilo: typeof sporocilo.text === "string" ? sporocilo.text : "",
+        html: typeof sporocilo.html === "string" ? sporocilo.html : null,
       };
       payload.logger.info(
         `E-pošta ni poslana (RESEND_API_KEY ni nastavljen), izpis:\nZa: ${zapis.za}\nZadeva: ${zapis.zadeva}\n\n${zapis.besedilo}`,

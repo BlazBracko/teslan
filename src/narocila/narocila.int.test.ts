@@ -336,3 +336,88 @@ describe("statusi in preklic v adminu (Z33–Z35, S5, S7)", () => {
     expect(await zaloga(cesen)).toBe((prej ?? 0) + 2);
   });
 });
+
+describe("obvestila kupcu ob spremembi statusa (Z57, Z59)", () => {
+  const posodobi = (id: number, data: Partial<Narocila>) =>
+    payload.update({ collection: "narocila", id, data, user: urednik, overrideAccess: false });
+  const posta = { nacinDostave: "posta", nacinPlacila: "kartica", ulica: "Glavna 1", postnaStevilka: "8000", kraj: "Novo mesto" };
+
+  it("„Pripravljeno za prevzem“ pošlje E3 s povezavo z žetonom; ponovno shranjevanje ne pošlje ničesar", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)]));
+    const posiljanje = vi.spyOn(payload, "sendEmail").mockResolvedValue(undefined);
+    await posodobi(r.id, { status: "pripravljeno" });
+    expect(posiljanje).toHaveBeenCalledTimes(1);
+    const [e3] = posiljanje.mock.calls[0];
+    expect(e3).toMatchObject({
+      to: "ana@primer.si",
+      replyTo: "sandi@primer.si",
+      subject: `Naročilo ${r.stevilka} je pripravljeno za prevzem — Domačija Tešlan`,
+    });
+    expect(e3.text).toContain(r.pot);
+    expect(e3.text).toContain("Pokličite nas za termin.");
+    expect(e3.html).toContain("<html");
+
+    await posodobi(r.id, { internaOpomba: "V hladilniku." });
+    await posodobi(r.id, { status: "zakljuceno", placano: true });
+    expect(posiljanje).toHaveBeenCalledTimes(1);
+  });
+
+  it("„Poslano“ pošlje E4 s številko pošiljke; plačilo s kartico ne pošlje E3–E5", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)], posta, true));
+    const posiljanje = vi.spyOn(payload, "sendEmail").mockResolvedValue(undefined);
+    // Kot po plačilu (Stripe): „Čaka na plačilo“ → „Novo“ ni obvestilo ob statusu.
+    await payload.update({ collection: "narocila", id: r.id, data: { status: "novo", placano: true }, overrideAccess: true });
+    expect(posiljanje).not.toHaveBeenCalled();
+
+    await posodobi(r.id, { status: "poslano", stevilkaPosiljke: "PS123456789SI" });
+    expect(posiljanje).toHaveBeenCalledTimes(1);
+    const [e4] = posiljanje.mock.calls[0];
+    expect(e4.subject).toBe(`Naročilo ${r.stevilka} je poslano — Domačija Tešlan`);
+    expect(e4.text).toContain("Številka pošiljke: PS123456789SI");
+    expect(e4.text).toContain("Glavna 1, 8000 Novo mesto");
+  });
+
+  it("preklic pošlje E5 z razlogom in obvestilom o vračilu pri plačani kartici", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)], posta, true));
+    await payload.update({ collection: "narocila", id: r.id, data: { status: "novo", placano: true }, overrideAccess: true });
+    const posiljanje = vi.spyOn(payload, "sendEmail").mockResolvedValue(undefined);
+    await posodobi(r.id, { status: "preklicano", razlogPreklica: "Ni več na zalogi." });
+    expect(posiljanje).toHaveBeenCalledTimes(1);
+    const [e5] = posiljanje.mock.calls[0];
+    expect(e5.subject).toBe(`Naročilo ${r.stevilka} je preklicano — Domačija Tešlan`);
+    expect(e5.text).toContain("Razlog: Ni več na zalogi.");
+    expect(e5.text).toContain("Znesek vrnemo na kartico v nekaj delovnih dneh.");
+  });
+
+  it("preklic naročila, ki še čaka na plačilo, ne pošlje ničesar (Z41)", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)], posta, true));
+    const posiljanje = vi.spyOn(payload, "sendEmail").mockResolvedValue(undefined);
+    await posodobi(r.id, { status: "preklicano" });
+    expect((await narocilo(r.id)).status).toBe("preklicano");
+    expect(posiljanje).not.toHaveBeenCalled();
+  });
+
+  it("hkratna preklica pošljeta E5 enkrat", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)]));
+    const posiljanje = vi.spyOn(payload, "sendEmail").mockResolvedValue(undefined);
+    await Promise.allSettled([posodobi(r.id, { status: "preklicano" }), posodobi(r.id, { status: "preklicano" })]);
+    expect((await narocilo(r.id)).status).toBe("preklicano");
+    expect(posiljanje).toHaveBeenCalledTimes(1);
+  });
+
+  it("napaka pri pošiljanju ne ustavi spremembe statusa in se zapiše na naročilo (Z59)", async () => {
+    const r = uspesno(await oddaj([postavka(cesen)]));
+    vi.spyOn(payload, "sendEmail").mockRejectedValue(new Error("Resend ni dosegljiv"));
+    vi.spyOn(payload.logger, "error").mockImplementation(() => undefined);
+    await posodobi(r.id, { status: "pripravljeno" });
+    const n = await narocilo(r.id);
+    expect(n.status).toBe("pripravljeno");
+    expect(n.napakaEposte).toMatch(/E3 pripravljeno za prevzem: Resend ni dosegljiv/);
+
+    await posodobi(r.id, { status: "preklicano" });
+    const po = await narocilo(r.id);
+    expect(po.status).toBe("preklicano");
+    // Napake se dodajajo, prejšnja ostane.
+    expect(po.napakaEposte).toMatch(/E3 pripravljeno[\s\S]*E5 preklicano: Resend ni dosegljiv/);
+  });
+});
