@@ -69,7 +69,7 @@ export function Uvod({
       <div aria-hidden="true" className="absolute inset-0 -z-10 vzorec-pik opacity-[0.07]" />
 
       <div className="flex flex-1 flex-col items-center justify-center px-gutter pt-[calc(var(--spacing-glava)+1.25rem)] pb-8 text-center md:pt-[calc(var(--spacing-glava)+2rem)] md:pb-10">
-        <p className="mb-5 inline-block rounded-full px-5 py-2.5 type-label text-ink-inverse ring-1 ring-ink-inverse/40 ring-inset md:mb-7">
+        <p className="mb-4 inline-block rounded-full px-4 py-2 type-label sm:mb-5 sm:px-5 sm:py-2.5 text-ink-inverse ring-1 ring-ink-inverse/40 ring-inset md:mb-7">
           Domačija Tešlan · Dolenjska
         </p>
         <h1 id="uvod-naslov" className="mb-4 max-w-4xl type-display text-ink-inverse md:mb-5">
@@ -81,7 +81,7 @@ export function Uvod({
           Zelenjava, sadje in domači izdelki s kmetije v Podgori pri Novem mestu. Naročite na spletu: pošljemo po
           pošti ali pripravimo za prevzem.
         </p>
-        <div className="mb-8 flex w-full max-w-xs flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row md:mb-10">
+        <div className="mb-2 flex w-full max-w-xs flex-col gap-3 sm:mb-8 sm:w-auto sm:max-w-none sm:flex-row md:mb-10">
           <Button asChild size="lg" variant="bright">
             <Link href={POT_TRGOVINE}>
               <LuShoppingBag aria-hidden="true" />
@@ -96,7 +96,8 @@ export function Uvod({
             </Link>
           </Button>
         </div>
-        <dl className="grid w-full max-w-2xl grid-cols-3 gap-4 md:gap-12">
+        {/* Na telefonu brez številk: uvod ostane pregleden in na enem zaslonu. */}
+        <dl className="hidden w-full max-w-2xl grid-cols-3 gap-4 sm:grid md:gap-12">
           {statistika.map(([vrednost, oznaka]) => (
             <div key={oznaka} className="flex flex-col-reverse gap-1.5">
               <dt className="type-caption text-ink-inverse/75 md:type-label">{oznaka}</dt>

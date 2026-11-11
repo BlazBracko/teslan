@@ -40,14 +40,13 @@ const GLAVE: Record<NacinNakupa, { oznaka: string; naslov: string; opis: string;
   splet: {
     oznaka: "Spletna trgovina",
     naslov: "Naročite na spletu",
-    opis: "Izdelki, ki jih lahko naročite takoj: pošljemo jih po pošti ali pripravimo za prevzem na kmetiji.",
-    namig: "Izdelki z oznako »Samo prevzem na kmetiji« se ne pošiljajo; naročite jih na spletu in prevzamete v Podgori.",
+    opis: "Izdelki, ki vam jih pošljemo po pošti. Če želite, jih lahko prevzamete tudi na kmetiji.",
   },
   kmetija: {
     oznaka: "V živo na kmetiji",
-    naslov: "Samo na kmetiji",
-    opis: "Sveže iz sezone, ki ga ne pošiljamo. Kupite ga na kmetiji v Podgori pri Novem mestu.",
-    namig: "Teh izdelkov ni mogoče naročiti na spletu. Pred obiskom nas pokličite, da vam jih pripravimo.",
+    naslov: "Na voljo na kmetiji",
+    opis: "Jajca, sveža zelenjava in sadje iz sezone, ki jih ne pošiljamo. Dobite jih na kmetiji v Podgori pri Novem mestu.",
+    namig: "Izdelke z gumbom za nakup lahko naročite na spletu in jih prevzamete na kmetiji. Za ostale nas pred obiskom pokličite, da vam jih pripravimo.",
   },
 };
 

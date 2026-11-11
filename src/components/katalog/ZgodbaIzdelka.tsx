@@ -14,7 +14,7 @@ export function ZgodbaIzdelka({ izdelek }: { izdelek: IzdelekPogled }) {
       aria-labelledby="zgodba-izdelka"
       className="mt-12 grid overflow-hidden rounded-2xl bg-surface shadow-raised ring-1 ring-line md:mt-16 lg:grid-cols-12"
     >
-      <div className="flex flex-col gap-5 p-6 sm:p-10 lg:col-span-7 lg:p-14">
+      <div className="flex flex-col gap-4 p-5 sm:gap-5 sm:p-10 lg:col-span-7 lg:p-14">
         <p className="type-label text-accent">Zgodba izdelka</p>
         <h2 id="zgodba-izdelka" className="type-h2 text-ink">
           {izdelek.ime} z Domačije Tešlan

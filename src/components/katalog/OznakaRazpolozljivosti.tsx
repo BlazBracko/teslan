@@ -25,7 +25,7 @@ export function OznakaRazpolozljivosti({ razpolozljivost }: { razpolozljivost: R
   );
 }
 
-/** „Pošljemo po pošti“ ali „Samo prevzem na kmetiji“ (Z13). */
+/** „Pošljemo po pošti“ ali „Na voljo na kmetiji“ (Z13). */
 export function OznakaNacina({ nacin }: { nacin: NacinProdaje }) {
   const oznaka = oznakaNacinaProdaje(nacin);
   if (!oznaka) return null;

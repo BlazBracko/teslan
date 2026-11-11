@@ -71,7 +71,7 @@ describe("razpoložljivost velikosti (Z11–Z13)", () => {
   });
 
   it("oznaka načina prodaje", () => {
-    expect(oznakaNacinaProdaje("samo-prevzem")).toBe("Samo prevzem na kmetiji");
+    expect(oznakaNacinaProdaje("samo-prevzem")).toBe("Na voljo na kmetiji");
     expect(oznakaNacinaProdaje("posta-in-prevzem")).toBe("Pošljemo po pošti");
     expect(oznakaNacinaProdaje("samo-prikaz")).toBeNull();
   });

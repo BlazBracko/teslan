@@ -566,7 +566,7 @@ function ObrazecBlagajne({
 
       <aside
         aria-labelledby="povzetek-narocila"
-        className="flex flex-col gap-5 rounded-xl bg-surface p-6 shadow-raised ring-1 ring-line lg:sticky lg:top-24"
+        className="flex flex-col gap-5 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line sm:p-6 lg:sticky lg:top-24"
       >
         <h2 id="povzetek-narocila" className="type-h3 text-ink">
           Vaše naročilo

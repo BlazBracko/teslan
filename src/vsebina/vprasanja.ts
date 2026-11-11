@@ -108,7 +108,7 @@ export function pogostaVprasanja(p: PodatkiZaVprasanja): SklopVprasanj[] {
           vprasanje: "Zakaj nekaterih izdelkov ne pošiljate po pošti?",
           izpostavljeno: true,
           odgovor: [
-            "Jajca in sveža zelenjava so občutljivi in na poti izgubijo svežino, zato jih prodajamo samo s prevzemom na kmetiji. Taki izdelki imajo oznako »Samo prevzem na kmetiji«.",
+            "Jajca in sveža zelenjava so občutljivi in na poti izgubijo svežino, zato jih prodajamo samo na kmetiji. Taki izdelki imajo oznako »Na voljo na kmetiji« in jih najdete pod izbiro »Na kmetiji« v trgovini. Nekatere lahko naročite na spletu in jih prevzamete, ostale kupite v živo.",
             "Če je v košarici tak izdelek, celotno naročilo prevzamete na kmetiji. Če želite ostale izdelke prejeti po pošti, jih naročite posebej.",
           ],
         },

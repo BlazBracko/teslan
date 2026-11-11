@@ -106,8 +106,8 @@ test.describe("košarica (Z20, Z21, T2)", () => {
     await expect(obvestilo).toContainText("To naročilo prevzamete na kmetiji");
     await expect(obvestilo).toContainText("Jajca kokošja");
     await expect(page.getByText("Nekaterih izdelkov ni mogoče naročiti")).toHaveCount(0);
-    await expect(postavka(page, "Jajca kokošja", "10 kos").getByText("Samo prevzem na kmetiji")).toBeVisible();
-    await expect(postavka(page, "Česen v prahu", "41 ml").getByText("Samo prevzem na kmetiji")).toHaveCount(0);
+    await expect(postavka(page, "Jajca kokošja", "10 kos").getByText("Na voljo na kmetiji")).toBeVisible();
+    await expect(postavka(page, "Česen v prahu", "41 ml").getByText("Na voljo na kmetiji")).toHaveCount(0);
     await expect(povzetek(page).getByRole("link", { name: "Na blagajno" })).toHaveAttribute("href", "/blagajna");
     await expect(povzetek(page)).toContainText("Naročilo oddate za prevzem na kmetiji.");
 

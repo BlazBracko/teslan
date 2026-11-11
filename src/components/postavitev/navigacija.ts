@@ -12,7 +12,7 @@ export interface Povezava {
 
 /**
  * „Trgovina“ vodi na spletno trgovino (izdelki, naročljivi na spletu); na
- * isti strani je izbira „Samo na kmetiji“ in „Vsi izdelki“.
+ * isti strani je izbira „Na kmetiji“ in „Vsi izdelki“.
  */
 export const GLAVNA_NAVIGACIJA: Povezava[] = [
   { href: "/", oznaka: "Domov" },

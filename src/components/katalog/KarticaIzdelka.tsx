@@ -35,6 +35,10 @@ const pika: Record<VrstaRazpolozljivosti, string> = {
  * vrstici z razpoložljivostjo in načinom dostave namesto značk, ki so se
  * na ozki kartici lomile.
  *
+ * Na telefonu je kartica še bolj zbita: brez kategorije in brez vrstice
+ * „Pošljemo po pošti“ (to velja za vse v spletni trgovini); ostane samo
+ * „Na voljo na kmetiji“, ki kupca opozori na izjemo.
+ *
  * Cela kartica je povezava na podstran (raztegnjena povezava na imenu, da
  * bralnik zaslona prebere samo ime). Izdelek z eno samo velikostjo ima še
  * gumb, ki ga doda v košarico neposredno s seznama.
@@ -78,9 +82,9 @@ export function KarticaIzdelka({
         className={cn("aspect-square sm:aspect-[4/3]", !razpolozljivost.narocljiva && "opacity-80")}
         nadomestnaOznaka={`${izdelek.ime}: slika še ni na voljo`}
       />
-      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
-        <p className="type-caption text-ink-subtle">{izdelek.kategorija.ime}</p>
-        <Naslov className="font-sans type-title text-ink">
+      <div className="flex flex-1 flex-col gap-1 p-3 sm:gap-2 sm:p-4">
+        <p className="hidden type-caption text-ink-subtle sm:block">{izdelek.kategorija.ime}</p>
+        <Naslov className="font-sans text-[0.9375rem] leading-snug font-semibold tracking-[-0.011em] text-ink sm:type-title">
           <Link href={potIzdelka(izdelek.slug)} className="outline-none after:absolute after:inset-0 after:content-['']">
             {izdelek.ime}
           </Link>
@@ -94,13 +98,18 @@ export function KarticaIzdelka({
             <span className={cn(razpolozljivost.narocljiva && "font-medium text-ink")}>{razpolozljivost.oznaka}</span>
           </li>
           {nacin && (
-            <li className="flex items-start gap-1.5">
+            <li
+              className={cn(
+                "flex items-start gap-1.5",
+                izdelek.nacinProdaje === "posta-in-prevzem" && "max-sm:hidden",
+              )}
+            >
               <IkonaNacina aria-hidden="true" className="mt-[0.15em] size-3.5 shrink-0" />
               <span>{nacin}</span>
             </li>
           )}
         </ul>
-        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1.5 sm:pt-2">
           <div className="flex min-w-0 flex-col gap-0.5">
             {velikost && <span className="type-caption text-ink-subtle">{velikost}</span>}
             {cena && <Price cents={cena.centi} from={cena.od} size="card" />}
@@ -116,7 +125,7 @@ export function KarticaIzdelka({
           ) : (
             <span
               aria-hidden="true"
-              className="grid size-11 shrink-0 place-items-center rounded-full text-brand ring-1 ring-line-strong ring-inset"
+              className="grid size-10 shrink-0 place-items-center rounded-full text-brand sm:size-11 ring-1 ring-line-strong ring-inset"
             >
               <LuArrowRight className="size-5" />
             </span>

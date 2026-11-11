@@ -1,4 +1,5 @@
 import {
+  jeNaKmetiji,
   razpolozljivostIzdelka,
   type IzdelekZaRazpolozljivost,
   type VelikostZaRazpolozljivost,
@@ -38,14 +39,17 @@ export function razvrstiZaSeznam<T extends IzdelekZaSeznam>(
 
 /**
  * Izbor za domačo stran: najprej izpostavljeni, nato po en izdelek iz vsake
- * kategorije (da izbor pokaže širino ponudbe), vsi naročljivi na spletu.
+ * kategorije (da izbor pokaže širino ponudbe), vsi naročljivi v spletni
+ * trgovini (izdelki „Na voljo na kmetiji“ v izbor ne spadajo).
  */
 export function izborZaDomov<T extends IzdelekZaSeznam & { izpostavljen: boolean; kategorija: { id: number } }>(
   izdelki: readonly T[],
   mesec: Mesec,
   najvec: number,
 ): T[] {
-  const narocljivi = izdelki.filter((i) => razpolozljivostIzdelka(i, mesec).narocljiva);
+  const narocljivi = izdelki.filter(
+    (i) => !jeNaKmetiji(i.nacinProdaje) && razpolozljivostIzdelka(i, mesec).narocljiva,
+  );
   const izbrani: T[] = narocljivi.filter((i) => i.izpostavljen).slice(0, najvec);
   const kategorije = new Set(izbrani.map((i) => i.kategorija.id));
   for (const izdelek of narocljivi) {

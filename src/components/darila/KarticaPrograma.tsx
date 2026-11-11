@@ -37,7 +37,7 @@ export function KarticaPrograma({
           {p.tip.ime} · {stevilo(p.tip.steviloMest, MESTO)}
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
         <Naslov className="type-h3 text-ink">
           <Link href={potPrograma(p.slug)} className="outline-none after:absolute after:inset-0 after:content-['']">
             {p.ime}

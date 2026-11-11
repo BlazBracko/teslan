@@ -10,11 +10,24 @@ import { oznakaSezone, stanjeSezone, type Mesec, type Sezona } from "./sezona";
 export const NACINI_PRODAJE = ["posta-in-prevzem", "samo-prevzem", "samo-prikaz"] as const;
 export type NacinProdaje = (typeof NACINI_PRODAJE)[number];
 
+/**
+ * Oznake v urejevalniku. Za kupca sta `samo-prevzem` in `samo-prikaz` ena
+ * skupina („Na voljo na kmetiji“); razlikujeta se le v tem, ali izdelek
+ * lahko vnaprej naroči za prevzem.
+ */
 export const OZNAKE_NACINOV: Record<NacinProdaje, string> = {
-  "posta-in-prevzem": "Pošta in prevzem na kmetiji",
-  "samo-prevzem": "Samo prevzem na kmetiji",
-  "samo-prikaz": "Samo prikaz (ni naročljivo)",
+  "posta-in-prevzem": "Spletna trgovina: pošta ali prevzem",
+  "samo-prevzem": "Na voljo na kmetiji: naročilo za prevzem",
+  "samo-prikaz": "Na voljo na kmetiji: brez spletnega naročila",
 };
+
+/** Oznaka, ki jo kupec vidi pri vseh izdelkih, ki jih ne pošiljamo. */
+export const OZNAKA_NA_KMETIJI = "Na voljo na kmetiji";
+
+/** Izdelek, ki ga ne pošiljamo (prevzem ali samo nakup v živo). */
+export function jeNaKmetiji(nacin: NacinProdaje): boolean {
+  return nacin !== "posta-in-prevzem";
+}
 
 /** Pod to zalogo (vključno) oznaka pove točno število kosov (Z13). */
 export const MALO_ZALOGE = 3;
@@ -60,7 +73,7 @@ export function razpolozljivostVelikosti(
   mesec: Mesec,
 ): Razpolozljivost {
   if (izdelek.nacinProdaje === "samo-prikaz") {
-    return { vrsta: "na-kmetiji", narocljiva: false, oznaka: "Na voljo na kmetiji" };
+    return { vrsta: "na-kmetiji", narocljiva: false, oznaka: OZNAKA_NA_KMETIJI };
   }
   const sezona = stanjeSezone(izdelek.sezona, mesec);
   if (sezona === "kmalu") {
@@ -85,11 +98,12 @@ export function razpolozljivostVelikosti(
 
 /**
  * Dodatna oznaka načina prodaje na kartici in podstrani (Z13): kupec že na
- * seznamu vidi, ali izdelek pošljemo ali ga samo prevzame. Pri
- * `samo-prikaz` to pove že oznaka razpoložljivosti („Na voljo na kmetiji“).
+ * seznamu vidi, ali izdelek pošljemo ali je na voljo na kmetiji. Ista
+ * oznaka velja za `samo-prevzem` in `samo-prikaz`; pri `samo-prikaz` jo pove
+ * že oznaka razpoložljivosti, zato je tu ni.
  */
 export function oznakaNacinaProdaje(nacin: NacinProdaje): string | null {
-  if (nacin === "samo-prevzem") return "Samo prevzem na kmetiji";
+  if (nacin === "samo-prevzem") return OZNAKA_NA_KMETIJI;
   if (nacin === "posta-in-prevzem") return "Pošljemo po pošti";
   return null;
 }

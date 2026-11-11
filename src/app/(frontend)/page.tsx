@@ -18,7 +18,7 @@ import { SeznamVprasanj } from "@/components/vsebina/SeznamVprasanj";
 import { naloziDarila } from "@/darila/podatki";
 import { prazniskiCas, programiZaPrikaz } from "@/darila/predstavitev";
 import { okolje } from "@/env";
-import { POT_TRGOVINE, potSeznama } from "@/katalog/nakup";
+import { POT_TRGOVINE, potSeznama, ustrezaNacinuNakupa } from "@/katalog/nakup";
 import { naloziKatalog, naloziKontakt, naloziNastavitve } from "@/katalog/podatki";
 import { najnizjaNarocljivaCena } from "@/katalog/razpolozljivost";
 import { izborZaDomov } from "@/katalog/razvrscanje";
@@ -65,7 +65,7 @@ export default async function HomePage() {
   const danes = new Date();
   const trgovinaOdprta = nastavitve.trgovinaOdprta !== false;
   const programi = programiZaPrikaz(darila, katalog.izdelki, mesec);
-  const narocljivih = katalog.izdelki.filter((i) => i.nacinProdaje !== "samo-prikaz").length;
+  const narocljivih = katalog.izdelki.filter((i) => ustrezaNacinuNakupa(i, "splet")).length;
   const izbor = izborZaDomov(katalog.izdelki, mesec, IZBOR);
   const skupine: SkupinaZaPrikaz[] = katalog.skupine.map((skupina) => {
     const izdelki = katalog.izdelki.filter((i) => skupina.kategorije.includes(i.kategorija.id));
@@ -173,7 +173,7 @@ export default async function HomePage() {
               action={
                 <Button asChild variant="outline">
                   <Link href={potSeznama({ nakup: "kmetija" })}>
-                    Samo na kmetiji
+                    Na kmetiji
                     <LuArrowRight aria-hidden="true" />
                   </Link>
                 </Button>

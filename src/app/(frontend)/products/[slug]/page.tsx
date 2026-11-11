@@ -14,7 +14,7 @@ import { Container } from "@/components/ui/Container";
 import { Price } from "@/components/ui/Price";
 import { potSeznama, potSeznamaZaIzdelek } from "@/katalog/nakup";
 import { naloziKatalog, naloziKontakt, naloziNastavitve, type IzdelekPogled } from "@/katalog/podatki";
-import { cenaNaKartici, razpolozljivostIzdelka, razpolozljivostVelikosti } from "@/katalog/razpolozljivost";
+import { cenaNaKartici, jeNaKmetiji, razpolozljivostIzdelka, razpolozljivostVelikosti } from "@/katalog/razpolozljivost";
 import { oznakaSezone, trenutniMesec } from "@/katalog/sezona";
 import { okolje } from "@/env";
 import { izvorStrani } from "@/seo/izvor";
@@ -90,11 +90,12 @@ export default async function ProductPage({ params }: Parametri) {
       <JsonLd podatki={jsonLd} />
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 md:mb-6">
         <GumbNazaj nadomestna={seznam} />
-        <nav aria-label="Drobtinice">
+        {/* Na telefonu zadošča „Nazaj“; kategorija je tudi nad imenom izdelka. */}
+        <nav aria-label="Drobtinice" className="hidden sm:block">
           <ol className="flex flex-wrap items-center gap-1 type-small text-ink-muted">
             <li>
               <Link href={seznam} className="rounded-xs hover:text-ink hover:underline">
-                {izdelek.nacinProdaje === "samo-prikaz" ? "Na kmetiji" : "Trgovina"}
+                {jeNaKmetiji(izdelek.nacinProdaje) ? "Na kmetiji" : "Trgovina"}
               </Link>
             </li>
             <li aria-hidden="true">
@@ -118,13 +119,13 @@ export default async function ProductPage({ params }: Parametri) {
         </nav>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-14">
+      <div className="grid gap-5 sm:gap-6 lg:grid-cols-2 lg:gap-14">
         <div className="lg:sticky lg:top-24 lg:self-start">
           <GalerijaIzdelka slike={izdelek.slike} ime={izdelek.ime} />
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5 sm:gap-6">
+          <div className="flex flex-col gap-2.5 sm:gap-3">
             <p className="type-label text-accent">{izdelek.kategorija.ime}</p>
             <h1 className="type-h1 text-ink">{izdelek.ime}</h1>
             {cena && <Price cents={cena.centi} from={cena.od} size="xl" />}

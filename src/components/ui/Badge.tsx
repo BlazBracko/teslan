@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Oznaka (Z3), npr. razpoložljivost izdelka (Z13): „Na zalogi“,
- * „Še 2 kosa“, „Ni na zalogi“, „Kmalu“, „Samo prevzem na kmetiji“.
+ * „Še 2 kosa“, „Ni na zalogi“, „Kmalu“, „Na voljo na kmetiji“.
  * Pomen nikoli ni samo v barvi: besedilo oznake ga pove samo.
  */
 export const badgeVariants = cva(

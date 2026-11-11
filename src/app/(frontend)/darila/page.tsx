@@ -105,7 +105,7 @@ export default async function DarilaPage() {
               </h2>
               <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {KORAKI.map(({ ikona: Ikona, naslov, opis }, i) => (
-                  <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-5 ring-1 ring-line">
+                  <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-4 ring-1 ring-line sm:p-5">
                     <span className="relative grid size-11 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                       <Ikona aria-hidden="true" className="size-5" />
                       <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-brand type-caption font-semibold text-on-brand">
@@ -151,7 +151,7 @@ export default async function DarilaPage() {
                   {darila.tipi.map((t) => (
                     <li key={t.id}>
                       <Card interactive className="group h-full">
-                        <div className="flex flex-1 flex-col gap-4 p-6">
+                        <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
                           <Mesta stevilo={t.steviloMest} />
                           <div className="flex flex-col gap-1.5">
                             <p className="type-caption text-ink-subtle">{stevilo(t.steviloMest, MESTO)}</p>
