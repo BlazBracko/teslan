@@ -27,13 +27,13 @@ export function SectionHeading({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4",
+        "flex flex-col gap-3 sm:gap-4",
         action && "md:flex-row md:items-end md:justify-between",
         align === "center" && "items-center text-center",
         className,
       )}
     >
-      <div className={cn("flex max-w-2xl flex-col gap-3", align === "center" && "items-center")}>
+      <div className={cn("flex max-w-2xl flex-col gap-2 sm:gap-3", align === "center" && "items-center")}>
         {label && <p className="type-label text-accent">{label}</p>}
         <Naslov id={id} className={cn(Naslov === "h1" ? "type-h1" : "type-h2", "text-ink")}>
           {title}

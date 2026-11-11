@@ -54,7 +54,7 @@ function Nacin({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-5 rounded-2xl bg-surface p-6 shadow-raised ring-1 ring-line sm:p-8">
+    <section className="flex flex-col gap-5 rounded-2xl bg-surface p-5 shadow-raised ring-1 ring-line sm:p-8">
       <div className="flex items-start gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
           <Ikona aria-hidden="true" className="size-6" />
@@ -179,11 +179,11 @@ export default async function DostavaPage() {
         <Odsek id="samo-prevzem" ikona={LuPackage} naslov="Kaj pošljemo in česa ne">
           <p>
             Po pošti pošljemo vse izdelke z oznako »Pošljemo po pošti« in darilne škatle. Jajca in sveža zelenjava so
-            občutljivi, zato jih prodajamo samo s prevzemom na kmetiji.
+            občutljivi, zato jih ne pošiljamo: imajo oznako »Na voljo na kmetiji«.
           </p>
           {samoPrevzem.length > 0 && (
             <p>
-              Samo s prevzemom:{" "}
+              Na spletu jih naročite in prevzamete na kmetiji:{" "}
               {samoPrevzem.map((i, n) => (
                 <span key={i.id}>
                   {n > 0 && ", "}
@@ -196,7 +196,7 @@ export default async function DostavaPage() {
             </p>
           )}
           <p>
-            Če je v košarici izdelek samo za prevzem, celotno naročilo prevzamete na kmetiji. Če želite ostale izdelke
+            Če je v košarici izdelek, ki je na voljo na kmetiji, celotno naročilo prevzamete na kmetiji. Če želite ostale izdelke
             prejeti po pošti, jih naročite posebej.
           </p>
         </Odsek>

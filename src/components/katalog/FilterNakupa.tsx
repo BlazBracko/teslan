@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const MOZNOSTI: Array<{ nacin: NacinNakupa; oznaka: string; ikona: IconType }> = [
   { nacin: "splet", oznaka: "Spletna trgovina", ikona: LuShoppingBag },
-  { nacin: "kmetija", oznaka: "Samo na kmetiji", ikona: LuStore },
+  { nacin: "kmetija", oznaka: "Na kmetiji", ikona: LuStore },
   { nacin: "vse", oznaka: "Vsi izdelki", ikona: LuLayoutGrid },
 ];
 

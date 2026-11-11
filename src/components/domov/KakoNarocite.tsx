@@ -51,7 +51,7 @@ export function KakoNarocite({
       />
       <ol className="grid gap-4 md:grid-cols-3 md:gap-5">
         {koraki.map(({ ikona: Ikona, naslov, opis }, i) => (
-          <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line md:flex-col md:p-6">
+          <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-4 shadow-raised ring-1 ring-line sm:p-5 md:flex-col md:p-6">
             <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
               <Ikona aria-hidden="true" className="size-6" />
               <span

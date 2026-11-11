@@ -13,7 +13,7 @@ export function PoslovnaDarila({ kontakt, temno = false }: { kontakt: Kontakt; t
   return (
     <div
       className={cn(
-        "flex flex-col gap-5 rounded-xl p-6 md:p-8",
+        "flex flex-col gap-5 rounded-xl p-5 sm:p-6 md:p-8",
         !temno && "md:flex-row md:items-center md:justify-between",
         temno ? "bg-ink-inverse/8 ring-1 ring-ink-inverse/20 ring-inset" : "bg-surface shadow-raised ring-1 ring-line",
       )}

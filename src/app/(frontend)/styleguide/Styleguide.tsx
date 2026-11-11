@@ -404,7 +404,7 @@ function OznakeInCene() {
         <Badge variant="danger" dot>Ni na zalogi</Badge>
         <Badge variant="info">Kmalu</Badge>
         <Badge variant="accent">Sezona april — junij</Badge>
-        <Badge variant="neutral">Samo prevzem na kmetiji</Badge>
+        <Badge variant="neutral">Pošljemo po pošti</Badge>
         <Badge variant="outline">Na voljo na kmetiji</Badge>
         <Badge variant="brand">Primerno za darilo</Badge>
       </Primer>
@@ -446,7 +446,7 @@ function Kartice() {
           <CardBody>
             <div className="flex flex-wrap gap-2">
               <Badge variant="info">Kmalu</Badge>
-              <Badge variant="neutral">Samo prevzem na kmetiji</Badge>
+              <Badge variant="neutral">Na voljo na kmetiji</Badge>
             </div>
             <CardTitle>Šparglji</CardTitle>
             <p className="type-small">Zeleni šparglji iz peščene zemlje, nabrani zjutraj.</p>

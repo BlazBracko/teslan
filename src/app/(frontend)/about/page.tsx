@@ -171,7 +171,7 @@ export default async function AboutPage() {
           <SectionHeading title="Naše vrednote" />
           <ul className="grid gap-4 md:grid-cols-3 md:gap-5">
             {vrednote.map(({ ikona: Ikona, naslov, opis }) => (
-              <li key={naslov} className="flex gap-4 rounded-xl bg-canvas p-5 ring-1 ring-line md:flex-col md:gap-3 md:p-6">
+              <li key={naslov} className="flex gap-4 rounded-xl bg-canvas p-4 ring-1 ring-line sm:p-5 md:flex-col md:gap-3 md:p-6">
                 <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                   <Ikona aria-hidden="true" className="size-6" />
                 </span>
@@ -196,7 +196,7 @@ export default async function AboutPage() {
           <OznakaOsnutka>Opis dela na kmetiji je predlog. Popravite, kar ne drži ali bi radi povedali drugače.</OznakaOsnutka>
           <ol className="grid gap-4 md:grid-cols-3 md:gap-5">
             {pot.map(({ ikona: Ikona, naslov, opis }, i) => (
-              <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line md:flex-col md:p-6">
+              <li key={naslov} className="flex gap-4 rounded-xl bg-surface p-4 shadow-raised ring-1 ring-line sm:p-5 md:flex-col md:p-6">
                 <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                   <Ikona aria-hidden="true" className="size-6" />
                   <span
@@ -249,7 +249,7 @@ export default async function AboutPage() {
           />
           <ul className="grid gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
             {vrsticeKontakta.map(({ ikona: Ikona, oznaka, vsebina }) => (
-              <li key={oznaka} className="flex gap-4 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line">
+              <li key={oznaka} className="flex gap-4 rounded-xl bg-surface p-4 shadow-raised ring-1 ring-line sm:p-5">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
                   <Ikona aria-hidden="true" className="size-5" />
                 </span>

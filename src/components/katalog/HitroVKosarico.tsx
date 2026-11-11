@@ -56,7 +56,7 @@ export function HitroVKosarico({
       onClick={dodaj}
       aria-label={`Dodaj v košarico: ${ime}, ${velikost}`}
       className={cn(
-        "relative z-10 grid size-11 shrink-0 place-items-center rounded-full bg-brand text-on-brand shadow-raised",
+        "relative z-10 grid size-10 shrink-0 sm:size-11 place-items-center rounded-full bg-brand text-on-brand shadow-raised",
         "transition-[transform,background-color] duration-(--duration-press) ease-(--ease-out-soft)",
         "hover:bg-brand-strong active:scale-[0.94] motion-reduce:active:scale-100",
         className,

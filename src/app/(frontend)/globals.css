@@ -155,6 +155,14 @@
   --duration-base: 240ms;
 }
 
+/* Telefon (pod 40 rem): manj zraka med sekcijami, da je na zaslonu več
+   vsebine in manj praznega drsenja. Namizje ostane nespremenjeno. */
+@media (width < 40rem) {
+  :root {
+    --spacing-section: 2.75rem;
+  }
+}
+
 @layer base {
   html {
     font-family: var(--font-sans);
@@ -220,6 +228,8 @@
    Velikost, teža, razmik vrstic in tracking so en set. Velik
    naslov gre v minus tracking, besedilo ostane pri 0, majhne
    oznake gredo v plus.
+   Na telefonu (pod 40 rem) so naslovi manjši: prej je naslov strani
+   zasedel pol zaslona. Osnovno besedilo ostane 16 px zaradi berljivosti.
    ═════════════════════════════════════════════════════════════ */
 @utility type-display {
   font-family: var(--font-display);
@@ -227,6 +237,10 @@
   font-weight: 500;
   line-height: 1.02;
   letter-spacing: -0.03em;
+
+  @media (width < 40rem) {
+    font-size: 2.125rem;
+  }
 }
 
 @utility type-h1 {
@@ -235,6 +249,10 @@
   font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.025em;
+
+  @media (width < 40rem) {
+    font-size: 1.75rem;
+  }
 }
 
 @utility type-h2 {
@@ -243,6 +261,10 @@
   font-weight: 500;
   line-height: 1.14;
   letter-spacing: -0.02em;
+
+  @media (width < 40rem) {
+    font-size: 1.4375rem;
+  }
 }
 
 @utility type-h3 {
@@ -251,6 +273,10 @@
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: -0.01em;
+
+  @media (width < 40rem) {
+    font-size: 1.1875rem;
+  }
 }
 
 @utility type-title {
@@ -264,6 +290,11 @@
   font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
   line-height: 1.6;
   letter-spacing: -0.011em;
+
+  @media (width < 40rem) {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
 }
 
 @utility type-body {
@@ -311,6 +342,10 @@
   font-size: clamp(1.875rem, 1.3rem + 2.4vw, 3rem);
   line-height: 1;
   letter-spacing: -0.03em;
+
+  @media (width < 40rem) {
+    font-size: 1.625rem;
+  }
 }
 
 /* Mreža drobnih pik čez zamegljeno fotografijo v uvodu domače strani

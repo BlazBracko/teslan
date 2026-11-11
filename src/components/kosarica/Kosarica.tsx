@@ -259,7 +259,7 @@ function Vrstica({ postavka: p, kolicina }: { postavka: PostavkaIzdelkaPregled; 
             {p.izdelek?.nacinProdaje === "samo-prevzem" && !nedosegljivo && (
               <Badge variant="outline" className="mt-1 self-start">
                 <LuStore aria-hidden="true" />
-                Samo prevzem na kmetiji
+                Na voljo na kmetiji
               </Badge>
             )}
           </div>
@@ -426,7 +426,7 @@ function Povzetek({
     <section
       aria-labelledby="povzetek-naslov"
       aria-busy={zastarelo || undefined}
-      className="flex flex-col gap-5 rounded-xl bg-surface p-6 shadow-raised ring-1 ring-line lg:sticky lg:top-24"
+      className="flex flex-col gap-5 rounded-xl bg-surface p-5 shadow-raised ring-1 ring-line sm:p-6 lg:sticky lg:top-24"
     >
       <h2 id="povzetek-naslov" className="type-h3 text-ink">
         Povzetek

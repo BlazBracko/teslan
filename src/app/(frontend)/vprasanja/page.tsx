@@ -76,7 +76,7 @@ export default async function VprasanjaPage() {
 
           <section
             aria-labelledby="vprasajte-naslov"
-            className="flex flex-col gap-4 rounded-2xl bg-brand-soft p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+            className="flex flex-col gap-4 rounded-2xl bg-brand-soft p-5 sm:flex-row sm:items-center sm:justify-between sm:p-8"
           >
             <div className="flex flex-col gap-1">
               <h2 id="vprasajte-naslov" className="type-h3 text-ink">

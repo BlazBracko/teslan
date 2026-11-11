@@ -77,7 +77,7 @@ export default async function PogojiPage() {
           </li>
           <li>
             Nekateri pridelki so na voljo le v sezoni ali le za prevzem na kmetiji; to je označeno pri izdelku.
-            Izdelki z oznako »Na voljo na kmetiji« se v spletni trgovini ne prodajajo.
+            Izdelkov z oznako »Na voljo na kmetiji« ne pošiljamo: tiste, ki imajo gumb za nakup, lahko naročite za prevzem na kmetiji, ostale kupite na kmetiji.
           </li>
           <li>
             Fotografije so simbolične. Pridelki z domače kmetije se po videzu, barvi in velikosti lahko nekoliko

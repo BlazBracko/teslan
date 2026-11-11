@@ -51,6 +51,11 @@ describe("izborZaDomov", () => {
     izdelek("Marmelada", { kategorija: 5 }),
   ];
 
+  it("ne vzame izdelkov, ki so na voljo na kmetiji, tudi ko so naročljivi", () => {
+    const jajca = izdelek("Jajca", { nacin: "samo-prevzem", izpostavljen: true, kategorija: 6 });
+    expect(izborZaDomov([jajca, ...seznam], 5, 10).map((i) => i.ime)).not.toContain("Jajca");
+  });
+
   it("vzame izpostavljene naročljive, nato po enega iz vsake kategorije", () => {
     expect(izborZaDomov(seznam, 11, 3).map((i) => i.ime)).toEqual(["Bučno olje", "Česen v prahu", "Marmelada"]);
   });

@@ -192,7 +192,7 @@ test.describe("seznam izdelkov (Z14)", () => {
     await expect(cesen.getByText("Na zalogi")).toBeVisible();
 
     const jajca = kartica(page, "Jajca kokošja");
-    await expect(jajca.getByText("Samo prevzem na kmetiji")).toBeVisible();
+    await expect(jajca.getByText("Na voljo na kmetiji")).toBeVisible();
   });
 
   test("filter po kategoriji je v URL in ga je mogoče deliti", async ({ page }) => {
@@ -213,7 +213,7 @@ test.describe("seznam izdelkov (Z14)", () => {
     await expect(kartica(page, "Česen v prahu")).toBeVisible();
   });
 
-  test("način nakupa loči spletno trgovino od izdelkov samo na kmetiji", async ({ page }) => {
+  test("način nakupa loči spletno trgovino od izdelkov, ki so na voljo na kmetiji", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "V spletno trgovino" }).click();
     await expect(page).toHaveURL(/\/products\?nakup=splet$/);
@@ -221,18 +221,22 @@ test.describe("seznam izdelkov (Z14)", () => {
     await expect(nacin.getByRole("link", { name: /^Spletna trgovina/ })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("heading", { level: 1, name: "Naročite na spletu" })).toBeVisible();
     await expect(kartica(page, "Česen v prahu").getByText("Pošljemo po pošti")).toBeVisible();
-    await expect(kartica(page, "Jajca kokošja").getByText("Samo prevzem na kmetiji")).toBeVisible();
+    // V spletni trgovini ni ničesar, kar ni za pošto (ne jajc za prevzem ne jagod).
+    await expect(kartica(page, "Jajca kokošja")).toHaveCount(0);
     await expect(kartica(page, "Jagode")).toHaveCount(0);
+    await expect(page.locator("main").getByText("Na voljo na kmetiji")).toHaveCount(0);
 
     // Izbrana kategorija ostane, filter kategorij ohrani način nakupa.
     const kategorije = page.getByRole("navigation", { name: "Kategorije izdelkov" });
     await kategorije.getByRole("link", { name: /^Začimbe/ }).click();
     await expect(page).toHaveURL(/\?nakup=splet&kategorija=zacimbe$/);
 
-    await nacin.getByRole("link", { name: /^Samo na kmetiji/ }).click();
+    await nacin.getByRole("link", { name: /^Na kmetiji/ }).click();
     // Začimb na kmetiji ni, zato kategorija pade.
     await expect(page).toHaveURL(/\?nakup=kmetija$/);
-    await expect(kartica(page, "Jagode")).toBeVisible();
+    // Izdelki za prevzem in samo za ogled imajo isto oznako.
+    await expect(kartica(page, "Jagode").getByText("Na voljo na kmetiji")).toBeVisible();
+    await expect(kartica(page, "Jajca kokošja").getByText("Na voljo na kmetiji")).toBeVisible();
     await expect(kartica(page, "Česen v prahu")).toHaveCount(0);
 
     await nacin.getByRole("link", { name: /^Vsi izdelki/ }).click();

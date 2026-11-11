@@ -148,7 +148,7 @@ export const Izdelki: CollectionConfig = {
       options: NACINI_PRODAJE.map((value) => ({ value, label: OZNAKE_NACINOV[value] })),
       admin: {
         description:
-          "Pošta in prevzem: kupec izbere pošiljanje ali prevzem. Samo prevzem: npr. jajca in sveža zelenjava. Samo prikaz: izdelek je viden, a ga ni mogoče naročiti (cena in zaloga nista potrebni).",
+          "Spletna trgovina: izdelek pošljemo po pošti ali ga kupec prevzame. Na voljo na kmetiji: izdelka ne pošiljamo, kupec vidi oznako »Na voljo na kmetiji«; pri »naročilo za prevzem« (npr. jajca, sveža zelenjava) ga lahko naroči na spletu in prevzame, pri »brez spletnega naročila« (npr. sveže jagode) ga kupi samo v živo (cena in zaloga nista potrebni).",
       },
     },
     {
